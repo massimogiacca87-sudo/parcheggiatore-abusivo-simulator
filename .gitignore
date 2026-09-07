@@ -1,0 +1,10 @@
+*.zip
+*.7z
+*.rar
+*.blend
+*.fbx
+*.glb
+*.wav
+*.mp3
+Claude outputs/
+Models/
