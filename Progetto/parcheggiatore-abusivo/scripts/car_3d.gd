@@ -1074,10 +1074,26 @@ func _animate_emblem(delta: float) -> void:
 func _build_collision() -> void:
 	# Hitbox unica e alta per tutti i tipi: garantisce che il raggio di
 	# interazione (altezza occhi) becchi sempre l'auto.
+	#
+	# **Alta quanto 'a machina, no dduje metre e vinte** (0.62). Con la
+	# scatola alta 2,2 per tutti, chi saliva su un cofano camminava
+	# sull'aria settanta centimetri sopra al tetto, e l'appiglio (che arriva
+	# a 2,2) non ci arrivava mai per un pelo: davanti a un'utilitaria SPAZIO
+	# faceva un saltello e basta. Adesso la scatola è alta quanto il tetto;
+	# il raggio che cerca il bersaglio da troppo in alto ha comunque il
+	# ripiego di `_bersaglio_vicino` nel player.
+	var alta: float = 1.45
+	var info_t: Dictionary = CAR_TYPES.get(car_type, {})
+	if info_t.has("body_size") and info_t.has("cabin_size"):
+		alta = 0.28 + (info_t["body_size"] as Vector3).y \
+			+ (info_t["cabin_size"] as Vector3).y
+	if _model_size.y > 0.5:
+		alta = _model_size.y
+	alta = clampf(alta, 1.3, 2.2)
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(1.8, 2.2, 4.0)
-	shape.position = Vector3(0, 1.1, 0)
+	box.size = Vector3(1.8, alta, 4.0)
+	shape.position = Vector3(0, alta * 0.5, 0)
 	shape.shape = box
 	add_child(shape)
 
@@ -2832,9 +2848,9 @@ func get_interact_prompt(_from_position: Vector3) -> String:
 			elif not padrone_luntano():
 				parts.append("'O padrone sta ancora ccà vicino")
 			if has_emblem:
-				parts.append("G: ruba lo stemma \"%s\"" % emblem_info["name"])
+				parts.append("[G] arruobbe 'o stemma \"%s\"" % emblem_info["name"])
 			if damage_level < MAX_DAMAGE:
-				parts.append("F: danneggia l'auto")
+				parts.append("[F] danneggia l'auto")
 			return " · ".join(parts)
 	return ""
 
@@ -2852,7 +2868,12 @@ func player_interact() -> void:
 			pass
 
 
-## [H]: 'o stemma, ca mo' tene 'nu tasto sujo.
+## Vero se [G] qui deve staccare lo stemma invece di cambiare arma.
+func puo_stemma() -> bool:
+	return state == State.PARKED and has_emblem
+
+
+## [G] (o [H]): 'o stemma, ca mo' tene 'nu tasto sujo.
 func player_stemma() -> void:
 	if state == State.PARKED and has_emblem:
 		_steal_emblem()

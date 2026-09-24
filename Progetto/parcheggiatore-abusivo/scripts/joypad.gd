@@ -151,6 +151,11 @@ static func traduci_con(d: Dictionary, testo: String) -> String:
 	# Il pannello della regia: con lo stick i quattro tasti non esistono piu'.
 	t = t.replace("W vai · S aspetta · A/D gira",
 		"Stick: avanti = vai, indietro = aspetta, lati = gira")
+	# 0.62: la stessa riga coi tastini disegnati.
+	t = t.replace("[W] vai · [S] aspetta · [A]/[D] gira",
+		"Stick: avanti vai, indietro aspetta, ai lati gira")
+	t = t.replace("[F] o [SPAZIO] mettila ccà", "[" + d["triangolo"] + "] mettila ccà")
+	t = t.replace("[E] lassa sta'", "[" + d["quadrato"] + "] lassa sta'")
 
 	var coppie := [
 		["premi E", "premi " + d["quadrato"]],
@@ -159,6 +164,8 @@ static func traduci_con(d: Dictionary, testo: String) -> String:
 		["(E)", "(" + d["quadrato"] + ")"],
 		["E lassa sta'", d["quadrato"] + " lassa sta'"],
 		["[I]", "[" + d["l1"] + "]"],
+		["[G]", "[croce giù]"],
+		["[F]", "[" + d["triangolo"] + "]"],
 		["[X] fuma", "[" + d["r1"] + "] fuma"],
 		["[R] bevi", "[" + d["r3"] + "] bevi"],
 		["[Q] fischia", "[" + d["l3"] + "] fischia"],

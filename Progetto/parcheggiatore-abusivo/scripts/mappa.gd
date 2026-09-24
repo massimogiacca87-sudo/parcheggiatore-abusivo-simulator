@@ -110,7 +110,10 @@ func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	visible = false
-	_font = ThemeDB.fallback_font
+	# 0.62: il carattere del gioco (Poppins), non quello di fabbrica.
+	_font = UiStile.font_grassetto()
+	if _font == null:
+		_font = ThemeDB.fallback_font
 
 
 func apri(citta: Node, player: Node3D) -> void:
@@ -224,9 +227,13 @@ func _draw() -> void:
 	_disegna_cummissiune(t, ob)
 	_disegna_casa(t, ob)
 	_disegna_filo(t, ob)
-	_disegna_player(t)
 
 	_piazza_etichette(_carta_rect(t))
+	# **Tu stai sopra a tutto** (0.62). Il segno del player veniva prima
+	# delle scritte, e il nome della piazza — che si centra proprio dove
+	# tu stai all'inizio della giornata — ci finiva sopra: la carta si
+	# apriva e "Tu" non c'era.
+	_disegna_player(t)
 
 	_disegna_testate(t)
 	if _larghezza_pannello() > 0.0:

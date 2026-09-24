@@ -1,0 +1,317 @@
+[gd_resource type="Theme" load_steps=23 format=3]
+
+[ext_resource type="FontVariation" path="res://assets/ui/font_grassetto.tres" id="1_cu8d1"]
+[ext_resource type="FontVariation" path="res://assets/ui/font_testo.tres" id="2_d87lf"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1rat3"]
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.12, 0.125, 0.16, 0.55)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.06)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+corner_detail = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yo6nr"]
+bg_color = Color(0, 0, 0, 0)
+draw_center = false
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.93, 0.72, 0.31, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+corner_detail = 6
+expand_margin_left = 2.0
+expand_margin_top = 2.0
+expand_margin_right = 2.0
+expand_margin_bottom = 2.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6wcfa"]
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.17, 0.175, 0.22, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.93, 0.72, 0.31, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+corner_detail = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8uj4v"]
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.93, 0.72, 0.31, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.944, 0.776, 0.448, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+corner_detail = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kdsg4"]
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.12, 0.125, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.14)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+corner_detail = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yougl"]
+bg_color = Color(1, 1, 1, 0.22)
+border_color = Color(0, 0, 0, 0)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+corner_detail = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_eps0b"]
+bg_color = Color(0.93, 0.72, 0.31, 0.45)
+border_color = Color(0, 0, 0, 0)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+corner_detail = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wyepg"]
+bg_color = Color(0, 0, 0, 0.25)
+border_color = Color(0, 0, 0, 0)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+corner_detail = 6
+
+[sub_resource type="Image" id="Image_cpx5n"]
+data = {
+"data": PackedByteArray(25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 56, 25, 20, 12, 151, 25, 20, 12, 217, 25, 20, 12, 250, 25, 20, 12, 250, 25, 20, 12, 217, 25, 20, 12, 151, 25, 20, 12, 56, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 151, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 151, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 184, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 184, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 151, 25, 20, 12, 255, 25, 20, 12, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 151, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 56, 25, 20, 12, 255, 25, 20, 12, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 56, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 151, 25, 20, 12, 255, 25, 20, 12, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 151, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 217, 25, 20, 12, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 25, 20, 12, 255, 25, 20, 12, 217, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 250, 25, 20, 12, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 25, 20, 12, 255, 25, 20, 12, 250, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 250, 25, 20, 12, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 25, 20, 12, 255, 25, 20, 12, 250, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 217, 25, 20, 12, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 25, 20, 12, 255, 25, 20, 12, 217, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 151, 25, 20, 12, 255, 25, 20, 12, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 151, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 56, 25, 20, 12, 255, 25, 20, 12, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 56, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 151, 25, 20, 12, 255, 25, 20, 12, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 151, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 184, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 237, 183, 79, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 184, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 151, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 151, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 56, 25, 20, 12, 151, 25, 20, 12, 217, 25, 20, 12, 250, 25, 20, 12, 250, 25, 20, 12, 217, 25, 20, 12, 151, 25, 20, 12, 56, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0),
+"format": "RGBA8",
+"height": 18,
+"mipmaps": false,
+"width": 18
+}
+
+[sub_resource type="ImageTexture" id="ImageTexture_r2bep"]
+image = SubResource("Image_cpx5n")
+
+[sub_resource type="Image" id="Image_ry7ld"]
+data = {
+"data": PackedByteArray(25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 56, 25, 20, 12, 151, 25, 20, 12, 217, 25, 20, 12, 250, 25, 20, 12, 250, 25, 20, 12, 217, 25, 20, 12, 151, 25, 20, 12, 56, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 151, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 151, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 184, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 184, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 151, 25, 20, 12, 255, 25, 20, 12, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 151, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 56, 25, 20, 12, 255, 25, 20, 12, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 56, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 151, 25, 20, 12, 255, 25, 20, 12, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 151, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 217, 25, 20, 12, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 25, 20, 12, 255, 25, 20, 12, 217, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 250, 25, 20, 12, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 25, 20, 12, 255, 25, 20, 12, 250, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 250, 25, 20, 12, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 25, 20, 12, 255, 25, 20, 12, 250, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 217, 25, 20, 12, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 25, 20, 12, 255, 25, 20, 12, 217, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 151, 25, 20, 12, 255, 25, 20, 12, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 151, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 56, 25, 20, 12, 255, 25, 20, 12, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 56, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 151, 25, 20, 12, 255, 25, 20, 12, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 151, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 184, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 255, 229, 158, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 184, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 151, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 255, 25, 20, 12, 151, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 56, 25, 20, 12, 151, 25, 20, 12, 217, 25, 20, 12, 250, 25, 20, 12, 250, 25, 20, 12, 217, 25, 20, 12, 151, 25, 20, 12, 56, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0, 25, 20, 12, 0),
+"format": "RGBA8",
+"height": 18,
+"mipmaps": false,
+"width": 18
+}
+
+[sub_resource type="ImageTexture" id="ImageTexture_r1djp"]
+image = SubResource("Image_ry7ld")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gsv5w"]
+content_margin_top = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.93, 0.72, 0.31, 1)
+border_color = Color(0, 0, 0, 0)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+corner_detail = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qc2pj"]
+content_margin_top = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.03, 0.035, 0.05, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0.12)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+corner_detail = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0qbvk"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0.03, 0.035, 0.05, 0.85)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.93, 0.72, 0.31, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+corner_detail = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0ivs1"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0.03, 0.035, 0.05, 0.85)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.16)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+corner_detail = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pdqu0"]
+content_margin_left = 14.0
+content_margin_top = 14.0
+content_margin_right = 14.0
+content_margin_bottom = 14.0
+bg_color = Color(0.075, 0.08, 0.105, 0.93)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.93, 0.72, 0.31, 0.45)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+corner_detail = 6
+shadow_color = Color(0, 0, 0, 0.42)
+shadow_size = 10
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6nhrc"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.03, 0.035, 0.05, 0.78)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0.1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+corner_detail = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jcmlw"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.36, 0.82, 0.48, 1)
+border_color = Color(0, 0, 0, 0)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+corner_detail = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_12opg"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0.12, 0.125, 0.16, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.93, 0.72, 0.31, 0.45)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+corner_detail = 6
+
+[resource]
+default_font = ExtResource("2_d87lf")
+default_font_size = 16
+Button/colors/font_color = Color(0.965, 0.945, 0.905, 1)
+Button/colors/font_disabled_color = Color(0.74, 0.71, 0.66, 0.5)
+Button/colors/font_focus_color = Color(1, 0.93, 0.74, 1)
+Button/colors/font_hover_color = Color(1, 0.93, 0.74, 1)
+Button/colors/font_hover_pressed_color = Color(0.09, 0.07, 0.05, 1)
+Button/colors/font_outline_color = Color(0, 0, 0, 0)
+Button/colors/font_pressed_color = Color(0.09, 0.07, 0.05, 1)
+Button/constants/h_separation = 8
+Button/constants/outline_size = 0
+Button/font_sizes/font_size = 16
+Button/fonts/font = ExtResource("1_cu8d1")
+Button/styles/disabled = SubResource("StyleBoxFlat_1rat3")
+Button/styles/focus = SubResource("StyleBoxFlat_yo6nr")
+Button/styles/hover = SubResource("StyleBoxFlat_6wcfa")
+Button/styles/hover_pressed = SubResource("StyleBoxFlat_8uj4v")
+Button/styles/normal = SubResource("StyleBoxFlat_kdsg4")
+Button/styles/pressed = SubResource("StyleBoxFlat_8uj4v")
+HScrollBar/styles/grabber = SubResource("StyleBoxFlat_yougl")
+HScrollBar/styles/grabber_highlight = SubResource("StyleBoxFlat_eps0b")
+HScrollBar/styles/grabber_pressed = SubResource("StyleBoxFlat_eps0b")
+HScrollBar/styles/scroll = SubResource("StyleBoxFlat_wyepg")
+HSlider/icons/grabber = SubResource("ImageTexture_r2bep")
+HSlider/icons/grabber_highlight = SubResource("ImageTexture_r1djp")
+HSlider/styles/grabber_area = SubResource("StyleBoxFlat_gsv5w")
+HSlider/styles/grabber_area_highlight = SubResource("StyleBoxFlat_gsv5w")
+HSlider/styles/slider = SubResource("StyleBoxFlat_qc2pj")
+Label/colors/font_color = Color(0.965, 0.945, 0.905, 1)
+Label/colors/font_outline_color = Color(0, 0, 0, 0.62)
+Label/colors/font_shadow_color = Color(0, 0, 0, 0)
+Label/constants/line_spacing = 1
+Label/constants/outline_size = 3
+LineEdit/styles/focus = SubResource("StyleBoxFlat_0qbvk")
+LineEdit/styles/normal = SubResource("StyleBoxFlat_0ivs1")
+Panel/styles/panel = SubResource("StyleBoxFlat_pdqu0")
+PanelContainer/styles/panel = SubResource("StyleBoxFlat_pdqu0")
+ProgressBar/colors/font_color = Color(0.965, 0.945, 0.905, 1)
+ProgressBar/font_sizes/font_size = 11
+ProgressBar/styles/background = SubResource("StyleBoxFlat_6nhrc")
+ProgressBar/styles/fill = SubResource("StyleBoxFlat_jcmlw")
+TooltipLabel/colors/font_color = Color(0.965, 0.945, 0.905, 1)
+TooltipPanel/styles/panel = SubResource("StyleBoxFlat_12opg")
+VScrollBar/styles/grabber = SubResource("StyleBoxFlat_yougl")
+VScrollBar/styles/grabber_highlight = SubResource("StyleBoxFlat_eps0b")
+VScrollBar/styles/grabber_pressed = SubResource("StyleBoxFlat_eps0b")
+VScrollBar/styles/scroll = SubResource("StyleBoxFlat_wyepg")

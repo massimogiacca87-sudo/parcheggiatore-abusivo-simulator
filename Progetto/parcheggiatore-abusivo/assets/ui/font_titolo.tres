@@ -1,0 +1,8 @@
+[gd_resource type="FontVariation" load_steps=3 format=3]
+
+[ext_resource type="FontFile" path="res://assets/ui/fonts/Poppins-Black.ttf" id="1_3k3ox"]
+[ext_resource type="FontFile" path="res://assets/ui/fonts/DejaVuSans-Bold.ttf" id="2_qxplf"]
+
+[resource]
+fallbacks = Array[Font]([ExtResource("2_qxplf")])
+base_font = ExtResource("1_3k3ox")

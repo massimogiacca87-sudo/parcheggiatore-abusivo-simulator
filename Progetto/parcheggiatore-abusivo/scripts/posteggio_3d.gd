@@ -66,6 +66,12 @@ func configura(id: String, r: Array) -> void:
 	var cz: float = (z0 + z1) / 2.0
 	_entrata = Vector3(x0 - 4.0, 0.0, cz)
 	_uscita = Vector3(x1 + 4.0, 0.0, cz)
+	if not _vigili_fatti:
+		_vigili_fatti = true
+		_build_vigili()
+
+
+var _vigili_fatti: bool = false
 
 
 # ---------------------------------------------------------------------------
@@ -106,7 +112,11 @@ func _ready() -> void:
 	_timer.timeout.connect(_on_timeout)
 	add_child(_timer)
 	_timer.start()
-	_build_vigili()
+	# **'E vigile nun se costruivano cchiù** (0.62). `_build_vigili()` stava
+	# qui, ma la città chiama `configura()` DOPO `add_child()`: in `_ready`
+	# il rettangolo è ancora vuoto e la funzione usciva senza fare niente.
+	# Il risultato: stadio, mercato e cornetteria senza un vigile, da quando
+	# l'ordine è cambiato. Adesso li costruisce `configura()`.
 	# **La misura si fa a mondo avviato, non in `_ready`.**
 	#
 	# Serviva gia' un `call_deferred` perche' la citta' sta ancora

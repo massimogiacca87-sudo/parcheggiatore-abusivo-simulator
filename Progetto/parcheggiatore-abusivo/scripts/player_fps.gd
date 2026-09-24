@@ -46,7 +46,7 @@ const JUMP_SPEED: float = 6.4
 ## salto normale resta quello di prima. Vale per le auto, per il cassone del
 ## furgone, per le bancarelle e per i cassonetti — tutto quello che tappava
 ## un passaggio adesso si scavalca.
-const APPIGLIO_MAX: float = 2.0   # quanto in alto ci si tira su
+const APPIGLIO_MAX: float = 2.2   # quanto in alto ci si tira su (0.62: 2.0 → 2.2, il furgone)
 const APPIGLIO_MIN: float = 0.45  # sotto a questo si sale camminando
 const APPIGLIO_DURATA: float = 0.28
 ## Accovacciato: si va piano e si sta bassi. Serve per avvicinarsi alle
@@ -1024,11 +1024,21 @@ func _physics_process(delta: float) -> void:
 	# pad). Sono tre modi per la stessa azione, e va bene cosi': la rotella
 	# e' quella che si prova per prima.
 	var passo_arma := 0
+	# **[G] ncopp'a 'na machina cu 'o stemma = 'o stemma** (0.62). Il capo:
+	# *«Non si riesce a rubare lo stemma premendo G»*. La scritta diceva G
+	# ma il tasto dello stemma era H, e G cambiava arma. Adesso G fa quello
+	# che dice la scritta: se stai guardando un'auto con lo stemma, lo
+	# stacca; altrimenti cambia il fierro, come prima. H resta buono.
+	var g_stemma := false
+	if Input.is_action_just_pressed("arma") and current_target != null \
+			and current_target.has_method("puo_stemma") \
+			and current_target.puo_stemma():
+		g_stemma = true
 	if Input.is_action_just_pressed("arma_su"):
 		passo_arma = -1
 	elif Input.is_action_just_pressed("arma_giu"):
 		passo_arma = 1
-	elif Input.is_action_just_pressed("arma"):
+	elif Input.is_action_just_pressed("arma") and not g_stemma:
 		passo_arma = 1
 	if passo_arma != 0 and not _pickpocket_open():
 		GameManager.cambia_arma(passo_arma)
@@ -1039,7 +1049,7 @@ func _physics_process(delta: float) -> void:
 		current_target.player_interact()
 		if current_target.has_method("is_being_directed") and current_target.is_being_directed():
 			directing_car = current_target
-			prompt_changed.emit("W vai · S aspetta · A/D gira · F o SPAZIO = \"mettila ccà\" · E lassa sta'")
+			prompt_changed.emit("[W] vai · [S] aspetta · [A]/[D] gira · [F] o [SPAZIO] mettila ccà · [E] lassa sta'")
 
 	if Input.is_action_just_pressed("vandalize") and current_target and current_target.has_method("player_vandalize"):
 		current_target.player_vandalize()
@@ -1049,7 +1059,7 @@ func _physics_process(delta: float) -> void:
 	# può scassare, [E] è il furto dell'auto e lo stemma si stacca con [H].
 	# Due gesti diversi sullo stesso oggetto vogliono due tasti, se no il
 	# gioco decide per te quale dei due volevi fare.
-	if Input.is_action_just_pressed("stemma") and current_target \
+	if (g_stemma or Input.is_action_just_pressed("stemma")) and current_target \
 			and current_target.has_method("player_stemma"):
 		current_target.player_stemma()
 
@@ -1603,26 +1613,56 @@ func _handle_movement(delta: float) -> void:
 	velocity.x = move_dir.x * speed
 	velocity.z = move_dir.z * speed
 
+	# **Se salta sempe, e s'arrampica sempe** (0.62). Il capo: *«Fai in
+	# modo che il giocatore sempre e comunque possa saltare e arrampicarsi
+	# su ostacoli, per evitare che si blocchi o si incastri tra auto,
+	# oggetti ecc.»*
+	#
+	# Prima il salto voleva `is_on_floor()`, e uno incastrato fra due
+	# paraurti non è «a terra»: sta appoggiato di sbieco su due fiancate,
+	# e Godot lo vede in aria. SPAZIO non faceva niente, proprio quando
+	# serviva. Adesso:
+	#   1. l'appiglio si prova per primo, verso dove cammini (o guardi), a
+	#      tre altezze diverse — petto, ginocchia, spalle;
+	#   2. il salto vale se stai toccando **qualunque cosa** da meno di un
+	#      quinto di secondo (terra, un cofano, una fiancata): `_appoggio_t`;
+	#   3. se sei proprio incastrato (spingi e non ti muovi), SPAZIO ti tira
+	#      fuori e ti mette sopra, o accanto, nel posto libero più vicino:
+	#      `_sbroglia()`. Lo fa anche da solo dopo due secondi e mezzo.
+	var vuole_saltare: bool = Input.is_action_just_pressed("jump") \
+		and not _menu_aperto()
+	var appoggiato: bool = is_on_floor() or _appoggio_t < APPOGGIO_TOLLERANZA
+	if vuole_saltare and not is_crouching:
+		if _prova_appiglio(move_dir):
+			return
+		# Chi sta già dentro a qualcosa non salta: `move_and_slide` non lo
+		# tirerebbe fuori. Prima si esce.
+		if _incastrato() and _sbroglia():
+			return
+		if appoggiato and _salto_cd <= 0.0:
+			velocity.y = JUMP_SPEED
+			_salto_cd = 0.25
+			_appoggio_t = APPOGGIO_TOLLERANZA
+			SoundManager.play("pop", -16.0, 1.4)
+		elif _fermo_t > 0.35 or _incastrato():
+			if _sbroglia():
+				return
+	elif vuole_saltare and is_crouching:
+		# Anche accovacciato, se sei incastrato SPAZIO ti libera.
+		if _fermo_t > 0.35 or _incastrato():
+			if _sbroglia():
+				return
 	if is_on_floor():
-		# SPAZIO: un saltello. Serve a scavalcare i cordoli, a schivare il
-		# motorino all'ultimo e a tirare il pallone al volo.
-		if Input.is_action_just_pressed("jump") and not is_crouching \
-				and not _menu_aperto():
-			if not _prova_appiglio():
-				velocity.y = JUMP_SPEED
-				SoundManager.play("pop", -16.0, 1.4)
-		else:
+		if velocity.y <= 0.0:
 			velocity.y = -0.5
 	else:
-		# Anche a mezz'aria: si salta contro il cofano e col secondo tocco
-		# ci si tira su. E' il gesto che viene naturale a chi ci prova.
-		if Input.is_action_just_pressed("jump") and not _menu_aperto():
-			if _prova_appiglio():
-				return
 		velocity.y -= GRAVITY * delta
+	_salto_cd = maxf(0.0, _salto_cd - delta)
 
 	_scalino(delta)
+	var prima_xz := Vector2(global_position.x, global_position.z)
 	move_and_slide()
+	_dopo_il_passo(delta, prima_xz, move_dir)
 	_update_crouch_pose(delta)
 	_animate_body(delta, move_dir.length() > 0.1 and is_on_floor(), speed)
 	_update_footsteps(delta,
@@ -1701,7 +1741,7 @@ func _update_footsteps(delta: float, walking: bool, speed: float) -> void:
 
 
 ## Che tipo di negozio stiamo guardando (stringa vuota se nessuno).
-func _shop_kind(node: Node) -> String:
+func _shop_kind(node) -> String:
 	if node == null or not is_instance_valid(node):
 		return ""
 	if node.is_in_group("bazar"):
@@ -1835,6 +1875,13 @@ func _update_interaction() -> void:
 	else:
 		target = _bersaglio_vicino(reach)
 
+	# Il bersaglio di prima può essere già stato buttato (un'auto che se
+	# ne va): passarlo a `_shop_kind` fermava tutta la funzione, e il
+	# bersaglio restava quello morto per sempre (0.62, `prova_stemma`).
+	if current_target != null and not is_instance_valid(current_target):
+		current_target = null
+	if target != null and not is_instance_valid(target):
+		target = null
 	var was_kind := _shop_kind(current_target)
 	current_target = target
 	var kind := _shop_kind(target)
@@ -1908,55 +1955,190 @@ func _process(delta: float) -> void:
 ##   3. lassu' ci si sta in piedi, o e' il sottotetto di un balcone?
 ## Se passano tutti e tre si registra il punto d'arrivo e ci pensa
 ## `_physics_process` a portarci il personaggio.
-func _prova_appiglio() -> bool:
-	var avanti := -global_transform.basis.z
-	avanti.y = 0.0
-	if avanti.length() < 0.01:
-		return false
-	avanti = avanti.normalized()
+func _prova_appiglio(verso: Vector3 = Vector3.ZERO) -> bool:
+	# Prima verso dove stai camminando (è lì che vuoi andare), poi verso
+	# dove guardi. Chi scappa guardando indietro si arrampica lo stesso.
+	var guardo := -global_transform.basis.z
+	guardo.y = 0.0
+	var direzioni: Array = []
+	if Vector2(verso.x, verso.z).length() > 0.1:
+		direzioni.append(Vector3(verso.x, 0.0, verso.z).normalized())
+	if guardo.length() > 0.01:
+		direzioni.append(guardo.normalized())
+	for d in direzioni:
+		if _appiglio_verso(d):
+			return true
+	return false
+
+
+## Tre altezze per trovare il fianco dell'ostacolo: il petto (il cofano di
+## un'utilitaria), le ginocchia (un muretto, una cassetta) e le spalle (il
+## cassone di un furgone). E tre distanze per l'arrivo sopra: se il tetto
+## è stretto (un muretto), si atterra più vicino.
+const APPIGLIO_ALTEZZE := [0.85, 0.4, 1.35]
+const APPIGLIO_ARRIVI := [0.62, 0.4, 0.95]
+
+func _appiglio_verso(avanti: Vector3) -> bool:
 	var spazio := get_world_3d().direct_space_state
 	var maschera: int = LAYER_WORLD | LAYER_CAR
-
-	var petto := global_position + Vector3(0, 0.85, 0)
-	var q := PhysicsRayQueryParameters3D.create(petto, petto + avanti * 1.0,
-		maschera)
-	q.exclude = [get_rid()]
-	var muro := spazio.intersect_ray(q)
+	var muro: Dictionary = {}
+	for h in APPIGLIO_ALTEZZE:
+		var da := global_position + Vector3(0, float(h), 0)
+		var q := PhysicsRayQueryParameters3D.create(da, da + avanti * 1.3,
+			maschera)
+		q.exclude = [get_rid()]
+		muro = spazio.intersect_ray(q)
+		if not muro.is_empty():
+			break
 	if muro.is_empty():
 		return false
 
-	# Il punto d'arrivo sta mezzo metro oltre la faccia dell'ostacolo: se si
-	# atterrasse sul filo, il primo passo si tornerebbe di sotto.
-	var arrivo_xz: Vector3 = Vector3(muro["position"].x, 0.0, muro["position"].z) \
-		+ avanti * 0.62
-	var alto := Vector3(arrivo_xz.x, global_position.y + APPIGLIO_MAX + 0.4,
-		arrivo_xz.z)
-	var q2 := PhysicsRayQueryParameters3D.create(alto,
-		alto - Vector3(0, APPIGLIO_MAX + 0.5, 0), maschera)
-	q2.exclude = [get_rid()]
-	var tetto := spazio.intersect_ray(q2)
-	if tetto.is_empty():
-		return false
-	var y: float = tetto["position"].y
-	var salita: float = y - global_position.y
-	if salita < APPIGLIO_MIN or salita > APPIGLIO_MAX:
-		return false
-	# Un tetto troppo inclinato non e' un appoggio, e' uno scivolo.
-	if tetto.has("normal") and Vector3(tetto["normal"]).y < 0.65:
-		return false
+	for off in APPIGLIO_ARRIVI:
+		# Il punto d'arrivo sta oltre la faccia dell'ostacolo: se si
+		# atterrasse sul filo, il primo passo si tornerebbe di sotto.
+		var arrivo_xz: Vector3 = Vector3(muro["position"].x, 0.0,
+			muro["position"].z) + avanti * float(off)
+		var alto := Vector3(arrivo_xz.x,
+			global_position.y + APPIGLIO_MAX + 0.4, arrivo_xz.z)
+		var q2 := PhysicsRayQueryParameters3D.create(alto,
+			alto - Vector3(0, APPIGLIO_MAX + 0.5, 0), maschera)
+		q2.exclude = [get_rid()]
+		var tetto := spazio.intersect_ray(q2)
+		if tetto.is_empty():
+			continue
+		var y: float = tetto["position"].y
+		var salita: float = y - global_position.y
+		if salita < APPIGLIO_MIN or salita > APPIGLIO_MAX:
+			continue
+		# Un tetto troppo inclinato non e' un appoggio, e' uno scivolo.
+		if tetto.has("normal") and Vector3(tetto["normal"]).y < 0.55:
+			continue
+		var arrivo := Vector3(arrivo_xz.x, y + 0.04, arrivo_xz.z)
+		if not _ce_spazio(arrivo):
+			continue
+		_appiglio_da = global_position
+		_appiglio_a = arrivo
+		_appiglio_t = APPIGLIO_DURATA
+		velocity = Vector3.ZERO
+		_fermo_t = 0.0
+		SoundManager.play("pop", -14.0, 0.85)
+		return true
+	return false
 
-	var testa := Vector3(arrivo_xz.x, y + 0.12, arrivo_xz.z)
-	var q3 := PhysicsRayQueryParameters3D.create(testa,
-		testa + Vector3(0, 1.6, 0), maschera)
-	q3.exclude = [get_rid()]
-	if not spazio.intersect_ray(q3).is_empty():
-		return false
 
+# ---------------------------------------------------------------------------
+# Nun se resta 'ncastrate (0.62)
+# ---------------------------------------------------------------------------
+
+## Quanto tempo dopo l'ultimo contatto si può ancora saltare. Un quinto di
+## secondo: basta per chi sta di sbieco fra due fiancate, non basta per
+## saltare in aria due volte.
+const APPOGGIO_TOLLERANZA: float = 0.2
+## Dopo quanto tempo passato a spingere senza muoversi ci si libera da soli.
+const SBROGLIA_DA_SOLO: float = 2.5
+
+var _appoggio_t: float = 0.0
+var _fermo_t: float = 0.0
+var _salto_cd: float = 0.0
+
+
+## Dopo `move_and_slide`: si segna se stai toccando qualcosa e se stai
+## spingendo contro qualcosa senza andare da nessuna parte.
+func _dopo_il_passo(delta: float, prima_xz: Vector2, move_dir: Vector3) -> void:
+	var tocca := is_on_floor()
+	for i in range(get_slide_collision_count()):
+		var n: Vector3 = get_slide_collision(i).get_normal()
+		if n.y > -0.3:
+			tocca = true
+			break
+	_appoggio_t = 0.0 if tocca else _appoggio_t + delta
+	var fatto: float = Vector2(global_position.x, global_position.z) \
+		.distance_to(prima_xz)
+	var spinge: bool = move_dir.length() > 0.1
+	if spinge and fatto < 0.35 * delta and get_slide_collision_count() > 0:
+		_fermo_t += delta
+	elif not is_on_floor() and _appoggio_t < APPOGGIO_TOLLERANZA \
+			and absf(velocity.y) < 0.4 and fatto < 0.1 * delta:
+		# Appollaiato di sbieco su qualcosa, fermo, senza cadere.
+		_fermo_t += delta
+	else:
+		_fermo_t = maxf(0.0, _fermo_t - delta * 2.0)
+	if _fermo_t > SBROGLIA_DA_SOLO:
+		_fermo_t = 0.0
+		if not is_on_floor() or _incastrato():
+			_sbroglia()
+
+
+## Vero se il corpo sta già dentro a qualcosa.
+func _incastrato() -> bool:
+	return not _ce_spazio(global_position + Vector3(0, 0.02, 0))
+
+
+## C'è posto per il corpo intero in `p` (i piedi in `p`)?
+func _ce_spazio(p: Vector3) -> bool:
+	var spazio := get_world_3d().direct_space_state
+	var cap := CapsuleShape3D.new()
+	cap.radius = 0.33
+	cap.height = 1.6
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = cap
+	q.transform = Transform3D(Basis(), p + Vector3(0, 0.84, 0))
+	q.collision_mask = LAYER_WORLD | LAYER_CAR
+	q.exclude = [get_rid()]
+	return spazio.intersect_shape(q, 1).is_empty()
+
+
+## **'O sbroglio.** Cerca il posto libero più vicino — sopra alla cosa che
+## ti blocca, o di lato, fino a due metri — e ti ci porta con lo stesso
+## movimento dell'appiglio. Prima si prova sopra (un cofano, un cassone),
+## perché è quello che uno cerca di fare quando salta; poi intorno.
+func _sbroglia() -> bool:
+	var spazio := get_world_3d().direct_space_state
+	var maschera: int = LAYER_WORLD | LAYER_CAR
+	var base := global_position
+	var candidati: Array = []
+	for r in [0.0, 0.6, 1.1, 1.6, 2.2]:
+		var giri: int = 1 if r == 0.0 else 8
+		for k in range(giri):
+			var a: float = TAU * float(k) / float(giri)
+			var xz := Vector3(base.x + cos(a) * r, 0.0, base.z + sin(a) * r)
+			# Dall'alto in basso: la prima superficie sotto i due metri e
+			# mezzo sopra ai piedi.
+			var alto := Vector3(xz.x, base.y + 2.6, xz.z)
+			var q := PhysicsRayQueryParameters3D.create(alto,
+				alto - Vector3(0, 4.0, 0), maschera)
+			q.exclude = [get_rid()]
+			var hit := spazio.intersect_ray(q)
+			if hit.is_empty():
+				continue
+			var y: float = hit["position"].y
+			if y - base.y > APPIGLIO_MAX + 0.3 or base.y - y > 1.5:
+				continue
+			if hit.has("normal") and Vector3(hit["normal"]).y < 0.55:
+				continue
+			var p := Vector3(xz.x, y + 0.05, xz.z)
+			if Passo.Citta.dint_ô_palazzo(p, 0.3):
+				continue
+			if not _ce_spazio(p):
+				continue
+			candidati.append(p)
+		if not candidati.is_empty():
+			break
+	if candidati.is_empty():
+		return false
+	var meglio: Vector3 = candidati[0]
+	var dm := INF
+	for c in candidati:
+		var d: float = (c as Vector3).distance_to(base)
+		if d < dm:
+			dm = d
+			meglio = c
 	_appiglio_da = global_position
-	_appiglio_a = Vector3(arrivo_xz.x, y + 0.04, arrivo_xz.z)
+	_appiglio_a = meglio
 	_appiglio_t = APPIGLIO_DURATA
 	velocity = Vector3.ZERO
-	SoundManager.play("pop", -14.0, 0.85)
+	_fermo_t = 0.0
+	SoundManager.play("pop", -14.0, 0.8)
 	return true
 
 

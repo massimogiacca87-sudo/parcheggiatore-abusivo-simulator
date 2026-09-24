@@ -1,0 +1,9 @@
+[gd_resource type="FontVariation" load_steps=3 format=3]
+
+[ext_resource type="FontFile" path="res://assets/ui/fonts/Poppins-Regular.ttf" id="1_ackea"]
+[ext_resource type="FontFile" path="res://assets/ui/fonts/DejaVuSans-Bold.ttf" id="2_v48vs"]
+
+[resource]
+fallbacks = Array[Font]([ExtResource("2_v48vs")])
+base_font = ExtResource("1_ackea")
+variation_embolden = 0.55

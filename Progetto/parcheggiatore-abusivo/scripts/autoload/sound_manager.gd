@@ -21,7 +21,11 @@ const SOUND_NAMES := ["honk", "bump", "punch", "coin", "kaching", "success",
 	"moneta1", "moneta2", "monete", "monete2", "monete_tante", "mucchio",
 	# --- 'A seconda infornata --------------------------------------
 	"folla", "urlo", "botta", "rutto", "ruttino", "bottiglia", "sorso",
-	"woosh", "saluto2", "fiatone", "cintura", "stemma", "stemmi"]
+	"woosh", "saluto2", "fiatone", "cintura", "stemma", "stemmi",
+	# --- 0.62: 'e suone 'e ll'interfaccia (Universal UI Soundpack di
+	# Nathan Gibson, CC BY 4.0 — vedi CREDITI.txt) ---------------------
+	"ui_hover", "ui_click", "ui_ok", "ui_apri", "ui_chiudi", "ui_errore",
+	"ui_notifica", "ui_carta", "ui_vittoria", "ui_sblocco", "ui_missione"]
 const POOL_SIZE := 18
 const MASTER_OFFSET_DB := -6.0 # tutto un po' più discreto
 const MUSIC_VOLUME_DB := -19.0 # sottofondo: c'è, ma non copre il gioco
@@ -118,6 +122,50 @@ func _ready() -> void:
 	add_child(_music_b)
 	_avvia_ambiente()
 	metti("menu", 0.0)
+	# **Ogni bottone del gioco fa rumore** (0.62). Invece di ricordarsi di
+	# mettere il suono in quaranta pannelli diversi, si guarda ogni nodo che
+	# entra nell'albero: se è un bottone, gli si attacca il clic (e un
+	# fruscio leggerissimo quando ci passi sopra col mouse).
+	get_tree().node_added.connect(_su_nodo_nuovo)
+
+
+func _su_nodo_nuovo(n: Node) -> void:
+	if n is BaseButton and not n.has_meta(&"ui_muto"):
+		var b := n as BaseButton
+		if not b.pressed.is_connected(_ui_clic):
+			b.pressed.connect(_ui_clic)
+			b.mouse_entered.connect(_ui_sopra.bind(b))
+
+
+func _ui_clic() -> void:
+	ui("ui_click")
+
+
+var _ultimo_sopra: int = 0
+
+func _ui_sopra(b: BaseButton) -> void:
+	if not is_instance_valid(b) or b.disabled:
+		return
+	# Non più di un fruscio ogni sessanta millisecondi: passando il mouse
+	# su una fila di carte, se no, è una mitragliatrice.
+	var ora := Time.get_ticks_msec()
+	if ora - _ultimo_sopra < 60:
+		return
+	_ultimo_sopra = ora
+	ui("ui_hover")
+
+
+## I suoni dell'interfaccia, ognuno al suo volume: sono file registrati
+## pieni (picco a 0 dB) e vanno tenuti sotto al gioco.
+const UI_VOLUME := {
+	"ui_hover": -22.0, "ui_click": -13.0, "ui_ok": -11.0, "ui_apri": -14.0,
+	"ui_chiudi": -14.0, "ui_errore": -12.0, "ui_notifica": -10.0,
+	"ui_carta": -9.0, "ui_vittoria": -8.0, "ui_sblocco": -8.0,
+	"ui_missione": -9.0,
+}
+
+func ui(nome: String, piu_db: float = 0.0) -> void:
+	play(nome, float(UI_VOLUME.get(nome, -12.0)) + piu_db, 1.0, 0.03)
 
 
 # ---------------------------------------------------------------------------

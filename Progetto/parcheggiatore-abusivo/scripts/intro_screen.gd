@@ -46,7 +46,7 @@ const CONTROLS := [
 	["Zaino", "I"],
 	["'A chiantina", "M"],
 	["Compra", "1 – 6"],
-	["Cagna 'e fierre", "G"],
+	["Cagna 'e fierre · stemma", "G"],
 	["Pausa", "ESC"],
 ]
 
@@ -67,7 +67,7 @@ static func _controlli_pad() -> Array:
 		["Caffè", Pad.tasto("caffe")],
 		["Zaino", Pad.tasto("inventory")],
 		["'A chiantina", Pad.tasto("mappa")],
-		["Cagna 'e fierre", Pad.tasto("arma")],
+		["Cagna 'e fierre · stemma", "Croce giù"],
 		["Scegli / compra", "Croce dir. + " + Pad.tasto("jump")],
 		["Pausa", Pad.tasto("ui_cancel")],
 	]

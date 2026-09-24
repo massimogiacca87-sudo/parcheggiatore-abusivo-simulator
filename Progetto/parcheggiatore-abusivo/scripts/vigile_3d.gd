@@ -1021,8 +1021,33 @@ func _do_patrol(delta: float) -> void:
 	_scan_time += delta
 	var sweep: float = sin(_scan_time * TAU / SCAN_PERIOD)
 	_visual_root.rotation.y += deg_to_rad(SCAN_HALF_ANGLE_DEG) * sweep
-	if global_position.distance_to(target) < 0.3:
+	# **'O vigile ca s'appenneva a nu spigolo** (0.62). L'angolo della
+	# ronda sta nel posto dove dalla 0.59 è parcheggiata la macchina dei
+	# vigili (o una sedia del bar): la meta è dentro a una cosa e non ci si
+	# arriva mai a trenta centimetri. Lui ci tremava davanti per il resto
+	# della giornata — `sonda_vigile` l'ha trovato fermo a (20, 13) dalle
+	# due alle otto di sera. Adesso: arrivato a sessanta centimetri è
+	# arrivato; e se per sei secondi non si avvicina di almeno trenta
+	# centimetri, quell'angolo si sposta dove sta lui (se è vicino) e si
+	# passa al prossimo.
+	var dist: float = Vector2(global_position.x - target.x,
+		global_position.z - target.z).length()
+	if dist < _meta_meglio - 0.3:
+		_meta_meglio = dist
+		_meta_ferma = 0.0
+	else:
+		_meta_ferma += delta
+	if dist < 0.6 or _meta_ferma > 6.0:
+		if _meta_ferma > 6.0 and dist < 3.0:
+			patrol_points[_patrol_idx] = Vector3(global_position.x,
+				target.y, global_position.z)
 		_patrol_idx = (_patrol_idx + 1) % patrol_points.size()
+		_meta_meglio = INF
+		_meta_ferma = 0.0
+
+
+var _meta_meglio: float = INF
+var _meta_ferma: float = 0.0
 
 
 ## Camminata. `moved` è la distanza fatta nel frame: diviso il delta è la

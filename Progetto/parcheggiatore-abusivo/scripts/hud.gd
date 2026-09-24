@@ -9,7 +9,7 @@ var heat_bar: ProgressBar
 var timer_label: Label
 var giorno_label: Label
 var fascia_label: Label
-var prompt_label: Label
+var prompt_label: Control  # 0.62: riga_comandi.gd (ha `text` come una Label)
 var crosshair: Control
 var _segno: Control
 var _segno_t: float = 0.0
@@ -242,6 +242,10 @@ func _process(delta: float) -> void:
 		_zona_visibile -= delta
 		if zona_label:
 			zona_label.modulate.a = clampf(_zona_visibile, 0.0, 1.0)
+			# 0.62: sta dentro alla scheda, e una riga trasparente occupa
+			# posto lo stesso: finita la dissolvenza si svuota.
+			if _zona_visibile <= 0.0:
+				zona_label.text = ""
 	Pad.aggiorna()
 	var ora_pad := Pad.collegato()
 	if ora_pad != _era_pad:
@@ -271,6 +275,7 @@ func _process(delta: float) -> void:
 			nemico_panel.visible = false
 
 	_update_pickpocket(delta)
+	_spegni_vuote()
 	_update_servizio()
 	_update_client_pointer()
 	_update_emblem_pointer()
@@ -402,11 +407,8 @@ func _passo_pacco(delta: float) -> void:
 	GameManager.passo_pacco(delta, visto)
 	if pacco_bar != null:
 		pacco_bar.value = GameManager.pacco_caldo
-		var st := StyleBoxFlat.new()
-		st.bg_color = Color(0.92, 0.28, 0.22) if GameManager.pacco_caldo > 55.0 \
-			else Color(0.96, 0.74, 0.28)
-		st.set_corner_radius_all(3)
-		pacco_bar.add_theme_stylebox_override("fill", st)
+		UiStile.colora_barra(pacco_bar, Color(0.92, 0.28, 0.22)
+			if GameManager.pacco_caldo > 55.0 else Color(0.96, 0.74, 0.28))
 	if pacco_cap != null:
 		pacco_cap.text = "'O pacco — %s" % ("TE STANNO GUARDANNO!" if visto
 			else "portalo 'a %s" % str(l.get("nome_a", "")))
@@ -549,8 +551,12 @@ func _update_emblem_pointer() -> void:
 	if best == null:
 		emblem_pointer.text = ""
 		return
-	if best_dist < 3.0:
-		emblem_pointer.text = Pad.traduci("★  guarda l'auto e premi E per svitare lo stemma")
+	if best_dist < 4.0:
+		# Da vicino lo dice già la riga dei comandi sotto al mirino, se la
+		# stai guardando; se no, un promemoria corto.
+		var riga_piena: bool = prompt_label != null and prompt_label.visible
+		emblem_pointer.text = "" if riga_piena else \
+			Pad.traduci("★  guarda 'a machina e premi [G] pe' svità 'o stemma")
 		return
 	emblem_pointer.text = "★  stemma da fottere %s — %d m" % [
 		_direction_hint(best.global_position), int(round(best_dist))]
@@ -817,102 +823,96 @@ func _cruscotto() -> void:
 
 
 func _build_ui() -> void:
-	money_label = _make_label(Vector2(16, 12), "€ 0", 22)
-	add_child(money_label)
-
-	# **La scritta sta SOPRA la sua barra, non sotto.**
+	# =====================================================================
+	# **'A faccia nova d''o HUD (0.62).**
 	#
-	# Prima stava sotto, e c'erano due guai. Il primo e' che una barra di
-	# Godot non e' alta quanto le dici: il tema le impone un minimo di una
-	# ventina di pixel, quindi la barra da 18 ne occupava 28 e la scritta
-	# messa a 18 di distanza ci finiva dentro. Il secondo e' peggio: con la
-	# scritta sotto, "Sospetto vigili" stava appiccicata alla barra degli
-	# HP, e la barra verde piena si leggeva come sospetto al massimo — cioe'
-	# esattamente il contrario di quello che voleva dire.
+	# Il capo: *«Alza un po' le scritte dei tasti da premere perché stanno
+	# davanti ad altri elementi UI. Rivedi l'intera UI per farla più
+	# leggibile e bella possibile»*.
 	#
-	# Etichetta sopra, barra sotto, e l'altezza fissata con
-	# `custom_minimum_size`, che e' l'unica che il tema rispetta.
-	var heat_caption := _make_label(Vector2(16, 46), "Sospetto vigili", 12)
-	heat_caption.modulate = Color(0.86, 0.86, 0.88)
-	add_child(heat_caption)
+	# Fino alla 0.61 ogni scritta dell'HUD era una `Label` con la sua `y`
+	# scritta a mano (trappola 29), senza sfondo, sopra al 3D: la riga dei
+	# tasti a −90 dal fondo si sovrapponeva alla bussola di casa (−104),
+	# alla barra delle armi (−76) e al segnale dello stemma (−56). Adesso
+	# l'HUD è fatto di **quattro scatole** che si impilano da sole:
+	#
+	#   - in alto a sinistra la **scheda del parcheggiatore**: soldi, le
+	#     quattro barre con la loro icona, e sotto le righe che cambiano
+	#     (stemmi, sigarette, commissione);
+	#   - in alto a destra la **scheda della giornata**: ora, giorno, fascia,
+	#     servizio, il conto della sera, le stelle;
+	#   - sotto al mirino la **riga dei comandi**, coi tasti disegnati;
+	#   - in basso al centro la **pila delle bussole** (cliente, casa,
+	#     stemma) sopra alla barra delle armi, e in basso a destra la
+	#     **chiantina piccerella**.
+	#
+	# I nomi delle variabili sono quelli di prima: il resto del file non se
+	# ne accorge.
+	# =====================================================================
+	const US := preload("res://scripts/ui_stile.gd")
 
-	heat_bar = ProgressBar.new()
-	heat_bar.position = Vector2(16, 64)
-	heat_bar.custom_minimum_size = Vector2(220, 14)
-	heat_bar.size = Vector2(220, 14)
-	heat_bar.min_value = 0
-	heat_bar.max_value = 100
-	heat_bar.value = 0
-	heat_bar.show_percentage = false
-	add_child(heat_bar)
+	# --- In alto a sinistra: 'a scheda d''o parcheggiatore ----------------
+	var scheda := PanelContainer.new()
+	scheda.name = "SchedaParcheggiatore"
+	scheda.add_theme_stylebox_override("panel", US.scheda())
+	scheda.position = Vector2(14, 12)
+	scheda.custom_minimum_size = Vector2(286, 0)
+	scheda.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(scheda)
+	_scheda_sx = scheda
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 5)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	scheda.add_child(col)
 
-	# **'O pacco.** Sta subito sotto al sospetto perche' e' la stessa cosa
-	# vista da un'altra parte: quella dice quanto ti stanno guardando storto,
-	# questa quanto ti stanno guardando **mentre tieni una busta che non si
-	# puo' vedere**. Compare solo quando ne stai portando uno: una barra
-	# sempre a video, sempre a zero, e' una barra che non si legge piu'.
-	pacco_cap = _make_label(Vector2(16, 86), "'O pacco", 12)
+	var riga_soldi := HBoxContainer.new()
+	riga_soldi.add_theme_constant_override("separation", 8)
+	riga_soldi.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(riga_soldi)
+	riga_soldi.add_child(US.figura("euro", 24, US.ORO))
+	money_label = _make_label(Vector2.ZERO, "0", 26)
+	money_label.add_theme_font_override("font", US.font_titolo())
+	money_label.add_theme_color_override("font_color", US.ORO_CHIARO)
+	riga_soldi.add_child(money_label)
+
+	# **La scritta sta SOPRA la sua barra, non sotto** (0.5x). Adesso c'è
+	# anche l'icona: l'occhio (chi ti guarda), il pacco, il cuore, il
+	# fulmine. Si riconoscono senza leggere.
+	var riga_sosp := _riga_barra(col, "occhio", "Sospetto vigili", US.VERDE)
+	heat_bar = riga_sosp["barra"]
+	_riga_sospetto = riga_sosp["riga"]
+	var riga_pacco := _riga_barra(col, "pacco", "'O pacco", US.GIALLO)
+	pacco_bar = riga_pacco["barra"]
+	pacco_cap = riga_pacco["dida"]
 	pacco_cap.modulate = Color(1.0, 0.78, 0.42)
+	_riga_pacco = riga_pacco["riga"]
+	_riga_pacco.visible = false
 	pacco_cap.visible = false
-	add_child(pacco_cap)
-
-	pacco_bar = ProgressBar.new()
-	pacco_bar.position = Vector2(16, 104)
-	pacco_bar.custom_minimum_size = Vector2(220, 14)
-	pacco_bar.size = Vector2(220, 14)
-	pacco_bar.min_value = 0
-	pacco_bar.max_value = 100
-	pacco_bar.value = 0
-	pacco_bar.show_percentage = false
 	pacco_bar.visible = false
-	add_child(pacco_bar)
+	var riga_hp := _riga_barra(col, "cuore", "HP", US.VERDE,
+		GameManager.HEALTH_MAX)
+	health_bar = riga_hp["barra"]
+	health_caption = riga_hp["dida"]
+	var riga_sc := _riga_barra(col, "fulmine", "SCIATO", US.AZZURRO,
+		GameManager.SCIATO_MAX)
+	sciato_bar = riga_sc["barra"]
+	sciato_caption = riga_sc["dida"]
 
-	# Gli HP. Sta sotto il sospetto perché è l'altra barra che ti può far
-	# finire il turno male.
-	health_caption = _make_label(Vector2(16, 126), "HP", 12)
-	health_caption.modulate = Color(0.86, 0.86, 0.88)
-	add_child(health_caption)
-
-	health_bar = ProgressBar.new()
-	health_bar.position = Vector2(16, 144)
-	health_bar.custom_minimum_size = Vector2(220, 14)
-	health_bar.size = Vector2(220, 14)
-	health_bar.min_value = 0
-	health_bar.max_value = GameManager.HEALTH_MAX
-	health_bar.value = GameManager.HEALTH_MAX
-	health_bar.show_percentage = false
-	add_child(health_bar)
-
-	# **'O sciato** (0.56). Sotto agli HP, perché sono le due barre che
-	# dicono cosa **puoi ancora fare**: una quanto reggi, l'altra quanti
-	# colpi ti restano. Il colore cambia quando è quasi finito — a zero
-	# non meni più, e uno deve poterlo vedere senza contare i pugni.
-	sciato_caption = _make_label(Vector2(16, 164), "SCIATO", 12)
-	sciato_caption.modulate = Color(0.86, 0.86, 0.88)
-	add_child(sciato_caption)
-
-	sciato_bar = ProgressBar.new()
-	sciato_bar.position = Vector2(16, 182)
-	sciato_bar.custom_minimum_size = Vector2(220, 12)
-	sciato_bar.size = Vector2(220, 12)
-	sciato_bar.min_value = 0
-	sciato_bar.max_value = GameManager.SCIATO_MAX
-	sciato_bar.value = GameManager.SCIATO_MAX
-	sciato_bar.show_percentage = false
-	add_child(sciato_bar)
+	# Le righe che cambiano: stemmi, commissione, sigarette, la consegna.
+	# Dentro a una colonna sua, così quelle vuote non lasciano buchi.
+	_righe_sx = VBoxContainer.new()
+	_righe_sx.add_theme_constant_override("separation", 2)
+	_righe_sx.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(_righe_sx)
+	emblem_counter_label = _riga_testo(_righe_sx, Color(1.0, 0.85, 0.3))
+	commission_label = _riga_testo(_righe_sx, Color(0.7, 0.95, 1.0))
+	cig_label = _riga_testo(_righe_sx, Color(0.9, 0.85, 0.75))
+	cumm_label = _riga_testo(_righe_sx, Color(0.65, 1.0, 0.72))
 
 	# **'A versione, 'n basso a destra e piccerella** (0.56).
-	#
-	# Il capo l'ha chiesta, e serve a una cosa sola ma importante: chi
-	# segnala un problema deve poter dire **quale build**. "Non mi
-	# funziona" senza il numero non si può nemmeno cercare — e con una
-	# build a settimana, nel giro di un mese non si capisce più niente.
-	#
-	# Sta in basso a destra e ancorata lì: con un'ancora a sinistra, su
-	# uno schermo largo finiva in mezzo allo schermo.
 	var ver := Label.new()
 	ver.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	ver.position = Vector2(-118, -24)
+	ver.position = Vector2(-118, -22)
 	ver.size = Vector2(106, 16)
 	ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	ver.add_theme_font_size_override("font_size", 11)
@@ -930,138 +930,102 @@ func _build_ui() -> void:
 	hurt_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(hurt_flash)
 
-	# **'E tre righe 'e sotto: mo' stanno sotto overo** (0.56).
-	#
-	# Stavano a 128, 144 e 164 — cioè **esattamente sopra** all'etichetta
-	# degli HP (126), alla barra degli HP (144) e all'etichetta del fiato
-	# (164). Nella colonna di sinistra ogni riga si scrive a mano con una
-	# `y`, e la barra del fiato nuova ha spinto la colonna di venti pixel:
-	# il risultato, nella foto di collaudo, era «Commissione 'O Zio…»
-	# stampato dentro alla barra verde della salute e la parola SCIATO
-	# sopra al pacchetto di sigarette.
-	#
-	# Le barre finiscono a 194. Le righe di testo cominciano a 204, e da
-	# qui in poi chi ne aggiunge una parte da lì.
-	emblem_counter_label = _make_label(Vector2(16, 204), "", 13)
-	emblem_counter_label.modulate = Color(1.0, 0.85, 0.3)
-	add_child(emblem_counter_label)
+	# --- In alto a destra: 'a scheda d''a jurnata -------------------------
+	var destra := PanelContainer.new()
+	destra.name = "SchedaJurnata"
+	destra.add_theme_stylebox_override("panel", US.scheda())
+	destra.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	destra.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	destra.offset_left = -14.0 - 300.0
+	destra.offset_right = -14.0
+	destra.offset_top = 12.0
+	destra.custom_minimum_size = Vector2(300, 0)
+	destra.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(destra)
+	_scheda_dx = destra
+	var cd := VBoxContainer.new()
+	cd.add_theme_constant_override("separation", 2)
+	cd.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	destra.add_child(cd)
 
-	commission_label = _make_label(Vector2(16, 222), "", 13)
-	commission_label.modulate = Color(0.7, 0.95, 1.0)
-	add_child(commission_label)
+	var riga_ora := HBoxContainer.new()
+	riga_ora.alignment = BoxContainer.ALIGNMENT_END
+	riga_ora.add_theme_constant_override("separation", 8)
+	riga_ora.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cd.add_child(riga_ora)
+	riga_ora.add_child(US.figura("orologio", 20, US.TESTO_2))
+	timer_label = _make_label(Vector2.ZERO, "12:00", 26)
+	timer_label.add_theme_font_override("font", US.font_titolo())
+	timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	riga_ora.add_child(timer_label)
 
-	cig_label = _make_label(Vector2(16, 240), "", 13)
-	cig_label.modulate = Color(0.9, 0.85, 0.75)
-	add_child(cig_label)
+	# **'O juorno** e **'a fascia** (0.51): due righe, e il colore della
+	# fascia dice da solo com'è l'ora.
+	giorno_label = _riga_destra(cd, 14, Color(0.86, 0.84, 0.74))
+	fascia_label = _riga_destra(cd, 14, Color(1, 1, 1))
+	fascia_label.add_theme_font_override("font", US.font_grassetto())
+	servizio_label = _riga_destra(cd, 15, Color(1, 1, 1))
+	servizio_label.add_theme_font_override("font", US.font_grassetto())
+	servizio_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	zona_label = _riga_destra(cd, 15, Color(1, 1, 1))
 
-	# **'O conto d''a sera, sempe 'nnanze a ll'uocchie.**
-	#
-	# È la riga che cambia il significato di tutto il resto del gioco. Con
-	# «'A luce €58 · 'O fitto €121 — ce vonno €179» scritto in alto a
-	# destra, tre euro di mancia non sono più tre euro: sono tre dei
-	# centosettantanove. Non è una notifica che passa — è lì per tutta la
-	# giornata, e quando finisce a zero è l'unica cosa che diventa verde.
-	conto_label = _make_label(Vector2(0, 96), "", 15)
-	conto_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	conto_label.position = Vector2(-360, 96)
-	conto_label.size = Vector2(344, 22)
-	conto_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	conto_label.modulate = Color(1.0, 0.78, 0.42)
-	add_child(conto_label)
+	# **'O conto d''a sera, sempe 'nnanze a ll'uocchie.** Un filo sopra, per
+	# staccarlo dall'ora: è un'altra cosa.
+	var filo := HSeparator.new()
+	filo.add_theme_constant_override("separation", 6)
+	filo.add_theme_stylebox_override("separator",
+		US.box(Color(1, 1, 1, 0.10), Color(0, 0, 0, 0), 0, 0, 0.0, 0.0))
+	filo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cd.add_child(filo)
+	conto_label = _riga_destra(cd, 16, Color(1.0, 0.78, 0.42))
+	conto_label.add_theme_font_override("font", US.font_grassetto())
+	conto_voci = _riga_destra(cd, 12, Color(0.86, 0.80, 0.72))
+	conto_voci.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
-	conto_voci = _make_label(Vector2(0, 118), "", 12)
-	conto_voci.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	conto_voci.position = Vector2(-360, 118)
-	conto_voci.size = Vector2(344, 66)
-	conto_voci.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	conto_voci.modulate = Color(0.86, 0.80, 0.72)
-	add_child(conto_voci)
+	# --- In cima al centro: gli annunci ------------------------------------
+	# **'O cartiello ca asceva 'a fore ô schermo** (0.51): va a capo, ed è
+	# largo al massimo `BANNER_MAX`; dalla 0.62 sta dentro a una pillola che
+	# si stringe sul testo, e l'insegna del servizio e il cartello si
+	# impilano invece di cadersi addosso.
+	var alto := VBoxContainer.new()
+	alto.name = "Annunci"
+	alto.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	alto.offset_left = 330.0
+	alto.offset_right = -330.0
+	alto.offset_top = 118.0
+	alto.add_theme_constant_override("separation", 6)
+	alto.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(alto)
+	servizio_banner = _make_label(Vector2.ZERO, "", 28)
+	servizio_banner.add_theme_font_override("font", US.font_titolo())
+	servizio_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	servizio_banner.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	alto.add_child(servizio_banner)
+	servizio_sub = _make_label(Vector2.ZERO, "", 17)
+	servizio_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	servizio_sub.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	US.a_pillola(servizio_sub)
+	alto.add_child(servizio_sub)
 
-	# 'A cummissione ca staje purtanno, cu 'o tiempo ca resta. Sta sotto
-	# ê ttre righe 'e primma: 204, 222, 240 — e po' chesta.
-	cumm_label = _make_label(Vector2(16, 258), "", 13)
-	cumm_label.modulate = Color(0.65, 1.0, 0.72)
-	add_child(cumm_label)
-
-	# Bussola verso il cliente in attesa: la piazza è grande e senza un
-	# riferimento si finisce a girare a vuoto cercando chi è arrivato.
-	# Segnalatore stemmi: come la bussola dei clienti, ma per la roba da
-	# fottere. Senza, gli stemmi restavano invisibili in mezzo alla piazza.
-	# La freccia verso casa sta SOPRA quella del cliente: quando sono le
-	# quattro del mattino è l'unica informazione che conta, e deve stare
-	# dove l'occhio va per primo.
-	casa_pointer = _make_label(Vector2(0, 0), "", 18)
-	casa_pointer.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	casa_pointer.position = Vector2(-300, -104)
-	casa_pointer.size = Vector2(600, 26)
-	casa_pointer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	casa_pointer.modulate = Color(1.0, 0.72, 0.34)
-	add_child(casa_pointer)
-
-	emblem_pointer = _make_label(Vector2(0, 0), "", 16)
-	emblem_pointer.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	emblem_pointer.position = Vector2(-300, -56)
-	emblem_pointer.size = Vector2(600, 24)
-	emblem_pointer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	emblem_pointer.modulate = Color(1.0, 0.82, 0.28)
-	add_child(emblem_pointer)
-
-	client_pointer = _make_label(Vector2(0, 0), "", 17)
-	client_pointer.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	# Sopra alla barra della mano, non addosso: la barra sta a -76 e alta
-	# 42, quindi la bussola deve stare almeno a -122.
-	client_pointer.position = Vector2(-300, -126)
-	client_pointer.size = Vector2(600, 26)
-	client_pointer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	client_pointer.modulate = Color(1.0, 0.9, 0.45)
-	add_child(client_pointer)
-
-	# **'O cartiello ca asceva 'a fore ô schermo.**
-	#
-	# Ottocento pixel a corpo 28 fanno una sessantina di lettere, e
-	# diciotto messaggi del gioco ne hanno di più: *"%s mo' fatica pe' te a
-	# %s. 'A sera passa a piglià 'e sorde: se tene 'o 30%%"* ne ha
-	# settantasei. Il Label non andava a capo da solo, quindi la coda della
-	# frase finiva fuori dal bordo e non la leggeva nessuno — e il difetto
-	# non si vedeva provando, perché i cartelli corti (che sono i più
-	# frequenti) stavano dentro.
-	#
-	# Adesso la riga è larga millecento, va a capo, e il corpo si stringe
-	# di un paio di punti quando la frase è lunga: vedi `_on_event_started`.
+	# Il cartello sta fuori dalla pila: è largo fino a `BANNER_MAX` e deve
+	# poter essere più largo della colonna in mezzo alle due schede.
 	event_banner = _make_label(Vector2(0, 0), "", 28)
 	event_banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	event_banner.position = Vector2(-550, 186)
-	event_banner.size = Vector2(1100, 76)
+	event_banner.position = Vector2(-BANNER_MAX * 0.5, 196)
+	event_banner.size = Vector2(BANNER_MAX, 76)
 	event_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	event_banner.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	event_banner.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	event_banner.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	event_banner.pivot_offset = Vector2(550, 20)
+	event_banner.pivot_offset = Vector2(BANNER_MAX * 0.5, 20)
 	event_banner.modulate = Color(1.0, 0.6, 0.2)
+	event_banner.add_theme_font_override("font", US.font_grassetto())
+	US.a_pillola(event_banner, Color(1, 1, 1, 0.16), 0.78)
 	add_child(event_banner)
 
-	zona_label = _make_label(Vector2(0, 46), "", 17)
-	zona_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	zona_label.position = Vector2(-420, 44)
-	zona_label.size = Vector2(404, 26)
-	zona_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	# Mancava questo: l'insegna della zona veniva costruita e poi mai
-	# attaccata al HUD. Era invisibile da sempre.
-	add_child(zona_label)
-
-	# **«Clicca pe' piglià 'o mouse»** (0.56b).
-	#
-	# Sul browser il Pointer Lock si perde da solo — basta un Esc — e da
-	# fuori non si vede niente: il cursore ricompare e la testa smette di
-	# girare. Uno resta lì a muovere il mouse senza capire, e la conclusione
-	# che tira è che il gioco è rotto.
-	#
-	# Il click che lo rimette a posto c'è già (`player_fps._unhandled_input`),
-	# ma un rimedio che nessuno sa di avere non è un rimedio. Questa riga sta
-	# in mezzo allo schermo, grossa, e compare **solo** quando il gioco vuole
-	# il mouse e non ce l'ha: su Windows non si vede mai.
+	# **«Clicca pe' piglià 'o mouse»** (0.56b): solo sul browser.
 	mouse_hint = _make_label(Vector2(0, 0), "", 20)
 	mouse_hint.set_anchors_preset(Control.PRESET_CENTER)
-	mouse_hint.position = Vector2(-260, 78)
+	mouse_hint.position = Vector2(-260, 118)
 	mouse_hint.size = Vector2(520, 30)
 	mouse_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	mouse_hint.modulate = Color(1.0, 0.88, 0.42)
@@ -1069,22 +1033,12 @@ func _build_ui() -> void:
 	add_child(mouse_hint)
 
 	# **'O cruscotto** (0.57): si vede solo quando guidi una rubata.
-	#
-	# Due righe e una freccia, e nient'altro. Quello che serve a uno che sta
-	# attraversando la città con una macchina che non è sua è: **quanto vado**
-	# (perché lo sterzo si chiude con la velocità, e se non lo vedi non lo
-	# capisci), **quanto manca** e **da che parte sta**. Una mappa no: se
-	# apri la mappa mentre guidi a diciannove metri al secondo dentro a un
-	# vicolo, sei già dentro a un muro.
-	# Ancorati al CENTRO e non al fondo, come `mouse_hint`: è il solo
-	# ancoraggio di questo HUD che si sa per certo che tiene le misure che
-	# gli scrivi (i preset "wide" ricalcolano la larghezza dagli anchor e si
-	# mangiano `size`). Stanno sotto al mirino e sopra alle barre.
 	cruscotto = _make_label(Vector2(0, 0), "", 20)
 	cruscotto.set_anchors_preset(Control.PRESET_CENTER)
 	cruscotto.position = Vector2(-340, 176)
-	cruscotto.size = Vector2(680, 30)
+	cruscotto.size = Vector2(680, 34)
 	cruscotto.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cruscotto.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	cruscotto.modulate = Color(1.0, 0.86, 0.46)
 	cruscotto.visible = false
 	add_child(cruscotto)
@@ -1098,92 +1052,35 @@ func _build_ui() -> void:
 	cruscotto_freccia.visible = false
 	add_child(cruscotto_freccia)
 
-	# La targa della strada: in basso a sinistra, sopra alle barre.
-	strada_label = _make_label(Vector2(16, 0), "", 17)
+	# La targa della strada: in basso a sinistra, come le targhe di marmo
+	# dei vicoli (bianca, lettere scure, cornice).
+	strada_label = _make_label(Vector2(16, 0), "", 16)
 	strada_label.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	strada_label.position = Vector2(16, -46)
-	strada_label.size = Vector2(420, 26)
+	strada_label.position = Vector2(16, -52)
+	strada_label.add_theme_font_override("font", US.font_grassetto())
+	strada_label.add_theme_color_override("font_color", Color(0.16, 0.13, 0.10))
+	strada_label.add_theme_constant_override("outline_size", 0)
+	var marmo := US.box(Color(0.96, 0.94, 0.89, 0.95),
+		Color(0.36, 0.30, 0.24), 3, 4, 14.0, 5.0)
+	marmo.shadow_color = Color(0, 0, 0, 0.35)
+	marmo.shadow_size = 4
+	strada_label.add_theme_stylebox_override("normal", marmo)
 	add_child(strada_label)
-
-	# La targhetta del servizio: sta sempre a schermo e dice, in due parole,
-	# se in questo momento stai lavorando o stai solo passeggiando. È la
-	# risposta alla domanda "perché non arriva nessuna macchina?".
-	servizio_label = _make_label(Vector2(0, 0), "", 16)
-	servizio_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	servizio_label.position = Vector2(-420, 70)
-	servizio_label.size = Vector2(404, 24)
-	servizio_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	add_child(servizio_label)
-
-	# L'insegna grande che compare quando entri o esci dalla piazza tua.
-	servizio_banner = _make_label(Vector2(0, 0), "", 30)
-	servizio_banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	servizio_banner.position = Vector2(-460, 132)
-	servizio_banner.size = Vector2(920, 44)
-	servizio_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(servizio_banner)
-
-	servizio_sub = _make_label(Vector2(0, 0), "", 17)
-	servizio_sub.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	servizio_sub.position = Vector2(-460, 172)
-	servizio_sub.size = Vector2(920, 26)
-	servizio_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(servizio_sub)
-
-	timer_label = _make_label(Vector2(0, 12), "03:00", 22)
-	timer_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	timer_label.position = Vector2(-160, 12)
-	timer_label.size = Vector2(144, 30)
-	timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	add_child(timer_label)
-
-	# **'O juorno.**
-	#
-	# L'orologio diceva che ora era ma non che **giorno** era, e il gioco è
-	# tutto costruito sui giorni: il conto della sera arriva ogni sera, il
-	# fitto ogni tot, le scadenze si contano in giorni di ritardo, la
-	# roadmap parla di una partita di trenta giornate. Il numero c'era già
-	# dentro (`GameManager.giornata`) e non stava scritto da nessuna parte.
-	giorno_label = _make_label(Vector2(0, 36), "", 14)
-	giorno_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	giorno_label.position = Vector2(-160, 36)
-	giorno_label.size = Vector2(144, 20)
-	giorno_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	giorno_label.modulate = Color(0.86, 0.84, 0.74)
-	add_child(giorno_label)
-
-	# **'A fascia.**
-	#
-	# Sotto al giorno, una riga sola: *'a controra*, *'e ttre morte*,
-	# *ll'aperitivo*, *'e rristorante*, *'a nuttata*. Dalla 0.51 l'ora
-	# comanda quanto spesso arrivano le macchine e quanto lasciano, e un
-	# numero che cambia il gioco di tre volte non può restare invisibile.
-	#
-	# Sta su una riga sua e non appiccicata al giorno, per due motivi: le
-	# quattordici lettere di "'e rristorante" non ci stavano (uscivano dal
-	# bordo destro dello schermo), e il **colore** dice da solo com'è
-	# l'ora — arancio quando la piazza è vuota, verde quando cammina,
-	# azzurro di notte. Si legge senza leggerla.
-	fascia_label = _make_label(Vector2(0, 52), "", 13)
-	fascia_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	fascia_label.position = Vector2(-420, 52)
-	fascia_label.size = Vector2(404, 18)
-	fascia_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	add_child(fascia_label)
 
 	crosshair = Control.new()
 	crosshair.set_anchors_preset(Control.PRESET_CENTER)
-	crosshair.position = Vector2(-2, -2)
-	crosshair.size = Vector2(4, 4)
-	var dot := ColorRect.new()
-	dot.size = Vector2(4, 4)
-	dot.color = Color(1, 1, 1, 0.85)
-	crosshair.add_child(dot)
+	crosshair.position = Vector2(-3, -3)
+	crosshair.size = Vector2(6, 6)
+	crosshair.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var anello := Panel.new()
+	anello.size = Vector2(6, 6)
+	anello.add_theme_stylebox_override("panel",
+		US.box(Color(1, 1, 1, 0.9), Color(0, 0, 0, 0.55), 1, 3, 0.0, 0.0))
+	anello.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	crosshair.add_child(anello)
 	add_child(crosshair)
 	# **'A crocetta** (0.61): quattro trattini obliqui attorno al mirino,
 	# per un decimo di secondo, quando un colpo arriva addosso a qualcuno.
-	# È la risposta a «non si capisce se si stanno usando»: il suono dice
-	# che hai menato, la crocetta dice che hai preso.
 	_segno = Control.new()
 	_segno.set_anchors_preset(Control.PRESET_CENTER)
 	_segno.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1199,12 +1096,45 @@ func _build_ui() -> void:
 	_segno.modulate.a = 0.0
 	add_child(_segno)
 
-	prompt_label = _make_label(Vector2(0, 0), "", 18)
-	prompt_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	prompt_label.position = Vector2(-320, -90)
-	prompt_label.size = Vector2(640, 30)
-	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(prompt_label)
+	# --- Sotto al mirino: 'a riga d''e comandi -----------------------------
+	# Una colonna larga quanto lo schermo, che parte sessanta pixel sotto al
+	# centro; la pillola dentro si stringe sul testo e sta in mezzo.
+	var sotto_mirino := VBoxContainer.new()
+	sotto_mirino.name = "SottoMirino"
+	sotto_mirino.anchor_left = 0.0
+	sotto_mirino.anchor_right = 1.0
+	sotto_mirino.anchor_top = 0.5
+	sotto_mirino.anchor_bottom = 0.5
+	sotto_mirino.offset_top = 44.0
+	sotto_mirino.offset_bottom = 44.0
+	sotto_mirino.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(sotto_mirino)
+	prompt_label = preload("res://scripts/riga_comandi.gd").new()
+	prompt_label.name = "RigaComandi"
+	sotto_mirino.add_child(prompt_label)
+
+	# --- In basso al centro: 'e bussole sopra a 'e mmane --------------------
+	_pila_bassa = VBoxContainer.new()
+	_pila_bassa.name = "PilaBassa"
+	_pila_bassa.anchor_left = 0.0
+	_pila_bassa.anchor_right = 1.0
+	_pila_bassa.anchor_top = 1.0
+	_pila_bassa.anchor_bottom = 1.0
+	_pila_bassa.offset_left = 240.0
+	_pila_bassa.offset_right = -240.0
+	_pila_bassa.offset_top = -16.0
+	_pila_bassa.offset_bottom = -16.0
+	_pila_bassa.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_pila_bassa.alignment = BoxContainer.ALIGNMENT_END
+	_pila_bassa.add_theme_constant_override("separation", 6)
+	_pila_bassa.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_pila_bassa)
+
+	# La freccia verso casa sta SOPRA quella del cliente: quando sono le
+	# quattro del mattino è l'unica informazione che conta.
+	casa_pointer = _pillola_bassa(18, Color(1.0, 0.72, 0.34))
+	client_pointer = _pillola_bassa(17, Color(1.0, 0.9, 0.45))
+	emblem_pointer = _pillola_bassa(15, Color(1.0, 0.82, 0.28))
 
 	_build_directing_ui()
 	_build_inventory_ui()
@@ -1218,7 +1148,159 @@ func _build_ui() -> void:
 	mappa = MappaScript.new()
 	mappa.name = "Mappa"
 	add_child(mappa)
+	# 'A chiantina piccerella, in basso a destra (0.62).
+	_minimappa = preload("res://scripts/minimappa.gd").new()
+	_minimappa.name = "Minimappa"
+	var cornice := PanelContainer.new()
+	cornice.name = "CorniceMinimappa"
+	var st_c := US.box(Color(0.05, 0.055, 0.075, 0.7), Color(1, 1, 1, 0.16), 2,
+		12, 4.0, 4.0)
+	st_c.shadow_color = Color(0, 0, 0, 0.3)
+	st_c.shadow_size = 6
+	cornice.add_theme_stylebox_override("panel", st_c)
+	cornice.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	cornice.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	cornice.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	cornice.offset_left = -14.0 - 198.0
+	cornice.offset_right = -14.0
+	cornice.offset_top = -30.0 - 198.0
+	cornice.offset_bottom = -30.0
+	cornice.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cornice.add_child(_minimappa)
+	add_child(cornice)
+	_cornice_minimappa = cornice
+	_aggancia_minimappa.call_deferred()
 	_build_summary_ui()
+
+
+# ---------------------------------------------------------------------------
+# I pezzi dell'HUD nuovo (0.62)
+# ---------------------------------------------------------------------------
+
+## La larghezza massima del cartello degli eventi (vedi `prova_cartielle`).
+const BANNER_MAX: float = 1100.0
+
+var _scheda_sx: PanelContainer
+var _scheda_dx: PanelContainer
+var _righe_sx: VBoxContainer
+var _riga_sospetto: Control
+var _riga_pacco: Control
+var _pila_bassa: VBoxContainer
+var _minimappa: Control
+var _cornice_minimappa: Control
+var _banner_ultimo: String = ""
+
+
+## Una riga con l'icona, la didascalia sopra e la barra sotto.
+func _riga_barra(dove: Control, icona: String, dida: String, colore: Color,
+		massimo: float = 100.0) -> Dictionary:
+	const US := preload("res://scripts/ui_stile.gd")
+	var r := HBoxContainer.new()
+	r.add_theme_constant_override("separation", 8)
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dove.add_child(r)
+	r.add_child(US.figura(icona, 18, colore.lerp(Color(1, 1, 1), 0.25)))
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 1)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	r.add_child(v)
+	var l := _make_label(Vector2.ZERO, dida, 12)
+	l.add_theme_font_override("font", US.font_grassetto())
+	l.modulate = Color(0.86, 0.86, 0.88)
+	v.add_child(l)
+	var b := US.barra(colore, 9.0, massimo)
+	v.add_child(b)
+	return {"riga": r, "dida": l, "barra": b}
+
+
+func _riga_testo(dove: Control, colore: Color) -> Label:
+	var l := _make_label(Vector2.ZERO, "", 13)
+	l.modulate = colore
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.custom_minimum_size = Vector2(262, 0)
+	l.visible = false
+	dove.add_child(l)
+	return l
+
+
+func _riga_destra(dove: Control, corpo: int, colore: Color) -> Label:
+	var l := _make_label(Vector2.ZERO, "", corpo)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	l.modulate = colore
+	l.custom_minimum_size = Vector2(276, 0)
+	dove.add_child(l)
+	return l
+
+
+func _pillola_bassa(corpo: int, colore: Color) -> Label:
+	const US := preload("res://scripts/ui_stile.gd")
+	var l := _make_label(Vector2.ZERO, "", corpo)
+	l.add_theme_font_override("font", US.font_grassetto())
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	l.modulate = colore
+	l.add_theme_constant_override("outline_size", 0)
+	US.a_pillola(l, Color(colore.r, colore.g, colore.b, 0.35), 0.74)
+	l.visible = false
+	_pila_bassa.add_child(l)
+	return l
+
+
+func _aggancia_minimappa() -> void:
+	if _minimappa == null:
+		return
+	var citta := get_tree().get_first_node_in_group("citta")
+	if citta == null:
+		citta = get_tree().get_root().find_child("Citta", true, false)
+	_minimappa.aggancia(citta, _player_ref)
+
+
+## Le scritte che hanno uno sfondo si spengono quando sono vuote: se no
+## resta la pillola vuota a schermo. Si chiama ogni frame (costa niente).
+func _spegni_vuote() -> void:
+	for l in [servizio_sub, casa_pointer, client_pointer, emblem_pointer,
+			emblem_counter_label, commission_label, cig_label, cumm_label,
+			zona_label, strada_label, servizio_banner]:
+		if l != null:
+			var pieno: bool = (l as Label).text != ""
+			if (l as Label).visible != pieno:
+				(l as Label).visible = pieno
+	if event_banner != null and event_banner.text != _banner_ultimo:
+		_banner_ultimo = event_banner.text
+		_adatta_banner()
+	if event_banner != null:
+		event_banner.visible = event_banner.text != ""
+	if _riga_pacco != null and pacco_bar != null:
+		_riga_pacco.visible = pacco_bar.visible
+	if _cornice_minimappa != null:
+		# Mentre guidi una rubata, o con la chiantina grande aperta, la
+		# piccola si fa da parte.
+		_cornice_minimappa.visible = not ((mappa != null and mappa.visible)
+			or (inventory_panel != null and inventory_panel.visible)
+			or (shop_panel != null and shop_panel.visible)
+			or (summary_panel != null and summary_panel.visible)
+			or GameManager.auto_guidata != null)
+
+
+## Il cartello si stringe sul testo (fino a `BANNER_MAX`) e resta centrato.
+##
+## Attenzione: a HUD già nell'albero `position` è in coordinate dello
+## schermo, non l'offset dall'ancora — per restare centrato si scrivono gli
+## `offset_*` (a costruzione, fuori dall'albero, le due cose coincidevano).
+func _adatta_banner() -> void:
+	if event_banner == null or event_banner.text == "":
+		return
+	var f: Font = event_banner.get_theme_font("font")
+	var corpo: int = event_banner.get_theme_font_size("font_size")
+	var w: float = f.get_string_size(event_banner.text, HORIZONTAL_ALIGNMENT_LEFT,
+		-1, corpo).x + 44.0
+	w = clampf(w, 160.0, BANNER_MAX)
+	event_banner.offset_left = -w * 0.5
+	event_banner.offset_right = w * 0.5
+	event_banner.offset_top = 196.0
+	event_banner.offset_bottom = 196.0 + 40.0
+	event_banner.pivot_offset = Vector2(w * 0.5, 20)
 
 
 ## Il boss: barra della furia in alto e il riquadro delle risposte.
@@ -1321,13 +1403,14 @@ func _on_minaccia(posizione: Vector3) -> void:
 
 func _build_mano_ui() -> void:
 	mano_ui = HBoxContainer.new()
-	mano_ui.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	mano_ui.position = Vector2(-260, -76)
-	mano_ui.custom_minimum_size = Vector2(520, 42)
+	# 0.62: ultima della pila in basso al centro, sotto alle bussole.
 	mano_ui.alignment = BoxContainer.ALIGNMENT_CENTER
 	mano_ui.add_theme_constant_override("separation", 8)
 	mano_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(mano_ui)
+	if _pila_bassa != null:
+		_pila_bassa.add_child(mano_ui)
+	else:
+		add_child(mano_ui)
 	for i in range(3):
 		# **Le caselle si allargano sul testo, non il contrario.**
 		#
@@ -1338,22 +1421,17 @@ func _build_mano_ui() -> void:
 		# leggeva "2/'O curtiello". Con PanelContainer + MarginContainer la
 		# casella prende la misura dal testo e il problema non esiste.
 		var casella := PanelContainer.new()
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(0.06, 0.06, 0.08, 0.80 if i == 1 else 0.42)
-		sb.border_color = Color(1.0, 0.82, 0.35, 0.9) if i == 1 \
-			else Color(0.5, 0.5, 0.55, 0.35)
-		sb.set_border_width_all(2 if i == 1 else 1)
-		sb.set_corner_radius_all(6)
-		sb.content_margin_left = 12
-		sb.content_margin_right = 12
-		sb.content_margin_top = 6
-		sb.content_margin_bottom = 6
+		var sb := UiStile.box(Color(0.05, 0.055, 0.075, 0.82 if i == 1 else 0.5),
+			Color(UiStile.ORO.r, UiStile.ORO.g, UiStile.ORO.b, 0.95) if i == 1
+			else Color(1, 1, 1, 0.14), 2 if i == 1 else 1, 10, 14.0, 6.0)
 		casella.add_theme_stylebox_override("panel", sb)
 		casella.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var et := Label.new()
 		et.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		et.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		et.add_theme_font_size_override("font_size", 14 if i == 1 else 11)
+		et.add_theme_font_size_override("font_size", 15 if i == 1 else 12)
+		if i == 1:
+			et.add_theme_font_override("font", UiStile.font_grassetto())
 		et.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 		et.add_theme_constant_override("outline_size", 3)
 		et.modulate = Color(1, 1, 1) if i == 1 else Color(0.70, 0.70, 0.74)
@@ -1395,15 +1473,18 @@ func _aggiorna_mano(_id: String) -> void:
 
 func _build_stelle_ui() -> void:
 	stelle_ui = Control.new()
-	stelle_ui.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	# Sotto all'orologio e sotto alla targhetta del servizio: a 44 pixel
-	# finivano dentro all'ora, che sta anch'essa in alto a destra.
-	stelle_ui.position = Vector2(-186, 102)
-	stelle_ui.size = Vector2(170, 34)
+	# 0.62: dentro alla scheda della giornata, sotto all'ora; la scheda
+	# le fa posto da sola quando compaiono.
+	stelle_ui.custom_minimum_size = Vector2(160, 32)
+	stelle_ui.size_flags_horizontal = Control.SIZE_SHRINK_END
 	stelle_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	stelle_ui.set_script(preload("res://scripts/stelle.gd"))
 	stelle_ui.visible = GameManager.stelle > 0
-	add_child(stelle_ui)
+	if _scheda_dx != null:
+		(_scheda_dx.get_child(0) as VBoxContainer).add_child(stelle_ui)
+		(_scheda_dx.get_child(0) as VBoxContainer).move_child(stelle_ui, 1)
+	else:
+		add_child(stelle_ui)
 
 
 func _on_stelle_cambiate(quante: int) -> void:
@@ -1640,15 +1721,13 @@ func _on_boss_dialogue_closed() -> void:
 ## e sopra alla piazza — che e' chiara e piena di roba — il testo non si
 ## legge: si leggeva l'asfalto attraverso le lettere.
 func _stile_pannello(colore_bordo: Color) -> StyleBoxFlat:
-	var st := StyleBoxFlat.new()
-	st.bg_color = Color(0.09, 0.08, 0.11, 0.97)
-	st.border_color = colore_bordo
-	st.set_border_width_all(2)
-	st.set_corner_radius_all(10)
-	st.shadow_color = Color(0, 0, 0, 0.55)
-	st.shadow_size = 10
-	st.content_margin_left = 6
-	st.content_margin_right = 6
+	# 0.62: gli stessi pannelli, col passo nuovo — più scuri, angoli più
+	# tondi, il filo d'oro al posto del bordo marrone.
+	var st := UiStile.box(Color(0.075, 0.08, 0.105, 0.96),
+		colore_bordo.lerp(UiStile.ORO, 0.55), 2, 14, 6.0, 0.0)
+	st.shadow_color = Color(0, 0, 0, 0.5)
+	st.shadow_size = 14
+	st.shadow_offset = Vector2(0, 5)
 	return st
 
 
@@ -1666,7 +1745,8 @@ func _build_shop_ui() -> void:
 	shop_title.position = Vector2(12, 10)
 	shop_title.size = Vector2(368, 26)
 	shop_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	shop_title.add_theme_font_size_override("font_size", 18)
+	shop_title.add_theme_font_override("font", UiStile.font_titolo())
+	shop_title.add_theme_font_size_override("font_size", 20)
 	shop_title.text = "BANCHETTO 'E 'O ZIO"
 	shop_title.modulate = Color(1.0, 0.8, 0.25)
 	shop_panel.add_child(shop_title)
@@ -1868,9 +1948,10 @@ func _build_inventory_ui() -> void:
 	title.position = Vector2(12, 8)
 	title.size = Vector2(360, 26)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 18)
+	title.add_theme_font_size_override("font_size", 21)
+	title.add_theme_font_override("font", UiStile.font_titolo())
 	title.text = "ZAINO  [I]"
-	title.modulate = Color(1.0, 0.85, 0.3)
+	title.modulate = UiStile.ORO_CHIARO
 	inventory_panel.add_child(title)
 
 	_inv_grid = Control.new()
@@ -2044,40 +2125,44 @@ func _build_pause_menu() -> void:
 	# Alzato a 440 per far posto alle due manopole del volume (0.56): con
 	# 364 i cursori finivano oltre il bordo del pannello e si vedevano
 	# per metà.
-	pause_panel.position = Vector2(-190, -220)
-	pause_panel.size = Vector2(380, 440)
+	# 0.62: più largo e più alto, bottoni da 44, la versione in fondo
+	# (prima stava a 336 — sotto a "Esci dal gioco").
+	pause_panel.position = Vector2(-200, -262)
+	pause_panel.size = Vector2(400, 524)
 	pause_panel.visible = false
 	pause_panel.add_theme_stylebox_override("panel",
 		_stile_pannello(Color(0.6, 0.52, 0.34)))
 	add_child(pause_panel)
 
 	var title := Label.new()
-	title.position = Vector2(10, 14)
-	title.size = Vector2(360, 34)
+	title.position = Vector2(10, 16)
+	title.size = Vector2(380, 40)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_font_override("font", UiStile.font_titolo())
+	title.add_theme_color_override("font_color", UiStile.ORO_CHIARO)
 	title.text = "PAUSA"
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pause_panel.add_child(title)
 
 	_pause_first_btn = Button.new()
 	var resume_btn := _pause_first_btn
-	resume_btn.position = Vector2(90, 62)
-	resume_btn.size = Vector2(200, 40)
+	resume_btn.position = Vector2(60, 76)
+	resume_btn.size = Vector2(280, 44)
 	resume_btn.text = "Riprendi"
 	resume_btn.pressed.connect(_resume_game)
 	pause_panel.add_child(resume_btn)
 
 	var save_btn := Button.new()
-	save_btn.position = Vector2(90, 110)
-	save_btn.size = Vector2(200, 40)
+	save_btn.position = Vector2(60, 128)
+	save_btn.size = Vector2(280, 44)
 	save_btn.text = "Salva 'a partita"
 	save_btn.pressed.connect(func(): _apri_slot("salva"))
 	pause_panel.add_child(save_btn)
 
 	var load_btn := Button.new()
-	load_btn.position = Vector2(90, 158)
-	load_btn.size = Vector2(200, 40)
+	load_btn.position = Vector2(60, 180)
+	load_btn.size = Vector2(280, 44)
 	load_btn.text = "Carica 'na partita"
 	load_btn.pressed.connect(func(): _apri_slot("carica"))
 	pause_panel.add_child(load_btn)
@@ -2090,8 +2175,8 @@ func _build_pause_menu() -> void:
 	# partita non aveva dove guardarlo. Le pagine sono le stesse del menu
 	# — stanno in `tutoriale.gd`, in un posto solo.
 	var tut_btn := Button.new()
-	tut_btn.position = Vector2(90, 206)
-	tut_btn.size = Vector2(200, 40)
+	tut_btn.position = Vector2(60, 232)
+	tut_btn.size = Vector2(280, 44)
 	tut_btn.text = "Comme se joca"
 	tut_btn.pressed.connect(_apri_tutoriale)
 	pause_panel.add_child(tut_btn)
@@ -2100,21 +2185,21 @@ func _build_pause_menu() -> void:
 	# uno la spegne per ascoltare altro, gli effetti li abbassa perché il
 	# clacson a tre metri è forte davvero. Si ricordano fra una partita e
 	# l'altra (`user://audio.cfg`).
-	_slider_volume("Suone", 258, SoundManager.vol_effetti,
+	_slider_volume("Suone", 318, SoundManager.vol_effetti,
 		func(v): SoundManager.set_vol_effetti(v))
-	_slider_volume("Musica", 296, SoundManager.vol_musica,
+	_slider_volume("Musica", 362, SoundManager.vol_musica,
 		func(v): SoundManager.set_vol_musica(v))
 
 	var quit_btn := Button.new()
-	quit_btn.position = Vector2(90, 336)
-	quit_btn.size = Vector2(200, 40)
+	quit_btn.position = Vector2(60, 400)
+	quit_btn.size = Vector2(280, 44)
 	quit_btn.text = "Esci dal gioco"
 	quit_btn.pressed.connect(func(): get_tree().quit())
 	pause_panel.add_child(quit_btn)
 
 	var hint := Label.new()
-	hint.position = Vector2(10, 392)
-	hint.size = Vector2(360, 24)
+	hint.position = Vector2(10, 452)
+	hint.size = Vector2(380, 22)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", 12)
 	hint.text = "Esc per riprendere"
@@ -2126,8 +2211,8 @@ func _build_pause_menu() -> void:
 	# Il numero di versione, in piccolo. Serve a chi segnala un problema:
 	# "non mi funziona" senza la versione non si puo' nemmeno cercare.
 	var ver := Label.new()
-	ver.position = Vector2(10, 336)
-	ver.size = Vector2(360, 18)
+	ver.position = Vector2(10, 480)
+	ver.size = Vector2(380, 18)
 	ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ver.add_theme_font_size_override("font_size", 10)
 	ver.text = "Parcheggiatore Abusivo Simulator  ·  %s" % VERSIONE
@@ -2758,12 +2843,15 @@ func _on_money_changed(amount: int) -> void:
 	if _last_money >= 0 and amount > _last_money:
 		_spawn_money_popup(amount - _last_money)
 	_last_money = amount
-	money_label.text = "€ %d" % amount
+	# L'euro ce lo mette l'icona accanto (0.62).
+	money_label.text = "%d" % amount
 
 
 func _spawn_money_popup(delta_money: int) -> void:
-	var popup := _make_label(Vector2(0, 0), "+€%d" % delta_money, 20)
-	popup.position = money_label.position + Vector2(randf_range(70, 110), 2)
+	var popup := _make_label(Vector2(0, 0), "+€%d" % delta_money, 22)
+	popup.add_theme_font_override("font", UiStile.font_titolo())
+	popup.position = money_label.global_position + Vector2(
+		money_label.size.x + randf_range(14, 40), 0)
 	popup.modulate = Color(0.4, 1.0, 0.5)
 	popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(popup)
@@ -2851,10 +2939,7 @@ func _on_health_changed(value: float) -> void:
 		col = Color(0.9, 0.72, 0.25)
 	else:
 		col = Color(0.9, 0.25, 0.22)
-	var style := StyleBoxFlat.new()
-	style.bg_color = col
-	style.set_corner_radius_all(3)
-	health_bar.add_theme_stylebox_override("fill", style)
+	UiStile.colora_barra(health_bar, col)
 	health_caption.text = "HP" if ratio > 0.3 else "HP — STAI MALE"
 	health_caption.modulate = Color.WHITE if ratio > 0.3 else Color(1.0, 0.45, 0.4)
 
@@ -2869,12 +2954,14 @@ func _on_player_hurt(_amount: float, cause: String) -> void:
 
 func _on_heat_changed(heat: float) -> void:
 	heat_bar.value = heat
+	# 0.62: si tinge il pieno, non tutta la barra (prima col `modulate`
+	# diventava verde anche il vuoto, e una barra vuota sembrava piena).
 	if heat > 70.0:
-		heat_bar.modulate = Color(1.0, 0.3, 0.3)
+		UiStile.colora_barra(heat_bar, Color(1.0, 0.36, 0.3))
 	elif heat > 35.0:
-		heat_bar.modulate = Color(1.0, 0.8, 0.2)
+		UiStile.colora_barra(heat_bar, Color(1.0, 0.78, 0.25))
 	else:
-		heat_bar.modulate = Color(0.3, 0.9, 0.4)
+		UiStile.colora_barra(heat_bar, Color(0.4, 0.86, 0.5))
 
 
 ## L'orologio non e' piu' un conto alla rovescia: e' l'ora del giorno.
@@ -3150,7 +3237,7 @@ func _refresh_inventory() -> void:
 	var emblems: Dictionary = GameManager.emblems
 	if emblems.is_empty():
 		righe.append("STEMMI: nessuno. Stanno sul cofano delle auto di")
-		righe.append("lusso: aspetta che l'autista si allontani e premi E.")
+		righe.append("lusso: aspetta che l'autista si allontani e premi G.")
 	else:
 		var pezzi: Array = []
 		for name in emblems:
@@ -3457,7 +3544,7 @@ func _su_sciato(quanto: float) -> void:
 		c = Color(0.92, 0.36, 0.32)
 	elif q < 0.42:
 		c = Color(0.94, 0.72, 0.32)
-	sciato_bar.modulate = c
+	UiStile.colora_barra(sciato_bar, c)
 	if sciato_caption != null and is_instance_valid(sciato_caption):
 		sciato_caption.modulate = c.lerp(Color(0.9, 0.9, 0.9), 0.45)
 
@@ -3468,16 +3555,16 @@ func _su_sciato(quanto: float) -> void:
 func _slider_volume(nome: String, y: float, valore: float,
 		quanno_cagna: Callable) -> void:
 	var lab := Label.new()
-	lab.position = Vector2(90, y - 18)
-	lab.size = Vector2(120, 18)
+	lab.position = Vector2(60, y - 22)
+	lab.size = Vector2(160, 20)
 	lab.add_theme_font_size_override("font_size", 13)
 	lab.modulate = Color(0.86, 0.84, 0.80)
 	lab.text = nome
 	pause_panel.add_child(lab)
 
 	var num := Label.new()
-	num.position = Vector2(240, y - 18)
-	num.size = Vector2(50, 18)
+	num.position = Vector2(270, y - 22)
+	num.size = Vector2(70, 20)
 	num.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	num.add_theme_font_size_override("font_size", 13)
 	num.modulate = Color(0.72, 0.70, 0.66)
@@ -3485,9 +3572,9 @@ func _slider_volume(nome: String, y: float, valore: float,
 	pause_panel.add_child(num)
 
 	var s := HSlider.new()
-	s.position = Vector2(90, y)
-	s.size = Vector2(200, 20)
-	s.custom_minimum_size = Vector2(200, 20)
+	s.position = Vector2(60, y)
+	s.size = Vector2(280, 20)
+	s.custom_minimum_size = Vector2(280, 20)
 	s.min_value = 0.0
 	s.max_value = 1.0
 	s.step = 0.05
