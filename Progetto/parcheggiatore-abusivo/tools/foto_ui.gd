@@ -113,6 +113,17 @@ func _finisci() -> void:
 		return
 	# Si svuotano le mani e il mazzo: il motore chiude da solo alla prossima
 	# giocata, ma qui basta chiamare la chiusura.
+	# 0.62: una partita vinta, per vedere il riquadro del turneo sbloccato.
+	if OS.get_environment("SCOPA_VINTA") != "":
+		var mie: Array = []
+		var soie: Array = []
+		for c in range(40):
+			if c % 3 == 2:
+				soie.append(c)
+			else:
+				mie.append(c)
+		m.prese = [mie, soie]
+		m.scope = [2, 1]
 	_sc.call("_chiudi_partita")
 
 

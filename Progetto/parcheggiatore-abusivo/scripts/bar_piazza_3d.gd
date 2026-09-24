@@ -152,6 +152,17 @@ func _costruisci() -> void:
 	_insegna.outline_size = 8
 	_insegna.outline_modulate = Color(0.12, 0.10, 0.10)
 	add_child(_insegna)
+	# 0.62: sotto a BAR, il cartellino blu del LOTTO — qui se joca.
+	var lotto := Label3D.new()
+	lotto.text = "LOTTO"
+	lotto.font_size = 44
+	lotto.pixel_size = 0.005
+	lotto.position = Vector3(0.55, 2.55, 0)
+	lotto.rotation.y = deg_to_rad(-90.0)
+	lotto.modulate = Color(1, 1, 1)
+	lotto.outline_size = 12
+	lotto.outline_modulate = Color(0.13, 0.36, 0.72)
+	add_child(lotto)
 
 	# **'O rilorgio e 'e cascette d''e birre** (0.60, PSX). L'orologio a
 	# muro sopra alla macchina del caffè (quello che il barista guarda quando
@@ -218,10 +229,12 @@ func _e_matina() -> bool:
 
 
 func get_interact_prompt(_da: Vector3) -> String:
+	# 0.62: in ogni bar si gioca pure 'o lotto ([2]), come ai bar-tabacchi
+	# veri. Prima stava solo al tabaccaio della piazza di casa.
 	if _e_matina():
-		return "BAR — [E] 'nu cafè ô banco €%d  ·  [1] 'a colazione €%d" % [
+		return "[E] 'nu cafè €%d · [1] 'a colazione €%d · [2] 'o LOTTO" % [
 			CAFFE_BANCO, COLAZIONE]
-	return "BAR — [E] 'nu cafè ô banco €%d  (’a colazione s'è fernuta)" % CAFFE_BANCO
+	return "[E] 'nu cafè ô banco €%d · [2] gioca 'o LOTTO" % CAFFE_BANCO
 
 
 func player_interact() -> void:
@@ -257,3 +270,6 @@ func _physics_process(_delta: float) -> void:
 		return
 	if Input.is_action_just_pressed("buy_1"):
 		compra_voce(0)
+	elif Input.is_action_just_pressed("buy_2"):
+		_say("'O lotto? Tiè, 'a schedina.")
+		preload("res://scripts/pannello_lotto.gd").apri_da(self)

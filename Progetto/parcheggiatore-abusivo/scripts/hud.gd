@@ -45,6 +45,7 @@ var pacco_bar: ProgressBar
 const Pad := preload("res://scripts/joypad.gd")
 const MappaScript := preload("res://scripts/mappa.gd")
 const IconeScript := preload("res://scripts/icone.gd")
+const PannelloLottoS := preload("res://scripts/pannello_lotto.gd")
 
 var _player_ref: Node3D = null
 var shop_panel: Panel
@@ -3417,6 +3418,14 @@ func _riepilogo_giornata(s: Dictionary) -> String:
 		r.append("Affitto d''e piazze: €%d" % int(s["affitto_pagato"]))
 	if not s.get("zone_perse", []).is_empty():
 		r.append("!! Nun hê pavato ll'affitto: 'e piazze s''e so' ripigliate.")
+	# **'O lotto 'e stasera** (0.62): l'estrazione si fa proprio adesso, e
+	# prima nessuno ti diceva com'era andata.
+	if not GameManager.lotto_esiti.is_empty() \
+			and int(GameManager.lotto_ultima.get("giornata", -1)) == giorno:
+		r.append("")
+		r.append("── 'O LOTTO ───────────────────────")
+		for riga in PannelloLottoS.esiti_testo(true).split("\n"):
+			r.append(riga)
 	if s.get("boss_defeated", false):
 		r.append("Borrelli cunvinto. (+€%d)" % GameManager.BOSS_REWARD)
 	elif s.get("boss_spawned", false):

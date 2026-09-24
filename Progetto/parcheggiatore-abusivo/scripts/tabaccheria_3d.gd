@@ -129,6 +129,20 @@ func _build_visual() -> void:
 	bar.material_override = white
 	add_child(bar)
 
+	# **L'insegna d''o LOTTO** (0.62): il banco del lotto sta qua, e ora
+	# si vede da lontano. Un cartello blu sul fianco del bancone.
+	for lato in [-1.0, 1.0]:
+		var cart := Label3D.new()
+		cart.text = "LOTTO"
+		cart.font_size = 72
+		cart.pixel_size = 0.004
+		cart.modulate = Color(1, 1, 1)
+		cart.outline_size = 14
+		cart.outline_modulate = Color(0.13, 0.36, 0.72)
+		cart.position = Vector3(0.3, 1.9, lato * 1.72)
+		cart.rotation.y = 0.0 if lato > 0.0 else PI
+		add_child(cart)
+
 	var stem := MeshInstance3D.new()
 	var stem_mesh := BoxMesh.new()
 	stem_mesh.size = Vector3(0.06, 0.62, 0.16)
@@ -160,16 +174,15 @@ func _build_collision() -> void:
 
 
 func get_interact_prompt(_from_position: Vector3) -> String:
-	var lot := ""
+	# 0.62: il lotto per primo (è la cosa che non si trovava), poi il
+	# resto; il conto di sigarette e caffè sta già nella scheda dell'HUD.
 	var quante: int = GameManager.lotto_quante_aperte()
+	var lot := "[2] gioca 'o LOTTO"
 	if quante > 0:
-		lot = " · [2] 'o lotto (tiene %d giocate pe' stasera)" % quante
-	else:
-		lot = " · [2] 'o lotto"
-	return "TABACCHI — [E] sigarette €%d · [1] tre caffè €%d%s  (ne hai %d e %d)" % [
+		lot += " (%d pe' stasera)" % quante
+	return "%s · [E] sigarette €%d · [1] tre caffè €%d" % [lot,
 		GameManager.CIGARETTE_PACK_COST,
-		GameManager.CAFFE_COST * GameManager.CAFFE_PER_GIRO,
-		lot, GameManager.cigarettes, GameManager.caffe]
+		GameManager.CAFFE_COST * GameManager.CAFFE_PER_GIRO]
 
 
 func player_interact() -> void:
@@ -197,16 +210,10 @@ func player_interact() -> void:
 # novanta bottoni e rifarli a ogni apertura è uno spreco che si sente.
 const PannelloLotto := preload("res://scripts/pannello_lotto.gd")
 
-static var _lotto_panel: CanvasLayer = null
-
-
 func apri_lotto() -> void:
-	if _lotto_panel == null or not is_instance_valid(_lotto_panel):
-		_lotto_panel = PannelloLotto.new()
-		_lotto_panel.name = "PannelloLotto"
-		get_tree().root.add_child(_lotto_panel)
 	_say("Dimme 'e nummere, guagliò.")
-	_lotto_panel.apri()
+	# 0.62: il pannello è uno per tutta la partita e lo apre anche il bar.
+	PannelloLotto.apri_da(self)
 
 
 func compra_voce(indice: int) -> void:

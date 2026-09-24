@@ -1748,6 +1748,11 @@ func _shop_kind(node) -> String:
 		return "bazar"
 	if node.is_in_group("tabaccheria"):
 		return "tabacchi"
+	# 0.62: il bar sta nel gruppo "shop" (per il raggio), ma non è 'O Zio:
+	# guardandolo si apriva la vetrina degli attrezzi. Il bar ha il suo
+	# prompt e basta.
+	if node.is_in_group("bar"):
+		return ""
 	if node.is_in_group("shop"):
 		return "zio"
 	return ""

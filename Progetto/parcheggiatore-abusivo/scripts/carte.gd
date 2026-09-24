@@ -124,3 +124,40 @@ static func mesh(scala: float = 1.0) -> QuadMesh:
 	var q := QuadMesh.new()
 	q.size = Vector2(LARGHEZZA * scala, ALTEZZA * scala)
 	return q
+
+
+# ---------------------------------------------------------------------------
+# 'E ccarte grosse (0.62)
+# ---------------------------------------------------------------------------
+#
+# Per i pannelli a schermo (la scopa): l'atlante in alta definizione fatto
+# da `tools/carte_hd.py` (celle 240x390, angoli tondi trasparenti) e il
+# dorso disegnato. L'atlante piccolo resta per il 3D, dove basta e avanza.
+
+const ATLANTE_HD := "res://assets/ui/carte_hd.png"
+const RETRO_HD := "res://assets/ui/carta_retro.png"
+
+static var _cache_hd: Dictionary = {}
+
+
+static func texture_hd(i: int) -> Texture2D:
+	i = posmod(i, COLONNE * RIGHE)
+	if _cache_hd.has(i):
+		return _cache_hd[i]
+	if not ResourceLoader.exists(ATLANTE_HD):
+		return texture(i)
+	var base: Texture2D = load(ATLANTE_HD)
+	var w: float = float(base.get_width()) / float(COLONNE)
+	var h: float = float(base.get_height()) / float(RIGHE)
+	var a := AtlasTexture.new()
+	a.atlas = base
+	a.region = Rect2(float(i % COLONNE) * w, float(i / COLONNE) * h, w, h)
+	a.filter_clip = true
+	_cache_hd[i] = a
+	return a
+
+
+static func retro_hd() -> Texture2D:
+	if ResourceLoader.exists(RETRO_HD):
+		return load(RETRO_HD)
+	return null
