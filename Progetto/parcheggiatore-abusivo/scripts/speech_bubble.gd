@@ -250,9 +250,12 @@ func _gesticola() -> void:
 	while p != null and giri < 3:
 		var a: Node = p.find_child("Animator", true, false)
 		if a != null and a.has_method("action"):
-			if a.has_method("is_sitting") and a.is_sitting():
-				return # da seduto ci pensa la clip "seduto_parla"
-			a.action("parla")
+			# 0.62: la parlata dura quanto il fumetto e poi finisce (vedi
+			# `Animator.parla_per`); prima restava accesa per sempre.
+			if a.has_method("parla_per"):
+				a.parla_per(maxf(_timer, 1.2))
+			elif not (a.has_method("is_sitting") and a.is_sitting()):
+				a.action("parla")
 			return
 		p = p.get_parent()
 		giri += 1

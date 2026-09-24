@@ -1640,6 +1640,7 @@ func _handle_movement(delta: float) -> void:
 		if _incastrato() and _sbroglia():
 			return
 		if appoggiato and _salto_cd <= 0.0:
+			GameManager.commissione_urto(0.06)
 			velocity.y = JUMP_SPEED
 			_salto_cd = 0.25
 			_appoggio_t = APPOGGIO_TOLLERANZA
@@ -1805,6 +1806,8 @@ const GRUPPI_BERSAGLIO: Array[StringName] = [
 	&"signora_lotto", &"boss_capitolo", &"maestro",
 	# --- 'E perzone nove d''a 0.61 ---
 	&"nuovi_abusivi", &"turisti_spierze", &"panari",
+	# --- Chi t'affida 'e cummissiune e chi 'e riceve (0.62) ---
+	&"committenti",
 ]
 
 ## Quanto si può essere storti col mirino e agganciare lo stesso. Il coseno
@@ -1910,9 +1913,10 @@ func _process(delta: float) -> void:
 		# dirigere una macchina, seduto, al tavolo delle carte.
 		_arma_fp.get_child(0).visible = not (_seduto or _inchiodato \
 			or (directing_car != null) or GameManager.auto_guidata != null \
-			or not is_physics_processing())
+			or not is_physics_processing() or _robba_fp != null)
 		var v: float = Vector2(velocity.x, velocity.z).length()
 		_arma_fp.moto(v / WALK_SPEED if is_on_floor() else 0.3)
+	_aggiorna_robba_in_mano(delta)
 	_guarda_col_joypad(delta)
 	if _punch_timer > 0.0:
 		_punch_timer -= delta
@@ -1923,6 +1927,8 @@ func _process(delta: float) -> void:
 	if Input.is_action_pressed("sprint") and not is_crouching \
 			and Vector2(velocity.x, velocity.z).length() > 1.0:
 		GameManager.consuma_sciato(GameManager.SCIATO_CORSA * delta)
+		# 'A torta nun se porta currenno (0.62).
+		GameManager.commissione_urto(0.035 * delta)
 	_mira_forzata(delta)
 	if _catena_t > 0.0:
 		_catena_t -= delta
@@ -2024,6 +2030,7 @@ func _appiglio_verso(avanti: Vector3) -> bool:
 		_appiglio_da = global_position
 		_appiglio_a = arrivo
 		_appiglio_t = APPIGLIO_DURATA
+		GameManager.commissione_urto(0.08)
 		velocity = Vector3.ZERO
 		_fermo_t = 0.0
 		SoundManager.play("pop", -14.0, 0.85)
@@ -2254,3 +2261,62 @@ func _ammanettato() -> void:
 # alla faccia), quando dirigi, quando fumi, quando ti tengono — e
 # guardando in giù ci si vede addosso. Che è già molto più di quattro
 # braccia.
+
+
+# ---------------------------------------------------------------------------
+# 'A robba 'n mano (0.62)
+# ---------------------------------------------------------------------------
+#
+# Quando porti una commissione, la roba si vede: in basso davanti a te, con
+# le due mani (il fierro si mette via). Si decide guardando la commissione in
+# mano ogni quarto di secondo — così è giusta anche dopo un caricamento, e
+# sparisce da sola quando la consegni o la perdi.
+
+const RobbaC := preload("res://scripts/robba_cummissione.gd")
+var _robba_fp: Node3D = null
+var _robba_tipo: String = ""
+var _robba_cd: float = 0.0
+var _robba_y: float = -0.34
+
+
+func _aggiorna_robba_in_mano(delta: float) -> void:
+	_robba_cd -= delta
+	if _robba_fp != null and is_instance_valid(_robba_fp):
+		# Ondeggia col passo, poco: è roba che si porta con attenzione.
+		var v: float = Vector2(velocity.x, velocity.z).length()
+		_robba_fp.position.y = _robba_y + sin(_hands_time * 7.0) * 0.008 * minf(v, 4.0)
+	if _robba_cd > 0.0:
+		return
+	_robba_cd = 0.25
+	var c: Dictionary = GameManager.commissione_in_mano()
+	var tipo: String = str(c.get("robba", "")) if not c.is_empty() else ""
+	if tipo == _robba_tipo:
+		return
+	_robba_tipo = tipo
+	if _robba_fp != null and is_instance_valid(_robba_fp):
+		_robba_fp.queue_free()
+	_robba_fp = null
+	if tipo == "" or camera == null:
+		return
+	_robba_fp = Node3D.new()
+	_robba_fp.name = "RobbaInMano"
+	var r := RobbaC.costruisci(tipo)
+	_robba_fp.add_child(r)
+	# Le cose piccole più vicine all'occhio e girate verso di te.
+	var piccola: bool = tipo in ["chiave", "busta", "medicina"]
+	# In basso a destra, un po' girata: si vede cosa porti senza che copra
+	# la strada (la prima foto: due cartoni di pizza in mezzo allo schermo).
+	_robba_fp.position = Vector3(0.16 if piccola else 0.2, -0.34, -0.42 if piccola else -0.6)
+	_robba_fp.rotation = Vector3(0.35 if piccola else 0.2, 0.45, 0.0)
+	_robba_fp.scale = Vector3.ONE * (1.0 if piccola else 0.72)
+	if tipo == "sciure":
+		_robba_fp.position = Vector3(0.2, -0.5, -0.5)
+		_robba_fp.rotation = Vector3(-0.2, 0.0, -0.25)
+		_robba_fp.scale = Vector3.ONE
+	if tipo == "pizze" or tipo == "torta" or tipo == "pacco":
+		_robba_fp.position.y = -0.4
+	_robba_y = _robba_fp.position.y
+	camera.add_child(_robba_fp)
+	# Niente ombre e niente nebbia su roba a mezzo metro dall'occhio.
+	for m in _robba_fp.find_children("*", "GeometryInstance3D", true, false):
+		(m as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

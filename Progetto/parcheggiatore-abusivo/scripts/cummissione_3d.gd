@@ -21,6 +21,12 @@ const LAYER_CAR := 4
 const RAGGIO: float = 2.2
 
 var _segni: Dictionary = {}   # id commissione -> Node3D
+## **'E perzone** (0.62): chi te la dà e chi la riceve. Non si rifanno a
+## ogni cambio (sparirebbero a metà frase): nascono una volta e se ne vanno
+## da sole (`committente_3d.gd`).
+var _perzone: Dictionary = {}  # "da:<id>" / "a:<id>" -> Node3D
+const CommittenteScript := preload("res://scripts/committente_3d.gd")
+const CollinaC := preload("res://scripts/collina.gd")
 
 
 func _ready() -> void:
@@ -47,6 +53,13 @@ func _rifai() -> void:
 		var n := _segno(c, dove, ritiro)
 		add_child(n)
 		_segni[str(c["id"])] = n
+		# Al ritiro il segno resta (la colonna si vede da lontano) ma non si
+		# tocca: la roba te la dà la persona che ci sta dentro.
+		if ritiro and c.has("chi"):
+			for k in n.get_children():
+				if k is CollisionShape3D:
+					(k as CollisionShape3D).disabled = true
+	_perzone_d_oggi()
 
 	# **'O pacco d''a bacheca.** Stesso segno, stessa colonna di luce: uno
 	# solo alla volta, quello che sto portando adesso, e sta dove va
@@ -133,3 +146,37 @@ func _segno(c: Dictionary, dove: Vector3, ritiro: bool) -> Node3D:
 	l.position = Vector3(0, 2.4, 0)
 	root.add_child(l)
 	return root
+
+
+func _perzone_d_oggi() -> void:
+	for c in GameManager.commissioni:
+		if not c.has("chi"):
+			continue
+		var id: String = str(c["id"])
+		var stato: String = str(c["stato"])
+		var k_da: String = "da:" + id
+		var k_a: String = "a:" + id
+		if stato == "aperta" and not _perzone.has(k_da):
+			_nasce(c, "da", Vector3(c["da"]), k_da)
+		if stato == "in_mano" and not _perzone.has(k_a):
+			_nasce(c, "a", Vector3(c["a"]), k_a)
+	# Chi se n'è già andato si toglie dall'elenco.
+	for k in _perzone.keys():
+		if not is_instance_valid(_perzone[k]):
+			_perzone.erase(k)
+
+
+func _nasce(c: Dictionary, ruolo: String, dove: Vector3, chiave: String) -> void:
+	var n: CharacterBody3D = CommittenteScript.new()
+	n.name = "Perzona_" + chiave.replace(":", "_")
+	n.configura(c, ruolo)
+	# Un metro e mezzo accanto al punto, non dentro alla colonna.
+	var p: Vector3 = dove + Vector3(1.4, 0, 0.6)
+	p = Passo.fore(p, 0.45)
+	p.y = CollinaC.alzata(p.x, p.z)
+	# Prima della nascita, non dopo: `_ready` si segna il posto suo da qui
+	# (trappola 5). Il nodo delle commissioni sta nell'origine.
+	n.position = p - global_position if is_inside_tree() else p
+	n.rotation.y = randf_range(0.0, TAU)
+	add_child(n)
+	_perzone[chiave] = n

@@ -215,29 +215,55 @@ const RIG := {
 		"altezza": 4.74,
 		"ossa": {"head": "Head", "chest": "Torso", "hand_l": "Palm.L",
 			"hand_r": "Palm.R", "spalla_l": "UpperArm.L", "spalla_r": "UpperArm.R"},
-		"clip": {"idle": "Idle", "walk": "Walk", "jog": "Run", "run": "Run",
-			"crouch": "Idle", "crouch_walk": "Walk", "morto": "Death",
-			"seduto": "Sitting", "seduto_parla": "Sitting", "parla": "Idle",
-			"punch": "Punch", "jab": "Punch", "pugno": "Punch",
-			"pugno_sinistro": "Punch", "coltellata": "SwordSlash",
-			"colpo": "Idle", "colpo_capa": "Idle", "point": "Clapping",
-			"shrug": "Idle", "guida": "Sitting", "applaude": "Clapping",
-			"lavora": "Idle"},
+		# **'E mosse d''o pupo** (0.62): quello che il pacchetto non ha
+		# (parlare, accovacciarsi, incassare, indicare, guidare) viene dalla
+		# libreria `ual`, tradotta da `tools/retarget_ual.gd`.
+		"clip": {"idle": "Idle", "walk": "Walk", "jog": "ual/Jog_Fwd", "run": "Run",
+			"crouch": "ual/Crouch_Idle", "crouch_walk": "ual/Crouch_Fwd",
+			"morto": "Death", "seduto": "Sitting",
+			"seduto_parla": "ual/Sitting_Talking", "parla": "ual/Idle_Talking",
+			"punch": "Punch", "jab": "ual/Punch_Jab", "pugno": "Punch",
+			"pugno_sinistro": "ual/Punch_Jab", "coltellata": "SwordSlash",
+			"colpo": "ual/Hit_Chest", "colpo_capa": "ual/Hit_Head",
+			"point": "ual/Interact", "shrug": "ual/PickUp_Table",
+			"guida": "ual/Driving", "applaude": "Clapping",
+			"lavora": "ual/Fixing_Kneeling"},
+		"ual": "res://assets/models/omo_ual.res",
 	},
 	"umano_q": {
 		"altezza": 5.24,
 		"ossa": {"head": "Head", "chest": "Spine2", "hand_l": "LeftHand",
 			"hand_r": "RightHand", "spalla_l": "LeftArm", "spalla_r": "RightArm"},
-		# **`Fermo`, no `Idle`** (0.60): vedi `_prepara_fermo`.
-		"clip": {"idle": "Fermo", "walk": "Walk", "jog": "Run", "run": "Run",
-			"crouch": "Working", "crouch_walk": "Walk", "morto": "Death",
-			"seduto": "Fermo", "seduto_parla": "Fermo", "parla": "Fermo",
-			"punch": "Punch", "jab": "Punch", "pugno": "Punch",
-			"pugno_sinistro": "Punch", "coltellata": "Punch", "colpo": "Fermo",
-			"colpo_capa": "Fermo", "point": "Fermo", "shrug": "Fermo",
-			"guida": "Fermo", "applaude": "Fermo", "lavora": "Working"},
+		# **`Fermo`, no `Idle`** (0.60): vedi `_prepara_fermo`. **E dalla
+		# 0.62 manco `Fermo`**: 'o riposo vero è l'`Idle` d''o pupo, tradotto
+		# (`ual/Idle`). `Fermo` resta per misurare gli adattatori delle mani.
+		"clip": {"idle": "ual/Idle", "walk": "Walk", "jog": "ual/Jog_Fwd", "run": "Run",
+			"crouch": "ual/Crouch_Idle", "crouch_walk": "ual/Crouch_Fwd",
+			"morto": "Death", "seduto": "ual/Sitting_Idle",
+			"seduto_parla": "ual/Sitting_Talking", "parla": "ual/Idle_Talking",
+			"punch": "Punch", "jab": "ual/Punch_Jab", "pugno": "Punch",
+			"pugno_sinistro": "ual/Punch_Jab", "coltellata": "ual/Sword_Attack",
+			"colpo": "ual/Hit_Chest", "colpo_capa": "ual/Hit_Head",
+			"point": "ual/Interact", "shrug": "ual/PickUp_Table",
+			"guida": "ual/Driving", "applaude": "ual/Idle_Talking",
+			"lavora": "Working"},
+		"ual": "res://assets/models/umano_q_ual.res",
 	},
 }
+
+static var _librerie_ual: Dictionary = {}
+
+
+## Aggiunge al corpo la libreria delle mosse del pupo tradotte (0.62).
+static func _aggiungi_ual(ap: AnimationPlayer, percorso: String) -> void:
+	if ap == null or percorso == "" or ap.has_animation_library("ual"):
+		return
+	if not _librerie_ual.has(percorso):
+		_librerie_ual[percorso] = load(percorso) if ResourceLoader.exists(percorso) else null
+	var lib: AnimationLibrary = _librerie_ual[percorso]
+	if lib != null:
+		ap.add_animation_library("ual", lib)
+
 
 ## Gli otto uomini low poly (quattro vestiti, due modi di fare le facce).
 const OMINI := ["omo_casual", "omo_maniche", "omo_camicia", "omo_giacca",
@@ -278,6 +304,7 @@ static func _build_rig(modello: String, camicia: Color, pantaloni: Color,
 	var suonatore: AnimationPlayer = _trova_player(m)
 	if id_rig == "umano_q" and suonatore != null:
 		_prepara_fermo(suonatore)
+	_aggiungi_ual(suonatore, str(rig.get("ual", "")))
 	if id_rig == "omo":
 		_vesti_omo(m, camicia, pantaloni, opts)
 	else:

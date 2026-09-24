@@ -403,8 +403,7 @@ func action(nome: String) -> void:
 	if nome == "parla":
 		# La parlata non è un gesto da mezzo secondo: è uno stato, e
 		# finisce quando il personaggio smette di parlare.
-		if not _seduto and not _steso:
-			_playback.travel("parla")
+		parla_per(PARLA_DURATA)
 		return
 	var chiave: String = nome
 	if not CLIP.has(chiave) and not _mappa.has(chiave):
@@ -451,7 +450,63 @@ func reagisci_colpo(in_faccia: bool = false) -> void:
 
 ## Smette di parlare e torna in piedi normale.
 func stop_parlata() -> void:
+	_parla_t = 0.0
 	if _pronto and not _seduto and not _steso:
+		_playback.travel("loco")
+
+
+# ---------------------------------------------------------------------------
+# **'A parlata fernesce** (0.62)
+# ---------------------------------------------------------------------------
+#
+# Il capo: *«Molti dei nuovi modelli non hanno animazioni»*. Una parte vera
+# della ragione stava qui. Il fumetto (`speech_bubble._gesticola`) chiama
+# `action("parla")`, che manda l'albero nello stato "parla" — e **nessuno lo
+# tirava più fuori**: `stop_parlata()` non la chiamava nessun file. Ogni
+# personaggio che aveva detto una frase restava per sempre nella clip della
+# parlata, anche camminando: le gambe ferme e il corpo che scivolava per la
+# strada. Sugli omini e sull'umano la parlata era l'`Idle` (non avevano una
+# clip loro), quindi scivolavano **immobili**: la statua che cammina.
+#
+# Adesso la parlata dura quanto il fumetto, e finisce da sola; e appena il
+# personaggio si muove davvero (più di 0,35 m/s) si torna alle gambe.
+const PARLA_DURATA: float = 2.6
+var _parla_t: float = 0.0
+var _parla_seduto: bool = false
+
+
+func parla_per(secondi: float) -> void:
+	if not _pronto or _steso:
+		return
+	_parla_t = maxf(_parla_t, secondi)
+	if _seduto:
+		if not _seduto_parla:
+			_parla_seduto = true
+			_playback.travel("seduto_parla")
+		return
+	if _velocita > 0.35:
+		return  # cammina: si parla camminando, le gambe vanno
+	_playback.travel("parla")
+
+
+func _passo_parlata(delta: float) -> void:
+	if _parla_t <= 0.0 or not _pronto:
+		return
+	_parla_t -= delta
+	var fine: bool = _parla_t <= 0.0
+	if not _seduto and _velocita > 0.35:
+		fine = true
+	if not fine:
+		return
+	_parla_t = 0.0
+	if _steso:
+		return
+	if _seduto:
+		if _parla_seduto:
+			_parla_seduto = false
+			_playback.travel("seduto_parla" if _seduto_parla else "seduto")
+		return
+	if _playback.get_current_node() == "parla":
 		_playback.travel("loco")
 
 
@@ -473,6 +528,7 @@ func release_bone(osso: String) -> void:
 
 func _process(delta: float) -> void:
 	_misura_passo(delta)
+	_passo_parlata(delta)
 	if _scheletro == null or _tenute.is_empty():
 		return
 	for nome in _tenute:

@@ -3321,8 +3321,11 @@ func _aggiorna_conto() -> void:
 		if c.is_empty():
 			cumm_label.text = ""
 		else:
-			cumm_label.text = "%s → %s   (%d\")" % [str(c["nome"]),
-				str(c["nome_a"]), int(maxf(float(c.get("scade", 0.0)), 0.0))]
+			var sana := ""
+			if bool(c.get("fragile", false)):
+				sana = "  · sana %d%%" % int(float(c.get("integrita", 1.0)) * 100.0)
+			cumm_label.text = "%s → %s   (%d\")%s" % [str(c["nome"]),
+				str(c["nome_a"]), int(maxf(float(c.get("scade", 0.0)), 0.0)), sana]
 
 
 func _riepilogo_giornata(s: Dictionary) -> String:

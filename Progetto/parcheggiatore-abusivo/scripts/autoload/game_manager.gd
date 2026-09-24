@@ -3258,31 +3258,170 @@ var padrone_arrabbiato: bool = false
 # quanto sei minuti di piazza — ma nei sei minuti in cui la fai vedi tre
 # quartieri, ed e' quello il punto.
 
+# **Chi t'a dà, e pecché** (0.62). Il capo: *«Migliora le quest
+# secondarie aggiungendo un personaggio che si avvicina e te la affida
+# realisticamente (es. un portapizze che ti affida le pizze da consegnare
+# perché a lui hanno rubato il motorino), gli oggetti del caso»*. Ogni
+# tipo adesso ha: chi te la dà (`chi`, `look_da`), cosa ti grida per
+# chiamarti, la sua storia (tre frasi, `%s` = dove va portata), la roba
+# (`robba`, vedi `robba_cummissione.gd`), chi la riceve (`a_chi`,
+# `look_a`) e cosa dice. `fragile` = si rovina correndo e saltando (la
+# torta): la paga scende con quello che ne resta.
 const CUMM_TIPI := [
 	{
-		"tipo": "pacco", "nome": "'O pacco 'e Zi' 'Ntuono",
-		"testo": "Portalo 'a %s. Nun 'o guarda' dinto.",
-		"paga_min": 18, "paga_max": 30, "minuti": 2.2,
-	},
-	{
-		"tipo": "spesa", "nome": "'A spesa d''a signora",
-		"testo": "'A signora nun po' scennere. Portale 'a spesa 'a %s.",
-		"paga_min": 12, "paga_max": 20, "minuti": 2.6,
-	},
-	{
-		"tipo": "busta", "nome": "'Na busta, e nun se dice niente",
-		"testo": "Chesta va 'a %s. Nun 'a fa' vede' a nisciuno.",
-		"paga_min": 26, "paga_max": 42, "minuti": 1.8,
-	},
-	{
-		"tipo": "pizze", "nome": "Doje pizze 'a purtà",
+		"tipo": "pizze", "robba": "pizze", "nome": "'E ppizze 'e Totore",
 		"testo": "Càvere. Si arrivano fredde nun te paga nisciuno. 'A %s.",
-		"paga_min": 14, "paga_max": 24, "minuti": 1.3,
+		"paga_min": 16, "paga_max": 24, "minuti": 1.4,
+		"chi": "Totore 'o pizzaiuolo",
+		"look_da": {"camicia": Color(0.96, 0.96, 0.94), "pantaloni": Color(0.92, 0.92, 0.9),
+			"cappello": "pizzaiuolo", "opts": {"moustache": true, "belly": 0.7}},
+		"chiama": "Guagliò! Guagliò, fermate 'nu mumento, pe' carità!",
+		"storia": ["M'hanno arrubbato 'o motorino mo' mo', mentre pigliavo 'e pizze!",
+			"Tengo doje margherite ca s'arrefreddano: vanno 'a %s.",
+			"Me le puorte tu? Te pavo io, e currenno, ca 'e pizze fredde nun 'e vo' nisciuno!"],
+		"grazie": "Sî 'n angelo! Curre, curre, ca s'arrefreddano!",
+		"a_chi": "'A famiglia Esposito",
+		"look_a": {"camicia": Color(0.3, 0.42, 0.6), "pantaloni": Color(0.25, 0.25, 0.3)},
+		"aspetta": "Uè! Sî tu cu 'e pizze? Stammo murenno 'e famma!",
+		"ricevuto": "Finalmente! Ancora càvere, bravo. Tiè, e statte buono.",
+		"coda": "'E pizze so' arrivate càvere.",
 	},
 	{
-		"tipo": "chiave", "nome": "'E cchiave d''o garage",
+		"tipo": "spesa", "robba": "spesa", "nome": "'A spesa 'e Donna Carmela",
+		"testo": "'A signora nun po' scennere. Portale 'a spesa 'a %s.",
+		"paga_min": 12, "paga_max": 18, "minuti": 2.6,
+		"chi": "Donna Carmela",
+		"look_da": {"camicia": Color(0.32, 0.28, 0.36), "pantaloni": Color(0.26, 0.22, 0.28),
+			"alta": 1.6, "opts": {"corpo": "femmina", "hair": Color(0.8, 0.8, 0.78),
+			"bald": false, "moustache": false, "belly": 0.8}},
+		"chiama": "Figlio mio! Scusa, figlio mio, tieni 'nu minuto?",
+		"storia": ["Aggio fatto 'a spesa, ma 'e gamme nun me reggeno cchiù.",
+			"È pe' mia figlia, sta 'a %s cu 'e criature e nun po' scennere.",
+			"Nce 'a puorte tu? 'A Madonna t'accumpagna, e quaccosa te dongo."],
+		"grazie": "Dio t'o renne, guagliò. Chiano cu 'e ova!",
+		"a_chi": "'A figlia 'e Donna Carmela",
+		"look_a": {"camicia": Color(0.72, 0.36, 0.42), "pantaloni": Color(0.3, 0.26, 0.3),
+			"alta": 1.64, "opts": {"corpo": "femmina", "bald": false, "moustache": false}},
+		"aspetta": "Uh, 'a spesa 'e mammà! Sî tu? Grazie a Dio!",
+		"ricevuto": "Mammà t'ha mannato? Sî proprio 'nu bravo guaglione. Tiè.",
+		"coda": "Donna Carmela te benedice.",
+	},
+	{
+		"tipo": "pacco", "robba": "pacco", "nome": "'O pacco 'e Zi' 'Ntuono",
+		"testo": "Portalo 'a %s. Nun 'o guarda' dinto.",
+		"paga_min": 18, "paga_max": 28, "minuti": 2.2,
+		"chi": "Zi' 'Ntuono",
+		"look_da": {"camicia": Color(0.36, 0.3, 0.24), "pantaloni": Color(0.22, 0.2, 0.18),
+			"opts": {"moustache": true, "bald": true, "belly": 0.6}},
+		"chiama": "Tu! Sì, proprio tu. Viene ccà.",
+		"storia": ["Chisto è pe' nipotemo, sta 'a %s.",
+			"Io cu 'sta schiena nun ce arrivo, e 'o curriere nun se fida 'e venì ccà.",
+			"Nun 'o guardà dinto e nun 'o fa' cadé. Pe' 'o resto, fatte 'e fatte tuoje."],
+		"grazie": "Bravo. E ricuordate: nun l'hê maje visto.",
+		"a_chi": "'O nipote 'e Zi' 'Ntuono",
+		"look_a": {"camicia": Color(0.2, 0.2, 0.22), "pantaloni": Color(0.18, 0.2, 0.3),
+			"opts": {"modello": "umano_q"}},
+		"aspetta": "Uè. 'O pacco d''o zio? Dammillo ccà, ambresso.",
+		"ricevuto": "Tutto a posto. Zi' 'Ntuono sape chi paga. Tiè.",
+		"coda": "Nun hê visto niente.",
+	},
+	{
+		"tipo": "busta", "robba": "busta", "nome": "'Na busta, e nun se dice niente",
+		"testo": "Chesta va 'a %s. Nun 'a fa' vede' a nisciuno.",
+		"paga_min": 26, "paga_max": 38, "minuti": 1.8,
+		"chi": "'O signore cu 'e lente scure",
+		"look_da": {"camicia": Color(0.12, 0.12, 0.14), "pantaloni": Color(0.1, 0.1, 0.12),
+			"opts": {"modello": "omo_giacca", "hair": Color(0.1, 0.1, 0.1)}},
+		"chiama": "Pssst. Guagliò. Ccà, ccà.",
+		"storia": ["Tu nun m'hê maje visto, e io nun t'aggio maje parlato.",
+			"Chesta busta va 'a %s. Nce sta uno ca aspetta.",
+			"Si 'nu vigile te guarda, tu staje passianno. Chiaro?"],
+		"grazie": "Iamme. E nun currere, ca chi corre se fa guardà.",
+		"a_chi": "Chillo ca aspetta",
+		"look_a": {"camicia": Color(0.3, 0.3, 0.3), "pantaloni": Color(0.15, 0.15, 0.17),
+			"opts": {"modello": "omo_giacca_liscio"}},
+		"aspetta": "…Sî tu? Nun fa' vede', dammella comme si niente fosse.",
+		"ricevuto": "Perfetto. Tiè, e scurdate 'a faccia mia.",
+		"coda": "E nun se dice niente.",
+	},
+	{
+		"tipo": "chiave", "robba": "chiave", "nome": "'E cchiave d''o garage",
 		"testo": "Chille sta aspettanno 'a n'ora. Curre 'a %s.",
-		"paga_min": 15, "paga_max": 26, "minuti": 2.0,
+		"paga_min": 15, "paga_max": 22, "minuti": 1.7,
+		"chi": "Pascale d''o garage",
+		"look_da": {"camicia": Color(0.22, 0.3, 0.46), "pantaloni": Color(0.22, 0.3, 0.46),
+			"opts": {"modello": "umano_q", "hair": Color(0.2, 0.15, 0.1)}},
+		"chiama": "Ueh! Tu ca cammini! Me faje 'nu piacere grosso?",
+		"storia": ["Aggio dato 'a machina a 'nu cliente e m'aggio scurdato 'e cchiave 'e casa soja dinto!",
+			"Isso sta aspettanno 'a %s, e io nun pozzo lassà 'o garage.",
+			"Curre, ca chillo sta 'a 'n'ora fore â porta!"],
+		"grazie": "Grazie, fratè! Curre, curre!",
+		"a_chi": "'O cliente d''o garage",
+		"look_a": {"camicia": Color(0.62, 0.62, 0.66), "pantaloni": Color(0.2, 0.2, 0.26),
+			"opts": {"modello": "omo_camicia"}},
+		"aspetta": "Finalmente! 'E cchiave meje? Stongo 'a 'n'ora ccà fora!",
+		"ricevuto": "Meno male! Tiè, pe' 'o disturbo.",
+		"coda": "Chillo mo' se ne trase 'a casa.",
+	},
+	{
+		"tipo": "torta", "robba": "torta", "nome": "'A torta d''o battesimo", "fragile": true,
+		"testo": "Chiano chiano: si corre o si zompa, 'a torta se sfascia. 'A %s.",
+		"paga_min": 20, "paga_max": 30, "minuti": 2.6,
+		"chi": "'O pasticciere Gennaro",
+		"look_da": {"camicia": Color(0.96, 0.95, 0.92), "pantaloni": Color(0.3, 0.3, 0.34),
+			"opts": {"moustache": true, "belly": 0.9, "bald": true}},
+		"chiama": "Guagliò! Tieni 'e mmane ferme? Me serveno doje mane ferme!",
+		"storia": ["'O guaglione mio ca fa 'e consegne s'è ammalato proprio oggi.",
+			"Chesta torta è p''o battesimo 'a %s: è 'na torta a tre piane, delicatissima.",
+			"Nun correre e nun zumpà, pe' carità: si arriva sana te pavo buono."],
+		"grazie": "Chiano! Chiano, comme si purtasse 'nu criaturo!",
+		"a_chi": "'A mamma d''o battezzato",
+		"look_a": {"camicia": Color(0.86, 0.72, 0.8), "pantaloni": Color(0.3, 0.26, 0.32),
+			"alta": 1.64, "opts": {"corpo": "femmina", "bald": false, "moustache": false}},
+		"aspetta": "'A torta! 'A torta è arrivata! Fammi vedé comme sta…",
+		"ricevuto": "Uh, comm'è bella! Grazie, guagliò, tiè, e viene ô rinfresco!",
+		"coda": "'O battesimo è salvo.",
+	},
+	{
+		"tipo": "sciure", "robba": "sciure", "nome": "'E sciure p''a nnammurata",
+		"testo": "Portale 'e sciure 'a %s, e dille ca so' d''o nnammurato.",
+		"paga_min": 12, "paga_max": 20, "minuti": 2.0,
+		"chi": "Ciruzzo 'o nnammurato",
+		"look_da": {"camicia": Color(0.8, 0.3, 0.3), "pantaloni": Color(0.2, 0.24, 0.36),
+			"opts": {"modello": "omo_camicia_liscio", "hair": Color(0.1, 0.07, 0.05)}},
+		"chiama": "Ehi, frate! Tu tiene 'a faccia 'e uno ca sape parlà cu 'e femmene!",
+		"storia": ["Ll'aggio fatta arraggià, e mo' nun me risponne cchiù.",
+			"Sta 'a %s. Portale 'sti sciure e dille ca Ciruzzo le vo' bene.",
+			"Io nun tengo 'o curaggio 'e ce ghì. Te pavo io, parola."],
+		"grazie": "Dille ca so' 'nu scemo, ma 'nu scemo ca le vo' bene!",
+		"a_chi": "Carmelina",
+		"look_a": {"camicia": Color(0.95, 0.8, 0.3), "pantaloni": Color(0.25, 0.28, 0.4),
+			"alta": 1.63, "opts": {"corpo": "femmina", "bald": false, "moustache": false,
+			"hair": Color(0.18, 0.1, 0.06)}},
+		"aspetta": "E tu chi sî? Ah… 'sti sciure… so' 'e Ciruzzo?",
+		"ricevuto": "Uh… so' belle. Dincello ca stasera 'o perdono. Tiè, pe' te.",
+		"ricevuto_alt": "Dincello ca se po' ghì a cuccà! …Però 'e sciure m''e tengo. Tiè.",
+		"coda": "L'ammore è 'na cosa complicata.",
+	},
+	{
+		"tipo": "medicina", "robba": "medicina", "nome": "'A medicina d''o nonno",
+		"testo": "'O nonno ha dda piglià 'a medicina. Currenno, 'a %s.",
+		"paga_min": 14, "paga_max": 22, "minuti": 1.6,
+		"chi": "'O farmacista",
+		"look_da": {"camicia": Color(0.95, 0.96, 0.96), "pantaloni": Color(0.3, 0.3, 0.34),
+			"cappello": "farmacista", "opts": {"hair": Color(0.6, 0.6, 0.6)}},
+		"chiama": "Scusate! Giovanotto! 'Nu favore, è urgente!",
+		"storia": ["Nu nonno aspetta 'sta medicina, e 'o nipote nun è venuto a pigliarla.",
+			"Sta 'a %s: 'a ha dda piglià primma d''e otto, se no so' guaie.",
+			"Io nun pozzo chiudere 'a farmacia. V'a sentite 'e ce ghì vuje?"],
+		"grazie": "Grazie assaje. Ricurdateve: primma d''e otto!",
+		"a_chi": "Nonno Vicienzo",
+		"look_a": {"camicia": Color(0.42, 0.38, 0.32), "pantaloni": Color(0.28, 0.26, 0.24),
+			"alta": 1.7, "opts": {"hair": Color(0.85, 0.85, 0.85), "bald": true,
+			"moustache": true, "belly": 0.5}},
+		"aspetta": "Uè, giuvinò… è 'a medicina mia chella?",
+		"ricevuto": "Grazie, figlio mio. Tiè, pigliate 'nu cafè 'a parte mia.",
+		"coda": "'O nonno sta buono.",
 	},
 ]
 
@@ -3333,7 +3472,7 @@ func crea_commissioni() -> void:
 		# La paga sale con la distanza: una traversata da centocinquanta
 		# metri non puo' valere quanto una da venti.
 		var base: int = randi_range(int(t["paga_min"]), int(t["paga_max"]))
-		commissioni.append({
+		var c := {
 			"id": "c%d_%d" % [giornata, i], "tipo": str(t["tipo"]),
 			"nome": str(t["nome"]),
 			"testo": str(t["testo"]) % str(a["nome"]),
@@ -3341,8 +3480,15 @@ func crea_commissioni() -> void:
 			"nome_da": str(da["nome"]), "nome_a": str(a["nome"]),
 			"paga": base + int(dist * 0.12),
 			"tempo": float(t["minuti"]) * 60.0 * (0.6 + dist / 190.0),
-			"stato": "aperta",
-		})
+			"stato": "aperta", "integrita": 1.0,
+		}
+		# La faccia (0.62): chi te la dà, chi la riceve, la roba, le frasi.
+		for k in ["robba", "chi", "look_da", "chiama", "storia", "grazie",
+				"a_chi", "look_a", "aspetta", "ricevuto", "ricevuto_alt",
+				"coda", "fragile"]:
+			if t.has(k):
+				c[k] = t[k]
+		commissioni.append(c)
 	commissioni_cambiate.emit()
 
 
@@ -3371,7 +3517,8 @@ func consegna_commissione(id: String) -> int:
 		return 0
 	c["stato"] = "fatta"
 	commissioni_fatte += 1
-	var paga: int = int(c["paga"])
+	# 'A torta sfasciata se paga pe' chello ca ne resta (mai sotto al 30%).
+	var paga: int = int(round(float(c["paga"]) * clampf(float(c.get("integrita", 1.0)), 0.3, 1.0)))
 	add_money(paga)
 	add_reputation(2)
 	SoundManager.soldi(paga)
@@ -3398,6 +3545,20 @@ func commissione_in_mano() -> Dictionary:
 		if str(c["stato"]) == "in_mano":
 			return c
 	return {}
+
+
+## **'A roba fragile** (0.62): la torta si rovina correndo, zompando,
+## arrampicandosi e facendo a botte. `quanto` è la frazione persa.
+func commissione_urto(quanto: float) -> void:
+	var c: Dictionary = commissione_in_mano()
+	if c.is_empty() or not bool(c.get("fragile", false)):
+		return
+	var prima: float = float(c.get("integrita", 1.0))
+	c["integrita"] = clampf(prima - quanto, 0.0, 1.0)
+	# Si avvisa a scatti (ogni quarto perso), non a ogni passo di corsa.
+	if int(prima * 4.0) != int(float(c["integrita"]) * 4.0):
+		event_started.emit("Chiano! %s se sta sfasciando (%d%%)." % [
+			str(c.get("nome", "'A roba")), int(float(c["integrita"]) * 100.0)])
 
 
 # ===========================================================================
@@ -4842,6 +5003,8 @@ func damage_player(amount: float, cause: String = "",
 		da: Vector3 = Vector3.INF) -> void:
 	if not shift_active or hospitalized or arrested or amount <= 0.0:
 		return
+	# Chi le piglia cu 'a torta 'n mano, 'a torta 'a sfascia (0.62).
+	commissione_urto(0.18)
 	# Chi mena dice anche DA DOVE: l'HUD ci disegna la freccia. Una botta
 	# alle spalle, senza, e' solo lo schermo che diventa rosso — e non si
 	# capisce da che parte scappare.

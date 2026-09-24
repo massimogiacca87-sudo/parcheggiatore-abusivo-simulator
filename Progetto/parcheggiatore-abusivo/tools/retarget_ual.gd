@@ -191,7 +191,7 @@ func _traduci(s: Dictionary, t: Dictionary, mappa: Dictionary,
 			str(mappa["pelvis"]), str(mappa["Head"]))
 	var C: Basis = bt * bt_riposo.inverse()
 	var M: Basis = bt * bs.inverse()
-	print("  giro del riposo: %.1f gradi" % rad_to_deg(C.get_euler().y))
+	print("  C=%s  bt=%s  bt_riposo=%s" % [str(C), str(bt), str(bt_riposo)])
 	# La scala: altezza delle anche sopra ai piedi.
 	var h_s: float = ((rs[sks.find_bone("pelvis")] as Transform3D).origin
 		- (rs[sks.find_bone("foot_l")] as Transform3D).origin).dot(bs.y)
