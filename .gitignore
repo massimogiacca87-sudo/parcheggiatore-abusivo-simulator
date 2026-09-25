@@ -1,4 +1,4 @@
-*.zip
+﻿*.zip
 *.7z
 *.rar
 *.blend
@@ -7,9 +7,13 @@
 *.wav
 *.mp3
 Claude outputs/
-Models/
+/Models/
 # Godot: cache dell'editor e build (si rigenerano)
 .godot/
 Build/
 # file temporanei di Claude (patch in arrivo)
 _claude_tmp/
+
+# asset esterni CC0/open scaricati in assets/: i .glb qui vanno versionati (sono piccoli)
+!assets/models/**/*.glb
+!assets/materials/decals/graffiti/*.glb
