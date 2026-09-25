@@ -2133,7 +2133,7 @@ const TutorialeScript := preload("res://scripts/tutoriale.gd")
 ## Il numero di versione, in piccolo, dentro al menu di pausa. Serve a chi
 ## segnala un problema: "non mi funziona" senza la versione non si può
 ## nemmeno cercare. Stava inchiodato alla 0.43b da nove versioni.
-const VERSIONE := "v0.61"
+const VERSIONE := "v0.62"
 
 var _tutoriale: CanvasLayer = null
 
