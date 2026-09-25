@@ -1,0 +1,370 @@
+extends Node
+## SoundManager (autoload)
+## Tutti i suoni del gioco, generati proceduralmente (tools/gen_audio.py) e
+## riprodotti da un pool di player. La musichetta di quartiere gira in loop
+## anche nel menu di pausa.
+
+const SOUND_NAMES := ["honk", "bump", "punch", "coin", "kaching", "success",
+	"fail", "whistle", "steal", "pop", "door", "rev", "meow",
+	# 0.61: 'o sparo vero (prima era un pugno a meta' tono) e 'o fruscio.
+	"sparo",
+	# Suoni registrati veri (mp3), forniti dall'autore. Hanno la precedenza
+	# su quelli procedurali con lo stesso nome, se un giorno si sovrappongono.
+	"moto_pass", "horn_arrivo", "horn_impaziente", "soldi", "spiccioli",
+	# --- 'A robba nova: registrazioni vere da freesound ---------------
+	# I nomi sono in italiano perche' li chiama il codice del gioco, e il
+	# codice del gioco parla italiano.
+	"fischio_vigile", "portiera", "clacson_lungo", "clacson_corto",
+	"radio_polizia", "sbadiglio", "sorso_caffe", "perso", "vinto",
+	"saluto", "schiarisce", "tosse", "schiocco",
+	"pugno1", "pugno2", "pugno3", "pugno4", "pugno5", "pugno6",
+	"moneta1", "moneta2", "monete", "monete2", "monete_tante", "mucchio",
+	# --- 'A seconda infornata --------------------------------------
+	"folla", "urlo", "botta", "rutto", "ruttino", "bottiglia", "sorso",
+	"woosh", "saluto2", "fiatone", "cintura", "stemma", "stemmi"]
+const POOL_SIZE := 18
+const MASTER_OFFSET_DB := -6.0 # tutto un po' più discreto
+const MUSIC_VOLUME_DB := -19.0 # sottofondo: c'è, ma non copre il gioco
+
+## I brani. Uno per momento della giornata, più quelli che scattano quando
+## succede qualcosa. Chi decide quale va suonato è RegiaMusicale: qui c'è
+## solo il giradischi.
+## **'E tre tracce vere.** Fino alla 0.49 erano sette pezzi generati a 8 bit
+## da `tools/gen_audio.py`: servivano a non lasciare il gioco muto, ma erano
+## chiptune, e un gioco ambientato in un vicolo di Napoli con la chiptune
+## sopra suona come un altro gioco. Adesso il capo ha dato tre brani veri e
+## sono quelli a fare il fondo:
+##
+##   * `base.ogg`  — *Steps of the Old Quarter*, la traccia del gioco: si
+##     sente mentre cammini, mentre posteggi, mentre non succede niente;
+##   * `caccia.ogg` — *Terracotta Blur*, e parte **solo** con le stelle;
+##   * `notte.ogg` — *Blue Hour Lullaby*, dalle undici di sera in poi.
+##
+## I pezzi vecchi restano nel file per il menu, per Borrelli e per la
+## radiolina: quelli non li ha rimpiazzati nessuno.
+const BRANI := {
+	"menu": "res://audio/musica/menu.ogg",
+	# Le tre chiavi del giorno puntano tutte alla stessa traccia base. Non
+	# e' pigrizia: la regia ragiona per stati, e tenere gli stati separati
+	# vuol dire poterli ricolorare domani senza toccarla.
+	"giorno": "res://audio/musica/base.ogg",
+	"lavoro": "res://audio/musica/base.ogg",
+	"sera": "res://audio/musica/notte.ogg",
+	"notte": "res://audio/musica/notte.ogg",
+	"caccia": "res://audio/musica/caccia.ogg",
+	"boss": "res://audio/musica/boss.ogg",
+	# I pezzi a 8 bit di prima, per chi li vuole sulla radiolina.
+	"8bit_giorno": "res://audio/musica/giorno.ogg",
+	"8bit_lavoro": "res://audio/musica/lavoro.ogg",
+	"8bit_sera": "res://audio/musica/sera.ogg",
+	# Registrata vera, non 8 bit: e' il brano d''a festa, e si sente
+	# soltanto quando succede qualcosa (la processione, 'a partita) o
+	# quando lo scegli tu sulla radiolina.
+	"tarantella": "res://audio/tarantella.ogg",
+}
+
+var _streams: Dictionary = {}
+var _players: Array = []
+var _music: AudioStreamPlayer
+## Il secondo giradischi: mentre uno sfuma, l'altro entra. Con un solo
+## player il cambio era uno stacco netto, e uno stacco netto in un gioco
+## dove il tempo scorre di continuo si sente come un errore.
+var _music_b: AudioStreamPlayer
+var _brani: Dictionary = {}
+var _brano_ora: String = ""
+var _volume_base: float = MUSIC_VOLUME_DB
+## 'O volume d''o brano senza 'a manopola: serve pe' ricalculà quanno se
+## move 'o cursore mentre 'a musica sta già sunanno.
+var _volume_base_puro: float = MUSIC_VOLUME_DB
+var _tween: Tween
+
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS # la musica continua in pausa
+	carica_volume()
+	# Un suono può essere un mp3 registrato o un wav generato da
+	# tools/gen_audio.py: vince l'mp3, così basta lasciare cadere un file
+	# vero in audio/ per sostituire quello sintetico.
+	for sound_name in SOUND_NAMES:
+		for ext in ["ogg", "mp3", "wav"]:
+			var path := "res://audio/%s.%s" % [sound_name, ext]
+			if ResourceLoader.exists(path):
+				_streams[sound_name] = load(path)
+				break
+	for i in range(POOL_SIZE):
+		var p := AudioStreamPlayer.new()
+		add_child(p)
+		_players.append(p)
+
+	for nome in BRANI:
+		var path: String = BRANI[nome]
+		if not ResourceLoader.exists(path):
+			continue
+		var stream = load(path)
+		# Il loop si imposta anche qui e non solo nell'import: se un giorno
+		# uno dei file venisse rifatto senza il flag, il brano finirebbe e
+		# resterebbe il silenzio senza che nessuno capisca perché.
+		if stream is AudioStreamOggVorbis:
+			stream.loop = true
+		elif stream is AudioStreamMP3:
+			stream.loop = true
+		_brani[nome] = stream
+
+	_music = AudioStreamPlayer.new()
+	_music.volume_db = -80.0
+	add_child(_music)
+	_music_b = AudioStreamPlayer.new()
+	_music_b.volume_db = -80.0
+	add_child(_music_b)
+	_avvia_ambiente()
+	metti("menu", 0.0)
+
+
+# ---------------------------------------------------------------------------
+# Il giradischi
+# ---------------------------------------------------------------------------
+
+## Mette su un brano, sfumando quello di prima. Se è già quello, non fa
+## niente — chi chiama può richiamarla ogni frame senza pensarci.
+func metti(nome: String, fade: float = 2.5) -> void:
+	if nome == _brano_ora:
+		return
+	if not _brani.has(nome):
+		return
+	# **Due stati diversi ca sonano 'o stesso pezzo nun se rilanciano.**
+	# "sera" e "notte" puntano tutte e due a Blue Hour Lullaby: senza questo
+	# controllo, alle undici di sera il brano riparte da capo con una
+	# dissolvenza incrociata su se stesso — che si sente, ed e' un difetto
+	# che nasce solo dal modo in cui e' scritta la tabella.
+	if _brano_ora != "" and _brani.get(_brano_ora) == _brani[nome] \
+			and _music != null and _music.playing:
+		_brano_ora = nome
+		return
+	_brano_ora = nome
+
+	# Si scambiano i ruoli: quello che sta suonando diventa quello che
+	# sfuma, e l'altro parte da zero e sale.
+	var vecchio := _music
+	_music = _music_b
+	_music_b = vecchio
+
+	_music.stream = _brani[nome]
+	_music.volume_db = -80.0
+	_music.play()
+
+	if _tween and _tween.is_valid():
+		_tween.kill()
+	if fade <= 0.01:
+		_music.volume_db = _volume_base
+		_music_b.stop()
+		return
+	_tween = create_tween()
+	_tween.set_parallel(true)
+	_tween.tween_property(_music, "volume_db", _volume_base, fade)
+	_tween.tween_property(_music_b, "volume_db", -80.0, fade * 0.8)
+	_tween.chain().tween_callback(_music_b.stop)
+
+
+## Che brano sta girando adesso.
+func brano() -> String:
+	return _brano_ora
+
+
+## Alza/abbassa la musica senza cambiare brano (il menu la vuole un po' più
+## presente del gioco).
+func set_music_volume(db: float) -> void:
+	_volume_base_puro = db
+	_volume_base = db + _db_musica()
+	db = _volume_base
+	if _music and _music.playing:
+		if _tween and _tween.is_valid():
+			return # sta già sfumando: ci pensa il tween ad arrivarci
+		_music.volume_db = db
+
+
+func music_to_gameplay() -> void:
+	set_music_volume(MUSIC_VOLUME_DB)
+
+
+func music_to_menu() -> void:
+	set_music_volume(MUSIC_VOLUME_DB + 6.0)
+	metti("menu", 1.5)
+
+
+# ---------------------------------------------------------------------------
+# 'O volume
+# ---------------------------------------------------------------------------
+#
+# **Duje manopole, e se ricordano.**
+#
+# Il capo: *"aggiungi delle opzioni per abbassare il volume dei suoni e
+# della musica"*. Separate, perché servono a due cose diverse: la musica
+# uno la spegne per ascoltare altro, gli effetti li abbassa perché il
+# clacson di un motorino a tre metri è forte davvero.
+#
+# I due numeri stanno da 0 a 1 (che è come li pensa chi muove uno slider) e
+# si convertono in decibel al momento dell'uso, perché **il volume si sente
+# in decibel ma si regola in lineare**: una manopola a metà deve suonare
+# "metà", e metà in decibel è −6, non −40.
+#
+# Zero non è "molto piano": è **muto**, e va gestito a parte — `linear_to_db(0)`
+# fa meno infinito e certe piattaforme ci si offendono.
+#
+# E stanno in un file loro (`user://audio.cfg`), non nel salvataggio della
+# partita: il volume è una preferenza di chi gioca, non un fatto del
+# personaggio. Chi carica una partita vecchia non si ritrova la musica
+# alzata.
+const AUDIO_CFG := "user://audio.cfg"
+
+var vol_effetti: float = 1.0
+var vol_musica: float = 1.0
+
+
+func _db_effetti() -> float:
+	return -80.0 if vol_effetti <= 0.001 else linear_to_db(vol_effetti)
+
+
+func _db_musica() -> float:
+	return -80.0 if vol_musica <= 0.001 else linear_to_db(vol_musica)
+
+
+func set_vol_effetti(v: float) -> void:
+	vol_effetti = clampf(v, 0.0, 1.0)
+	salva_volume()
+
+
+func set_vol_musica(v: float) -> void:
+	vol_musica = clampf(v, 0.0, 1.0)
+	# La musica sta già suonando: va aggiornata adesso, se no la manopola
+	# sembra rotta finché non cambia brano.
+	set_music_volume(_volume_base_puro)
+	salva_volume()
+
+
+func salva_volume() -> void:
+	var f := FileAccess.open(AUDIO_CFG, FileAccess.WRITE)
+	if f == null:
+		return
+	f.store_string(JSON.stringify({"effetti": vol_effetti, "musica": vol_musica}))
+
+
+func carica_volume() -> void:
+	if not FileAccess.file_exists(AUDIO_CFG):
+		return
+	var f := FileAccess.open(AUDIO_CFG, FileAccess.READ)
+	if f == null:
+		return
+	var d = JSON.parse_string(f.get_as_text())
+	if typeof(d) != TYPE_DICTIONARY:
+		return
+	vol_effetti = clampf(float(d.get("effetti", 1.0)), 0.0, 1.0)
+	vol_musica = clampf(float(d.get("musica", 1.0)), 0.0, 1.0)
+
+
+## Riproduce un effetto. pitch_rand dà una leggera variazione naturale.
+func play(sound_name: String, volume_db: float = 0.0, pitch: float = 1.0, pitch_rand: float = 0.06) -> void:
+	if not _streams.has(sound_name):
+		return
+	if vol_effetti <= 0.001:
+		return # muto: nun se piglia manco 'nu canale d''o pool
+	for p in _players:
+		if not p.playing:
+			p.stream = _streams[sound_name]
+			p.volume_db = volume_db + MASTER_OFFSET_DB + _db_effetti()
+			p.pitch_scale = pitch * randf_range(1.0 - pitch_rand, 1.0 + pitch_rand)
+			p.play()
+			return
+
+
+## Uno a caso fra tanti. Serve a non sentire tre volte identico lo stesso
+## pugno: tre registrazioni diverse e nessuno se ne accorge piu'.
+func play_uno(nomi: Array, volume_db: float = 0.0, pitch: float = 1.0) -> void:
+	if nomi.is_empty():
+		return
+	play(str(nomi[randi() % nomi.size()]), volume_db, pitch)
+
+
+## **Il suono dei soldi, scelto in base a quanti sono.**
+##
+## Prima ogni pagamento faceva lo stesso "cling", che a fine giornata
+## diventava un tic. Adesso una mancia da due euro sono due monete, dieci
+## euro sono una manciata, e l'incasso di un guaglione e' un mucchio che si
+## versa. Non e' realismo: e' che **si sente quanto hai preso** senza
+## guardare il numero in alto a destra.
+func soldi(quanti: int, volume_db: float = 0.0) -> void:
+	var nome := "moneta1" if randf() < 0.5 else "moneta2"
+	if quanti >= 60:
+		nome = "mucchio"
+	elif quanti >= 20:
+		nome = "monete_tante"
+	elif quanti >= 5:
+		nome = "monete" if randf() < 0.5 else "monete2"
+	if not _streams.has(nome):
+		nome = "coin"
+	play(nome, volume_db)
+
+
+## 'E sei registrazioni 'e pugne, una a caso. Sei bastano: sotto le
+## quattro l'orecchio riconosce il giro, sopra le otto non se ne accorge
+## piu' nessuno.
+const PUGNI := ["pugno1", "pugno2", "pugno3", "pugno4", "pugno5", "pugno6"]
+
+
+func pugno(volume_db: float = 0.0) -> void:
+	play_uno(PUGNI, volume_db)
+
+
+## Il pugno che non prende: solo l'aria. Serve a far sentire la differenza
+## fra averlo dato e averlo tirato.
+func vuoto(volume_db: float = -8.0) -> void:
+	play("woosh", volume_db, randf_range(0.9, 1.15))
+
+
+# ---------------------------------------------------------------------------
+# 'O rummore d''a citta'
+# ---------------------------------------------------------------------------
+## **Napoli e' rumore, e questa e' la riga che lo dice.**
+##
+## Sotto a tutto gira un tappeto di voci vere registrate per strada. Non e'
+## musica e non e' un effetto: e' il fondo su cui sta il resto, e quando
+## manca il quartiere sembra spopolato anche se ci sono venti passanti a
+## schermo.
+##
+## Sta a volume basso e **si abbassa ancora** quando si entra in casa o
+## quando parte la musica dell'inseguimento: dentro al vascio la strada si
+## sente ma da lontano, ed e' quello che fa sembrare la casa un dentro.
+const AMBIENTE_DB: float = -22.0
+var _ambiente: AudioStreamPlayer
+var _ambiente_db: float = AMBIENTE_DB
+var _amb_tween: Tween
+
+
+func _avvia_ambiente() -> void:
+	var path := "res://audio/voci_napoli.ogg"
+	if not ResourceLoader.exists(path):
+		return
+	var s = load(path)
+	if s is AudioStreamOggVorbis:
+		s.loop = true
+	_ambiente = AudioStreamPlayer.new()
+	_ambiente.stream = s
+	_ambiente.volume_db = -80.0
+	add_child(_ambiente)
+
+
+## `quanto` da 0 (silenzio) a 1 (strada aperta). Mezzo e' "dentro casa".
+func ambiente(quanto: float, fade: float = 1.2) -> void:
+	if _ambiente == null:
+		return
+	quanto = clampf(quanto, 0.0, 1.0)
+	if not _ambiente.playing:
+		_ambiente.play()
+	var db: float = -80.0 if quanto <= 0.01 \
+		else AMBIENTE_DB + linear_to_db(quanto)
+	if _amb_tween and _amb_tween.is_valid():
+		_amb_tween.kill()
+	if fade <= 0.01:
+		_ambiente.volume_db = db
+		return
+	_amb_tween = create_tween()
+	_amb_tween.tween_property(_ambiente, "volume_db", db, fade)

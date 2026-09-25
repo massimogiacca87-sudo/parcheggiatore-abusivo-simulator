@@ -1,0 +1,135 @@
+﻿Pulizia 09/23/2026 22:02:35
+cestino: parcheggiatore-abusivo-v0.20.zip
+cestino: parcheggiatore-abusivo-v0.21.zip
+cestino: parcheggiatore-abusivo-v0.23.zip
+cestino: parcheggiatore-abusivo-v0.25.zip
+cestino: parcheggiatore-abusivo-v0.26.zip
+cestino: parcheggiatore-abusivo-v0.27_1.zip
+cestino: parcheggiatore-abusivo-v0.27.zip
+cestino: parcheggiatore-abusivo-v0.31_1.zip
+cestino: parcheggiatore-abusivo-v0.31.zip
+cestino: ParcheggiatoreAbusivo-v0.13-Windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.18-Windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.19-Progetto.zip
+cestino: ParcheggiatoreAbusivo-v0.19-Windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.20-Windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.21-Windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.22-Windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.23-Windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.24-Windows.tar_1.xz
+cestino: ParcheggiatoreAbusivo-v0.24-Windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.26-Windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.27-Web-itchio.zip
+cestino: ParcheggiatoreAbusivo-v0.27-Windows.tar_1.xz
+cestino: ParcheggiatoreAbusivo-v0.27-Windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.28-Windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.29-Windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.30-Windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.31-Web-itchio.zip
+cestino: ParcheggiatoreAbusivo-v0.31-Windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.32-Windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.33-windows.tar_1.xz
+cestino: ParcheggiatoreAbusivo-v0.33-windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.34-windows.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.48-Sorgenti_1.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.48-Sorgenti.tar.xz
+cestino: ParcheggiatoreAbusivo-v0.56-Web-itchio.zip
+cestino: PAS-v0.49-Windows.zip_1.part01
+cestino: PAS-v0.49-Windows.zip_1.part03
+cestino: PAS-v0.49-Windows.zip.part00
+cestino: PAS-v0.49-Windows.zip.part01
+cestino: PAS-v0.49-Windows.zip.part02
+cestino: PAS-v0.49-Windows.zip.part03
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.41-Sorgenti.zip
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.41-Web-itchio.zip
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.42-Sorgenti.zip
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.42-Web-itchio.zip
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.43-Sorgenti.zip
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.43-Web-itchio.zip
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.43b-Sorgenti.zip
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.43b-Web-itchio.zip
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.44b-Sorgenti.zip
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.44b-Web-itchio.zip
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.45-Sorgenti.zip
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.45-Web-itchio.zip
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.48-Windows.tar.xz
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.51-Sorgenti.tar.xz
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.51-Web-itchio.zip
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.51-Web-itchio.zip.00.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.51-Web-itchio.zip.01.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.51-Web-itchio.zip.02.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.51-Windows.tar.xz
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.51-Windows.tar.xz.00.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.51-Windows.tar.xz.01.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.51-Windows.tar.xz.02.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.51-Windows.tar.xz.03.part
+cestino: Claude outputs\PAS-v0.49-Sorgenti.zip
+cestino: Claude outputs\PAS-v0.50-Sorgenti.zip
+cestino (cartella): Claude outputs\v0.46
+cestino (cartella): Claude outputs\v0.47
+cestino (cartella): Claude outputs\PAS-v0.49-Web-parti
+cestino (cartella): Claude outputs\PAS-v0.49-Windows-parti
+cestino (cartella): Claude outputs\PAS-v0.50-Web-parti
+cestino (cartella): Claude outputs\PAS-v0.50-Windows-parti
+=== nel cestino: 72  mancanti: 0  errori: 0 ===
+
+Pulizia (secondo giro) 09/24/2026 11:04:21
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.53-Web-itchio.zip.00.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.53-Web-itchio.zip.01.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.53-Web-itchio.zip.02.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.53-Windows.tar.xz.00.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.53-Windows.tar.xz.01.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.53-Windows.tar.xz.02.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.53-Windows.tar.xz.03.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.55-Web-itchio.zip.00.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.55-Web-itchio.zip.01.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.55-Web-itchio.zip.02.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.55-Windows.tar.xz.00.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.55-Windows.tar.xz.01.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.55-Windows.tar.xz.02.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.55-Windows.tar.xz.03.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.56-Web-itchio.zip.00.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.56-Web-itchio.zip.01.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.56-Web-itchio.zip.02.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.56-Windows.tar.xz.00.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.56-Windows.tar.xz.01.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.56-Windows.tar.xz.02.part
+cestino: Claude outputs\ParcheggiatoreAbusivo-v0.56-Windows.tar.xz.03.part
+cestino: Claude outputs\v0.56b itch\ParcheggiatoreAbusivo-v0.56b-Web-itchio.zip.00.part
+cestino: Claude outputs\v0.56b itch\ParcheggiatoreAbusivo-v0.56b-Web-itchio.zip.01.part
+cestino: Claude outputs\v0.56b itch\ParcheggiatoreAbusivo-v0.56b-Web-itchio.zip.02.part
+cestino: Claude outputs\v0.57\PAS-v0.57-Web-itchio.zip.00.part
+cestino: Claude outputs\v0.57\PAS-v0.57-Web-itchio.zip.01.part
+cestino: Claude outputs\v0.57\PAS-v0.57-Web-itchio.zip.02.part
+cestino: Claude outputs\v0.58\PAS-v0.58-Web-itchio.zip.00.part
+cestino: Claude outputs\v0.58\PAS-v0.58-Web-itchio.zip.01.part
+cestino: Claude outputs\v0.58\PAS-v0.58-Web-itchio.zip.02.part
+cestino: Claude outputs\v0.58\PAS-v0.58-Web-itchio.zip.03.part
+cestino: Audio\Music\musica-8bit\Claude outputs\ParcheggiatoreAbusivo-v0.54-Web-itchio.zip.00.part
+cestino: Audio\Music\musica-8bit\Claude outputs\ParcheggiatoreAbusivo-v0.54-Web-itchio.zip.01.part
+cestino: Audio\Music\musica-8bit\Claude outputs\ParcheggiatoreAbusivo-v0.54-Web-itchio.zip.02.part
+cestino: Audio\Music\musica-8bit\Claude outputs\ParcheggiatoreAbusivo-v0.54-Windows.tar.xz.00.part
+cestino: Audio\Music\musica-8bit\Claude outputs\ParcheggiatoreAbusivo-v0.54-Windows.tar.xz.01.part
+cestino: Audio\Music\musica-8bit\Claude outputs\ParcheggiatoreAbusivo-v0.54-Windows.tar.xz.02.part
+cestino: Audio\Music\musica-8bit\Claude outputs\ParcheggiatoreAbusivo-v0.54-Windows.tar.xz.03.part
+cestino: Audio\Music\musica-8bit\Claude outputs\ParcheggiatoreAbusivo-v0.52-Windows.tar.xz
+cestino: Audio\Music\musica-8bit\Claude outputs\ParcheggiatoreAbusivo-v0.52-Windows.tar.xz.00.part
+cestino: Audio\Music\musica-8bit\Claude outputs\ParcheggiatoreAbusivo-v0.52-Windows.tar.xz.01.part
+cestino: Audio\Music\musica-8bit\Claude outputs\ParcheggiatoreAbusivo-v0.52-Windows.tar.xz.02.part
+cestino: Audio\Music\musica-8bit\Claude outputs\ParcheggiatoreAbusivo-v0.52-Windows.tar.xz.03.part
+cestino: Claude outputs\UNISCI.bat
+cestino: Audio\Music\musica-8bit\Claude outputs\UNISCI.bat
+cestino: Claude outputs\v0.56b itch\UNISCI.bat
+cestino: Claude outputs\pulizia-v0.60.ps1
+cestino: Claude outputs\pulizia-v0.60.bat
+=== nel cestino: 48  lasciati stare: 0  errori: 0 ===
+cestino: Claude outputs\pulizia2-v0.60.ps1 (lo script stesso, a lavoro finito)
+
+=== Pulizia della v0.61 (2026-09-24 16:39) - nel Cestino ===
+Cestino: ParcheggiatoreAbusivo-v0.53-Sorgenti.tar.xz
+Cestino: ParcheggiatoreAbusivo-v0.53-Web-itchio.zip
+Cestino: ParcheggiatoreAbusivo-v0.53-Windows.tar.xz
+Cestino: ParcheggiatoreAbusivo-v0.55-Sorgenti.tar.xz
+Cestino: ParcheggiatoreAbusivo-v0.55-Web-itchio.zip
+Cestino: ParcheggiatoreAbusivo-v0.55-Windows.tar.xz
+Restano: v0.56, v0.56b, v0.57, v0.58, v0.59, v0.60, v0.61 (sette versioni). Librerie di asset non toccate.

@@ -8,3 +8,8 @@
 *.mp3
 Claude outputs/
 Models/
+# Godot: cache dell'editor e build (si rigenerano)
+.godot/
+Build/
+# file temporanei di Claude (patch in arrivo)
+_claude_tmp/

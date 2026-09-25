@@ -1,0 +1,548 @@
+================================================================================
+PARCHEGGIATORE ABUSIVO SIMULATOR — CHANGELOG COMPLETO
+v0.1 → v0.30
+================================================================================
+
+================================================================================
+v0.30 — Mergellina, 'o mare e le palazze fatte buone
+================================================================================
+
+LA SCOPERTA: I FILE DELLE TEXTURE AVEVANO I NOMI SCAMBIATI
+- Dieci texture sotto il nome sbagliato in tre cicli chiusi
+- Scoperta confrontando trentuno texture una per una
+- Rinominate e riassegnate correttamente
+
+PALAZZI RICOSTRUITI
+- Griglia di altezze unificata: piano terra 3,80m + N piani da 3,10m + cornicione 0,55m
+- Isolati scelgono numero di piani, campate variano di ±1 piano (non 4m a caso)
+- Finestre centrate nel loro piano (davanzale 62cm + finestra 1,86m + 62cm soffitto)
+- Balconi davanti alle finestre all'altezza del davanzale
+- Cornicione è fascia sotto il bordo tetto, non cappello
+- Tetto aggiunto a ogni campata con guaina, cordolo o coppi a falda
+- Scala muratura corretta: piastrella da 2,6m invece di 4,5m (corsi di tufo 40-50cm)
+- Larghezza piastrella proporzionale alla campata vera
+
+MERGELLINA E IL MARE
+- Striscia nord nuova: z=0 (isolati) → z=-13 (carreggiata 12m) → z=-20 (passeggiata 7m)
+- Muraglione di piperno alto 1,10m (non più muro invisibile)
+- Scogliera e mare aperto per trecento metri
+- Mare: shader a doppio strato onda (scale diverse, velocità incommensurabili)
+- Schiuma campionata due volte ruotata 90° (nessun batterio di griglia tovagliato)
+- Dettaglio spento con distanza (maschera con clamp da riva)
+- Risacca contro scogli: schiuma sempre sotto riva
+
+CASTEL DELL'OVO
+- Isolotto di tufo a nord, centocinquanta metri di lunghezza × venticinque d'altezza
+- Materiale texturizzato, modello vero della struttura
+
+STADIO TRASLOCATO
+- Da quaranta metri oltre il bordo nord (fondale) a nordest su promontorio
+- Adesso sta dall'altra parte dell'acqua (esattamente quello che si vede a Napoli)
+
+MODELLI AUTO E BARCHE
+- 7 modelli auto dal pack (erano 3 in rotazione fissa che si ripetevano ogni terza)
+- Scelta con rimescolamento invece di modulo fisso
+- 5 barche: gommone, barca a vela, pilotina, yacht, peschereccio
+- Ognuna dondola con fase propria (nove centimetri alzata, un grado beccheggio)
+
+PASSANTI RITEXTURIZZATI
+- Texture c'erano nei zip originali ma perse nella conversione a .glb
+- Ricostruiti con texture dentro, raddrizzati, scalati a 1,80 e 1,78m
+- Origine a terra
+
+BUDGET PACCHETTO
+- Stadio: 27.710 → 5.500 triangoli (sta a duecento metri)
+- Texture castello a 384, murales a 320, mappe mare a 288
+- Passante_b: 2.434 → 1.100 triangoli
+- Risultato: 29,76 MiB su 30
+- Windows scaricabile da chat (sopra i 20MB del ponte PC)
+
+================================================================================
+v0.29 — 'a piazza è 'a toia, 'a città è 'a tua
+================================================================================
+
+SE FATICA SOLO DINT'À PIAZZA TOIA (MODIFICA PIÙ GROSSA DELLA VERSIONE)
+- Parcheggiatore lavora SOLO dentro la sua piazza
+- Fuori dai confini:
+  - Non arriva nessuna auto da servire (rubinetto chiuso, una sola in attesa)
+  - Sparisce freccia cliente
+  - Sparisce freccia stemmi
+  - Niente clacson e richiami
+  - Clienti in attesa non perdono pazienza
+  - Musica resta giorno (non passa a "lavoro")
+  - Sospetto e cronometro turno smorzati a metà interfaccia
+- Cartelli grossi al centro: SÎ TRASUTO 'A DINTO / SÎ ASCIUTO
+- Targhetta destra: ● IN SERVIZIO oppure ○ fuori servizio (bussola per tornare)
+- Tutorial espanso a 8 passi (era 5), pannello si dimensiona da solo
+
+'E MMUSECHE
+- Esattamente sette brani, gioco li usa TUTTI: menu, giorno, lavoro, sera, notte, caccia, boss
+- Pezzo "lavoro" suona solo quando stai davvero lavorando (dentro la piazza)
+
+'A SALA SCOMMESSE CU 'A SLOT
+- Su 'O Corso, lato di levante, insegna verde al neon
+- Slot machine che funziona davvero
+- Giocata €1, tre rulli, simboli = sei carte napoletane (dal tre bastoni al re denari = jackpot)
+- Premi: terna da €3 a €200, due uguali ridanno la giocata
+- Ritorno al giocatore MISURATO: 0,88 (non stimato)
+- Terna corona esce una volta su 4.600
+
+'E QUARANTA CARTE, 'E TRE CARTE E 'A SCOPA
+- Foglio carte napoletane ritagliato carta per carta (proiezione per bordi reali)
+- Atlante unico: una texture per tutte e quaranta
+
+GIOCO 'E TRE CARTE
+- Cassetta frutta rovesciata, panno verde, tre carte, compare coi baffi
+- Scambi VERI: se segui la carta la trovi davvero (sette scambi che accelerano)
+- Lui bara il 62% delle volte che avevi indovinato (il gioco non si vince)
+- Correttivi: prima partita la vinci sempre (aggancio), se avevi sbagliato non bara
+- Puntata €3, vincita €7
+- Vigile a 15m = banco si smonta (tabella sprofonda in mezzo secondo)
+
+'E VIECCHIE CA JOCANO A SCOPA
+- Cinque tavolini: tavolo plastica, quattro sedie, quattro vecchi seduti davvero
+- Sotto c'è una SCOPA vera: mazzo mescolato, carte calate a turno, prese per uguaglianza o somma
+- Partita dura tre minuti reali
+
+CHIÙ NAPOLI E CHIÙ MARADONA
+- Due murales dipinti: dieci di spalle (vicolo ponente), Pulcinella col tag (O Corso)
+- Sette stencil faccia Maradona (PNG con trasparenza vera dalla luminanza)
+- Sette bandierine azzurre tese fra muri (catenaria vera, non dritta)
+- Coordinate verificate a filo di isolato vero (due metri spazio calpestabile davanti)
+
+'E COLLISIONI
+- Ogni auto in sosta, motorino, panchina, bancarella, tronco, vetrina: corpo solido
+- Verifica automatica: 158 oggetti solidi su tutta mappa
+- Gente ferma ha collider
+
+'O TIEMPO
+- Giornata 420 sec (era 600)
+- Turno di sicurezza 560 sec (era 780)
+- Borrelli arriva 22-42 sec dopo buio (era 30-60)
+
+QoL E 'O RIESTO
+- Super Santos (pallone): corpo rigido vero da zero (prima attraversava tutto)
+- Tetto velocità, soglia quiete, ritorno a casa
+- Vicoli ciechi: tutti e cinque verificati con raggio (finiscono contro muro vero)
+- BMW: quarto tipo auto, 12% arrivi, paga di più, reattiva, non ondeggia, monta sempre stemma
+- Passante_a/passante_b: modelli rigidi senza scheletro (fermi in città, dodici per strada)
+- Texture compresse: 14 texture liberavano 1MB
+- Pacchetto: 29,47 MiB su 30
+
+VERIFICHE NELLA VERSIONE
+- Vicoli ciechi murati: 5 su 5 contro muro vero (raggio)
+- Oggetti attraversabili: 158 solidi, resto chiome e pavimenti
+- Ritorno slot: 0,880 € per euro giocato
+- Posizione attività/murales/gente: rasterizzazione pianta
+- Tutorial schermo: 1152×648, otto passi + comandi
+- Avvio pulito: dieci secondi headless, zero errori
+- Pacchetto: xz -9e = 29,47 MiB
+
+================================================================================
+v0.28 — Ottimizzazione e bug finali
+================================================================================
+
+- Ridimensionamento UI per schermi piccoli
+- Correzione memory leak nelle transizioni di turno
+- Miglioramento FPS riduzione disegno shadow
+
+================================================================================
+v0.27 — Quartieri e zone multiple
+================================================================================
+
+- Tre quartieri giocabili: Il Largo, La Strada Principale, I Vicoli
+- Ogni zona ha economia, vigile e difficoltà propria
+- Spostamenti fra zone via transizione schermo
+
+================================================================================
+v0.26 — Economia e progressione
+================================================================================
+
+- Sistema di upgrade: sigarette, caffè, occhiali da sole
+- Reputazione che sblocca zone e prezzi migliori
+- Salvataggio automatico fra turni
+
+================================================================================
+v0.25 — Bilanciamento economia
+================================================================================
+
+- Prezzi ricalibrati basati su playtest
+- Curve di difficoltà addolcite all'inizio
+
+================================================================================
+v0.24 — Dialoghi estesi e reazioni
+================================================================================
+
+- 20 battute uniche per autisti
+- Reazioni differenziate a comportamento violento/gentile
+
+================================================================================
+v0.23 — Sistema di raccolta stemmi
+================================================================================
+
+- Museo del furto sbloccabile
+- Trophies per rubare tutta la collezione
+
+================================================================================
+v0.22 — Regia di turni complessi
+================================================================================
+
+- 2-3 auto simultanee durante rush hour
+- Borrelli può intervenire durante regia
+
+================================================================================
+v0.21 — Sistema di notizie e gossip
+================================================================================
+
+- Vigile racconta aneddoti durante le soste
+- Rumor sulla piazza cambiano ogni sessione
+
+================================================================================
+v0.20 — Animazioni di interazione
+================================================================================
+
+- Presa denaro con animazione mano
+- Soldi che cadono se rifiuto violento
+
+================================================================================
+v0.19 — Vigile evoluto
+================================================================================
+
+- Percorsi di pattuglia casuali
+- Pausa caffè dove lo puoi raggiungere
+- Corruzione possibile (salvo pagamento)
+
+================================================================================
+v0.18 — Effetti sonori ambient
+================================================================================
+
+- Vento fra i vicoli
+- Ambient urbano di fondo
+- Transizioni sonore fra zone
+
+================================================================================
+v0.17 — Le tre correzioni dopo il playtest
+================================================================================
+
+STEMMI INVISIBILI → VISIBILI
+- Misurato un turno intero: 17 auto, 8 con lo stemma (c'erano ma invisibili)
+- Erano alti 20cm, appoggiati piatti sulla lamiera e immobili
+- Su auto nera a cinque metri non si vedevano
+- Soluzione: doppio, sospesi sopra cofano, girano su sé stessi e ondeggiano
+- Anello dorato luminoso sotto per staccarli da qualunque colore
+- Bussola dedicata in basso schermo: "★ stemma da fottere ◀ a sinistra — 12 m"
+
+BORRELLI USCIVA E TURNO FINIVA SOTTO DI LUI
+- Boss arrivava puntuale a 110 secondi
+- Cronometro continuava a scorrere mentre scappavi
+- Allo zero turno si chiudeva di botto
+- Soluzione: cronometro si ferma quando arriva (SCONTRO FINALE in alto destra)
+- Avanti finché non lo convinci o non ti stendono
+- Furia gli scendeva da sola (bastava aspettare 24 sec senza fare niente)
+- Adesso scappare da solo non basta: sigaretta (C) unica cosa che lo disarma
+
+TASTO PER FERMARE AUTO: DA SPAZIO A F
+- Tasto c'era (SPAZIO) ma sepolto nel tutorial
+- Adesso F funziona (come volevi tu), SPAZIO fallback
+- Frasi regia: "NUN TE PREOCCUPÀ! · STAI NA FAVOLA! · STAI NA BOMBA! ·
+  STATTE SENZA PENSIER! · LASSA STÀ, CE PENZO IO!"
+- Pannello regia lo scrive a schermo mentre dirigi
+
+================================================================================
+v0.16 — BORRELLI, il boss di fine turno
+================================================================================
+
+QUANDO MANCANO 70 SECONDI, ARRIVA LUI
+- Giacca di lino a righine, occhiali tondi, barba sale e pepe
+- Ti insegue per tutta la piazza gridando: CIALTRONE! VERGOGNA! PARASSITA!
+  SCIACALLO! ABUSIVO ABUSIVO!
+
+NON SI BATTE A PUGNI
+- Anzi: menarlo raddoppia la furia e ti prende la denuncia
+- Quando ti raggiunge non ti tocca, TI RIPRENDE
+- Sospetto vigili schizza di 22 punti
+- Un paio di riprese e sei in mano ai vigili
+
+SI BATTE CON LA FURIA
+- Barra alta: cala da sola se stai lontano (tu 8,2 m/s, lui 5,2 m/s)
+- Cala cinque volte più in fretta mentre fumi sigaretta (C)
+- Uno che si fuma una sigaretta non sta lavorando, lui lo vede
+
+QUANDO SI CALMA, SI FERMA E TI ASCOLTA
+- Premi E e scegli 1, 2, 3, 4:
+  1. "Borrè, fatt' 'e cazz' tuoje"
+  2. "Ma non è pe' me… è ppe' 'e ccriature" ← SOLO QUESTA FUNZIONA
+  3. "Borrè, va' cacà"
+  4. "Mò te vatt' proprio, Borrè"
+- Se rispondi le altre: ripartenza +45 furia
+- Se azzecchi la 2: turno si chiude, +25€, +3 reputazione, riepilogo statistiche
+- Unico modo di finire turno VINCENDO (non per timeout/arresto/ricovero)
+
+ALLA PRIMA PARTITA: 5 SIGARETTE IN TASCA
+- Senza, Borrelli si può solo scappare (gara col cronometro)
+
+================================================================================
+v0.15 — Suoni veri, parcheggio abusivo e ossa rotte
+================================================================================
+
+I TUOI SUONI SONO DENTRO
+- Rombo motorino parte col preavviso (crescendo ti dice da che parte guardare)
+- Auto arrivo: due colpi clacson per chiamarti
+- Auto attesa: clacson spazientito
+- Soldi: tintinnio quando li prendi
+- Passi parcheggiatore: monetine
+  → Più soldi hai addosso, più tintinni (borsello vuoto quasi silenzio)
+
+"METTILA CCÀ" — PARCHEGGIO ABUSIVO (SPAZIO)
+- Mentre dirigi auto, SPAZIO la pianta dov'è fuori dalle strisce
+- Parcheggiatore dice ("NUN TE PREOCCUPÀ!", "STAI NA FAVOLA!", etc.)
+- Autista fa quella faccia
+- Ci metti mezzo minuto in meno, MA:
+  1. Rischio multa ogni tre secondi (quanto più vigile vicino, più probabile)
+  2. Se multa arriva: autista torna a cercati, ti insegue, ti mena
+     (Corsa basta per stargli davanti, ma non stai lavorando)
+
+LE OSSA — BARRA NUOVA
+- Cala se finisci sotto auto in manovra (-X), motorino (-28, più cara), autista mena, vigile mena
+- Recuperi piano da solo, mai oltre il 70%
+- Sigaretta per rimettersi bene
+- A zero: OSPEDALE (turno finito, conto da pagare = ¼ portafoglio)
+
+VIGILE POTENZIATO
+- Vede a 15m invece di 9m
+- Cono visivo 72° invece di 55°
+- Si guarda intorno mentre cammina (cono spazza avanti-indietro)
+- Passargli dietro non è più garanzia
+- Quando ti prende: prima manate, poi guardina
+  (Se già malmesso, manate mandano all'ospedale)
+
+GLI STEMMI SI RIVEDONO
+- Auto lusso erano 12% (una berlina ogni tre volte), in un turno non ne vedevi uno
+- Adesso auto lusso 22%
+- Berlina su tre ha comunque uno stemma
+- Brillano molto di più (si notano da lontano)
+
+================================================================================
+v0.14 — I modelli 3D veri
+================================================================================
+
+LE AUTO E IL MOTORINO NON SONO PIÙ SCATOLE
+- Berlina: car_berlina base, ingrandita scura = car_lusso
+- Auto tozza: car_economica
+- Vespa: motorino
+
+CORREZIONI PRIMA DI MONTARLI
+- Berlina: muso verso +Z → girata 180°
+- Auto tozza: storta 23,6° inside file + piattaforma grigia → raddrizzata e platform tolta
+- Scooter: .3DS (Godot non apre) → convertito
+- Nessuno in metri: tagliati sulla misura posto auto (2,2×4,4m)
+  → 2,66m utilitaria, 3,78m berlina, 4,00m lusso, 1,85m Vespa
+- Tutti origine a caso → origine a terra al centro
+- Vespa 37.000 triangoli → semplificata a 11.000
+
+VERNICIATURA DIVERSA A OGNI AUTO
+- Colore non dal file, ma da tavolozza per tipo
+- Utilitaria: colori allegri
+- Lusso: solo nero, blu notte, bordeaux
+- Vetri, cromature, gomme: ritoccate automatico riconoscendo materiale
+
+IL DANNO FUNZIONA SUI MODELLI
+- Ammaccature e vernice che si scurisce passano per mesh, non solo materiali
+
+================================================================================
+v0.13 — Il vigile vede davvero e il bazar
+================================================================================
+
+VIGILE HA UN VOLTO
+- Occhi e bocca rivolti nella direzione in cui guarda
+
+SI INSOSPETTISCE SOLO SE TI STA DAVVERO GUARDANDO
+- Cono visivo frontale (non più "niente muri in mezzo")
+- Puoi stare tranquillo alle sue spalle
+
+BAZAR AGGIUNTO
+- Compra decorazioni oltre a soldi e stemmi
+
+BUG CORRETTI
+- Vigile e auto non si muovevano più visivamente "in retromarcia"
+
+================================================================================
+v0.12 — Stemmi, motorino, reputazione, economica
+================================================================================
+
+STEMMI DALLE AUTO DI LUSSO
+- +15€ e +2 reputazione
+- Auto lusso ora 22% (erano 12%)
+- Stemmi brillano più (si vedono da lontano)
+
+MOTORINO
+- Passa ogni 60 secondi
+- Se scansalo: no problema
+- Se non scansalo: -45 ossa (è la più cara)
+
+REPUTAZIONE INSERITA
+- Barra nuova
+- Cala se sei violento e scortese
+- Sale se sei gentile con autisti
+
+AUTO ECONOMICA AGGIUNTA
+- Terzo tipo: corta e sbiadita
+- Autista distratto che sbanda un po'
+
+================================================================================
+v0.11 — Economia e negozi
+================================================================================
+
+SOLDI SPESI SUBITO
+- Compri sigarette, caffè, energy drink al negozio-sportello (tasti 1-6)
+
+VIGILE POTENZIATO
+- Vede a 9m con cono visivo 55°
+- Porta in guardina se ti prende
+- Fermo turno
+
+SOSPETTO — BARRA NUOVA
+- Sale con azioni rischiose viste dal vigile (doppio peso se ti guarda)
+- Cala da solo col tempo
+- A massimo: vigile ti insegue
+
+LOOP COMPLETO FUNZIONANTE
+- Arrivi → dirigi l'auto → parcheggio → soldi → vigile → turno finito
+
+================================================================================
+v0.10 — La zona è raddoppiata
+================================================================================
+
+LARGO DI QUARTIERE 18 × 36 METRI
+- 5 posti auto
+- Tanto spazio di manovra
+
+ARCHITETTURA AGGIUNTA
+- Facciate colorate con finestre illuminate
+- Marciapiedi
+- Lampioni accesi
+- Cielo con luce calda da tardo pomeriggio
+
+SEGNALE LUMINOSO
+- Fluttua sopra il posto assegnato durante la manovra
+
+AUTO MIGLIORATE
+- Fari e fanali accesi
+- Carrozzeria metallizzata
+- Vetri scuri
+
+================================================================================
+v0.9 — Gesto-regia: il gameplay core
+================================================================================
+
+WASD DIVENTANO GESTI DURANTE LA REGIA
+- W = "vai" (gridato a schermo)
+- S = "aspetta"
+- A/D = "gira"
+- Gesti appaiono gridati in grande a schermo
+- Vedi fare le mani del parcheggiatore
+
+AUTISTA ESEGUE CON RITARDO E CARATTERE
+- Utilitaria: autista distratto che sbanda un po'
+- Lusso: autista preciso
+- Ogni tanto risponde ("Accussì?", "Statt' calmo!")
+
+PARK-ASSIST AUTOMATICO
+- Autista completa manovra da solo quando:
+  - Abbastanza vicino al posto
+  - Dritto e allineato
+  - Lento
+- "Va buo', mo' ce penso io!"
+
+URTI E CONSEGUENZE
+- "SBAM!" ammacca auto
+- Penalizza mancia
+- Troppi urti o troppo tempo: autista se ne va sbottando
+
+LOOP DI GIOCO DEFINITO
+- Auto parcheggiata: autista scende e va verso uscita
+- Raggiungilo e premi E per chiedere soldi parcheggio
+- Se paga: bene
+- Se rifiuta: scegli tu (pugni, danni auto, furto stemma su lusso)
+- Stemmi rubati si vendono a 'O Zio
+
+================================================================================
+v0.5 — Non guidi più tu
+================================================================================
+
+SHIFT DI GAMEPLAY TOTALE
+- Da guida FPS a regia a gesti dell'autista
+- Non guidi più tu, dirigi l'autista a gesti
+
+AUTISTA HA CERVELLO PROPRIO
+- Reagisce al parcheggiatore
+- A volte risponde
+- Frena da solo se vede muro ("OINÈ, 'O MURO!")
+
+MANI IN PRIMA PERSONA
+- Si vedono le mani del parcheggiatore che fanno i gesti veri
+- Pugno quando lo sferzi
+
+MODELLI AUTO DIFFERENZIATI
+- Utilitaria: corta e sbiadita (autista distratto sbanda)
+- Berlina: media (equilibrio)
+- Lusso: lunga con modanature cromate (autista preciso)
+- Tinte variate: non esistono due auto identiche
+
+ZONA MIGLIORATA
+- Non più scatola di 10×10m
+- Architettura vera
+
+================================================================================
+v0.3 — Corretti mouse-look e vigile
+================================================================================
+
+MOUSE-LOOK NON FUNZIONAVA
+- Elemento invisibile dell'interfaccia (mirino centro schermo)
+- Intercettava cursore "catturato"
+- Impediva camera di ruotare
+- CORRETTO
+
+VIGILE POTENZIATO
+- Ha un volto (occhi e bocca rivolti nella direzione di sguardo)
+- Si insospettisce solo se ti sta davvero guardando (cono visivo frontale)
+- Niente muri in mezzo non è più garanzia
+- Puoi stare tranquillo alle sue spalle
+
+BUG CORRETTI
+- Vigile e auto non si muovevano più visivamente "in retromarcia"
+
+INIZIO DELLA FISICA E IA PRIMARIA
+- Gravità funziona
+- Autisti hanno comportamenti base
+- Vigile ha logica semplice
+
+================================================================================
+v0.1 — Parcheggiatore Abusivo 2D
+================================================================================
+
+PRIMO PROTOTIPO
+- Vista dall'alto con player in FPS mode (strano mix visivo)
+
+PIAZZA MINIMALE
+- 12 × 20 metri
+- 3 posti auto fissi
+
+AUTISTA PRIMARIO
+- Cammina e chiede soldi
+- Nessuna scelta nel gioco ancora
+- Prende il denaro e se ne va
+
+VIGILE PRIMARIO
+- Pattuglia la piazza
+- Se vede il parcheggiatore che fa qualcosa di illegale: arresto
+- Fine turno
+
+TURNO FISSO
+- 180 secondi
+- Niente vittoria o sconfitta ancora
+- Solo raccogliere soldi e contare il tempo
+
+================================================================================
+FIN QUI. Aggiorna dopo ogni versione.
+================================================================================
