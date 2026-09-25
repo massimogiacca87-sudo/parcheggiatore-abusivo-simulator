@@ -14,6 +14,11 @@ const PANEL_BG := Color(0.11, 0.09, 0.13, 0.98)
 const GOLD := Color(1.0, 0.83, 0.33)
 const CREAM := Color(0.95, 0.93, 0.88)
 const DIM := Color(0.72, 0.68, 0.66)
+## Il corpo dei passi, dove comincia la lista e quanto è alta una riga dei
+## comandi (0.62: col font del tema nuovo).
+const CORPO := 12
+const CIMA_PASSI := 80.0
+const RIGA_COMANDI := 19.0
 
 ## Il ciclo di gioco, passo per passo: titolo, tasto, spiegazione.
 const STEPS := [
@@ -39,14 +44,14 @@ const CONTROLS := [
 	["Guarda", "Mouse"],
 	["Interagisci", "E"],
 	["Pugno · scippo", "Click sx"],
-	["Mettila ccà · danneggia", "F"],
+	["Pianta · danneggia", "F"],
 	["Sigaretta", "X"],
 	["Fischietto", "Q"],
 	["Caffè", "R"],
 	["Zaino", "I"],
 	["'A chiantina", "M"],
 	["Compra", "1 – 6"],
-	["Cagna 'e fierre · stemma", "G"],
+	["Fierre · stemma", "G"],
 	["Pausa", "ESC"],
 ]
 
@@ -195,28 +200,30 @@ func _build_full() -> void:
 		get_viewport().get_visible_rect().size.y - 16.0)
 	var box := _panel(Vector2(-W / 2.0, -H / 2.0), Vector2(W, H))
 
-	_label(box, Vector2(0, 12), Vector2(W, 40),
-		"PARCHEGGIATORE ABUSIVO", 30, GOLD, HORIZONTAL_ALIGNMENT_CENTER)
-	_label(box, Vector2(0, 52), Vector2(W, 22),
-		"Simulator — 'a piazza è 'a toia", 14, DIM,
+	_label(box, Vector2(0, 8), Vector2(W, 38),
+		"PARCHEGGIATORE ABUSIVO", 28, GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	_label(box, Vector2(0, 44), Vector2(W, 20),
+		"Simulator — 'a piazza è 'a toia", 13, DIM,
 		HORIZONTAL_ALIGNMENT_CENTER)
 
-	_separator(box, 82.0, W, 0.7)
+	_separator(box, 70.0, W, 0.7)
 
 	var meta: int = int(ceil(float(STEPS.size()) / 2.0))
-	var y := [94.0, 94.0]
+	var y := [CIMA_PASSI, CIMA_PASSI]
 	for i in STEPS.size():
 		var step: Array = STEPS[i]
 		var col: int = 0 if i < meta else 1
 		var x: float = 34.0 + col * COL
 		_label(box, Vector2(x, y[col]), Vector2(300, 24),
-			str(step[0]), 17, GOLD, HORIZONTAL_ALIGNMENT_LEFT)
-		_key_chip(box, Vector2(x + 286.0, y[col]), str(step[1]))
+			str(step[0]), 16, GOLD, HORIZONTAL_ALIGNMENT_LEFT)
+		# Il "—" voleva dire "nessun tasto": un tastino vuoto confondeva.
+		if str(step[1]) != "—":
+			_key_chip(box, Vector2(x + 286.0, y[col]), str(step[1]))
 		var body := str(step[2])
 		var body_h := _text_height(body)
 		_label(box, Vector2(x, y[col] + 23), Vector2(COL - 46.0, body_h),
-			body, 13, CREAM, HORIZONTAL_ALIGNMENT_LEFT)
-		y[col] += 23.0 + body_h + 8.0
+			body, CORPO, CREAM, HORIZONTAL_ALIGNMENT_LEFT)
+		y[col] += 23.0 + body_h + 5.0
 
 	var fondo: float = maxf(y[0], y[1])
 	_separator(box, fondo + 2.0, W, 0.5)
@@ -230,13 +237,13 @@ func _build_full() -> void:
 		var col2: int = i % cols
 		var row: int = i / cols
 		var cx: float = 40.0 + col2 * 222.0
-		var ry: float = cy + row * 21.0
-		_label(box, Vector2(cx, ry), Vector2(110, 20),
+		var ry: float = cy + row * RIGA_COMANDI
+		_label(box, Vector2(cx, ry), Vector2(126, 20),
 			str(elenco[i][0]), 12, DIM, HORIZONTAL_ALIGNMENT_LEFT)
-		_label(box, Vector2(cx + 114, ry), Vector2(90, 20),
+		_label(box, Vector2(cx + 128, ry), Vector2(86, 20),
 			str(elenco[i][1]), 12, CREAM, HORIZONTAL_ALIGNMENT_LEFT)
 
-	_label(box, Vector2(0, cy + rows * 21.0 + 12.0), Vector2(W, 28),
+	_label(box, Vector2(0, cy + rows * RIGA_COMANDI + 10.0), Vector2(W, 28),
 		"Schiaccia nu tasto qualsiase pe' accummincià 'o turno", 17, GOLD,
 		HORIZONTAL_ALIGNMENT_CENTER)
 
@@ -246,15 +253,15 @@ func _build_full() -> void:
 ## taglia il testo da solo.
 func _altezze_colonne() -> Array:
 	var meta: int = int(ceil(float(STEPS.size()) / 2.0))
-	var y := [94.0, 94.0]
+	var y := [CIMA_PASSI, CIMA_PASSI]
 	for i in STEPS.size():
 		var col: int = 0 if i < meta else 1
-		y[col] += 23.0 + _text_height(str(STEPS[i][2])) + 8.0
+		y[col] += 23.0 + _text_height(str(STEPS[i][2])) + 5.0
 	# Sotto ai passi ci vanno ancora i comandi, su quattro colonne, e la
 	# riga "premi un tasto".
 	var elenco: Array = _controlli_pad() if Pad.collegato() else CONTROLS
 	var righe: float = ceil(float(elenco.size()) / 4.0)
-	var extra: float = 18.0 + righe * 21.0 + 40.0
+	var extra: float = 16.0 + righe * RIGA_COMANDI + 40.0
 	return [y[0] + extra, y[1] + extra]
 
 
@@ -267,8 +274,13 @@ func _separator(parent: Control, y: float, width: float, alpha: float) -> void:
 	parent.add_child(sep)
 
 
+## **Si misura col font vero** (0.62). Era 18 px a riga, scritto a mano per
+## il font di prima; il Poppins del tema nuovo è più alto, e il conto
+## sbagliato faceva finire i comandi sotto al bordo del pannello.
 func _text_height(text: String) -> float:
-	return text.split("\n").size() * 18.0
+	var f: Font = UiStile.font_testo()
+	var riga: float = f.get_height(CORPO) if f != null else 17.0
+	return text.split("\n").size() * riga
 
 
 func _panel(offset: Vector2, size: Vector2) -> Panel:

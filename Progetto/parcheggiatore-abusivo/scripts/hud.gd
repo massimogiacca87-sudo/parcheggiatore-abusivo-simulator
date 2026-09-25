@@ -1734,9 +1734,12 @@ func _stile_pannello(colore_bordo: Color) -> StyleBoxFlat:
 
 func _build_shop_ui() -> void:
 	shop_panel = Panel.new()
-	shop_panel.set_anchors_preset(Control.PRESET_CENTER_LEFT)
-	shop_panel.position = Vector2(24, -246)
-	shop_panel.size = Vector2(392, 492)
+	# **Sotto alla scheda, non sopra** (0.62). Stava centrato a sinistra e
+	# copriva mezza scheda dei soldi e delle barre; adesso parte da sotto
+	# alla scheda (`_metti_negozio`) e si allunga quanto serve.
+	shop_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	shop_panel.position = Vector2(16, SHOP_TOP)
+	shop_panel.size = Vector2(392, 440)
 	shop_panel.visible = false
 	shop_panel.add_theme_stylebox_override("panel",
 		_stile_pannello(Color(0.55, 0.47, 0.3)))
@@ -1762,7 +1765,7 @@ func _build_shop_ui() -> void:
 
 	shop_label = Label.new()
 	shop_label.position = Vector2(16, 300)
-	shop_label.size = Vector2(360, 184)
+	shop_label.size = Vector2(360, 140)
 	shop_label.add_theme_font_size_override("font_size", 13)
 	shop_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	shop_panel.add_child(shop_label)
@@ -1810,6 +1813,35 @@ func _disegna_griglia(dove: Control, voci: Array, per_riga: int,
 
 
 var _shop_kind: String = ""
+## Dove comincia il negozio se la scheda di sinistra non si trova.
+const SHOP_TOP: float = 170.0
+const SHOP_LATO: float = 72.0
+
+
+## Mette il negozio sotto alla scheda di sinistra e lo fa alto quanto il
+## suo contenuto: la griglia (`alto_griglia`) più la scheda della voce.
+func _metti_negozio(alto_griglia: float) -> void:
+	var scheda_ok: bool = _scheda_sx != null and is_instance_valid(_scheda_sx)
+	var cima: float = SHOP_TOP
+	if scheda_ok and _scheda_sx.visible:
+		cima = _scheda_sx.get_global_rect().end.y + 10.0
+	var vista: float = get_viewport().get_visible_rect().size.y
+	shop_label.position.y = 42.0 + alto_griglia + 8.0
+	var righe: int = maxi(1, shop_label.get_line_count())
+	var alto_testo: float = float(righe) * float(shop_label.get_line_height()) + 6.0
+	shop_label.size.y = alto_testo
+	var alto: float = shop_label.position.y + alto_testo + 14.0
+	# Se sotto alla scheda non c'entra (la scheda s'allunga con la
+	# commissione in corso), il banco sale in cima e la scheda si fa da
+	# parte finché si compra: i soldi stanno scritti nel banco.
+	var sale: bool = cima + alto > vista - 12.0
+	if sale:
+		cima = 16.0
+	if scheda_ok:
+		_scheda_sx.modulate.a = 0.0 if sale else 1.0
+	alto = minf(alto, vista - cima - 12.0)
+	shop_panel.position = Vector2(16, cima)
+	shop_panel.size = Vector2(392, alto)
 
 
 func set_shop_visible(kind: String) -> void:
@@ -1826,6 +1858,8 @@ func set_shop_visible(kind: String) -> void:
 		_refresh_shop()
 	elif era != "":
 		GameManager.azzera_scelta_negozio()
+	if kind == "" and _scheda_sx != null and is_instance_valid(_scheda_sx):
+		_scheda_sx.modulate.a = 1.0
 
 
 ## Il banco ha cambiato voce selezionata (l'ha detto GameManager, perché il
@@ -1875,9 +1909,9 @@ func _refresh_shop() -> void:
 				{"id": "caffe", "posseduto": GameManager.caffe > 0,
 					"etichetta": "×%d" % GameManager.caffe},
 			]
-			_disegna_griglia(_shop_grid, voci, 3, 84.0, -1)
+			var hg: float = _disegna_griglia(_shop_grid, voci, 4, SHOP_LATO, -1)
 			shop_label.text = Pad.traduci("\n".join([
-				"Puórtafoglio: € %d" % GameManager.money,
+				"'O portafoglio: €%d" % GameManager.money,
 				"",
 				"[E] nu pacchetto 'e ssigarette — €%d" % GameManager.CIGARETTE_PACK_COST,
 				"      po' [X] pe' t''a appiccià: mentre fume",
@@ -1888,6 +1922,7 @@ func _refresh_shop() -> void:
 				"      po' [R] pe' te ne sculà uno: leva suspetto,",
 				"      te rimette 'nzieme e pe' quinnece secunne curre.",
 			]))
+			_metti_negozio(hg)
 			return
 
 	for i in chiavi.size():
@@ -1906,10 +1941,10 @@ func _refresh_shop() -> void:
 			"id": id, "posseduto": mio and not (id in GameManager.DECOR_IDS),
 			"etichetta": etichetta,
 		})
-	_disegna_griglia(_shop_grid, voci, 3, 84.0, _sel)
+	var alto_griglia: float = _disegna_griglia(_shop_grid, voci, 4, SHOP_LATO, _sel)
 
 	# Sotto la griglia, la scheda della casella scelta.
-	var righe: Array = ["Puórtafoglio: € %d" % GameManager.money, ""]
+	var righe: Array = ["'O portafoglio: €%d" % GameManager.money, ""]
 	if _sel >= 0 and _sel < chiavi.size():
 		var id2: String = chiavi[_sel]
 		var info2: Dictionary = GameManager.UPGRADES[id2]
@@ -1933,6 +1968,7 @@ func _refresh_shop() -> void:
 	righe.append("")
 	righe.append_array(coda)
 	shop_label.text = Pad.traduci("\n".join(righe))
+	_metti_negozio(alto_griglia)
 
 
 func _build_inventory_ui() -> void:
@@ -2758,6 +2794,18 @@ func _build_summary_ui() -> void:
 	summary_panel.size = Vector2(580, 500)
 	summary_panel.visible = false
 	add_child(summary_panel)
+	# **'O scuro dereto** (0.62): il riepilogo si apriva sopra alla piazza
+	# con le schede dell'HUD accese attorno, e le barre ci passavano sotto.
+	# Un velo scuro, figlio del pannello e disegnato dietro di lui: si
+	# accende e si spegne insieme al pannello senza doverlo ricordare.
+	var velo := ColorRect.new()
+	velo.name = "Velo"
+	velo.color = Color(0.02, 0.02, 0.04, 0.72)
+	velo.position = Vector2(-3000, -3000)
+	velo.size = Vector2(6000, 6000)
+	velo.show_behind_parent = true
+	velo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	summary_panel.add_child(velo)
 
 	summary_label = Label.new()
 	summary_label.position = Vector2(20, 14)

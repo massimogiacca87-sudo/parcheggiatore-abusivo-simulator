@@ -93,6 +93,22 @@ func aperto() -> bool:
 	return _aperto
 
 
+## **Sempe 'mmiezo** (0.62). Il pannello partiva da 250 px sopra al centro
+## e cresceva verso il basso: con due spese e sei bottoni l'ultimo
+## («Vabbuo', mo' vengo») finiva sotto al bordo dello schermo. Adesso si
+## rimette al centro ogni volta che cambia il contenuto, alto quanto serve.
+func _process(_d: float) -> void:
+	if not visible or _pannello == null:
+		return
+	var alto: float = _pannello.get_combined_minimum_size().y
+	var vista: float = get_viewport().get_visible_rect().size.y
+	alto = minf(alto, vista - 16.0)
+	_pannello.offset_left = -LARGH * 0.5
+	_pannello.offset_right = LARGH * 0.5
+	_pannello.offset_top = -alto * 0.5
+	_pannello.offset_bottom = alto * 0.5
+
+
 # ---------------------------------------------------------------------------
 # 'A consegna
 # ---------------------------------------------------------------------------
@@ -218,13 +234,14 @@ func _mostra_extra(d: Dictionary) -> void:
 
 func _svuota_bottoni() -> void:
 	for c in _bottoni.get_children():
+		_bottoni.remove_child(c)
 		c.queue_free()
 
 
 func _bottone(testo: String, azione: Callable) -> void:
 	var b := Button.new()
 	b.text = testo
-	b.custom_minimum_size = Vector2(LARGH - 60, 38)
+	b.custom_minimum_size = Vector2(LARGH - 60, 32)
 	b.pressed.connect(azione)
 	_bottoni.add_child(b)
 	if _bottoni.get_child_count() == 1:
