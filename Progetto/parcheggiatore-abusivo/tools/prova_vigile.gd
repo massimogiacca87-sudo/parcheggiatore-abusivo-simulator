@@ -136,6 +136,20 @@ func _prova_ca_smonta() -> void:
 		else "sta ancora ccà"))
 	if is_instance_valid(v):
 		male("doppo 'e vinte 'o vigile nun se ne va")
+	# **0.62**: dalla 0.62 i vigili nascono in tutte le piazze che ne
+	# hanno (prima solo in quella di casa, ed era il guasto «il vigile è
+	# sparito»). Quelli delle altre piazze hanno più strada da fare per
+	# andarsene: si aspetta che smontino tutti, e si controlla che nessuno
+	# sia rimasto in servizio.
+	var altri: Array = get_tree().get_nodes_in_group("vigili")
+	print("  vigili ancora 'n giro: %d" % altri.size())
+	for w in altri:
+		if is_instance_valid(w) and int(w.stato) != int(w.Stato.SMONTA):
+			male("'nu vigile 'e n'ata piazza nun ha smuntato (stato %d)" % int(w.stato))
+	for _i in range(1800):
+		if get_tree().get_nodes_in_group("vigili").is_empty():
+			break
+		await get_tree().physics_frame
 	if not get_tree().get_nodes_in_group("vigili").is_empty():
 		male("ce stanno ancora vigili 'n piazza doppo 'e vinte")
 	# **E chesta è 'a risposta â dimanna vera.** Dalle venti in poi
