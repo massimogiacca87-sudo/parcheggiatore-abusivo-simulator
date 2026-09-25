@@ -291,7 +291,9 @@ func _prova_prezzo() -> void:
 		GameManager.auto_vennute = i
 		prime.append(GameManager.quanto_vale_a_machina("berlina"))
 	print("  berlina, cinche 'n fila dint'a 'na jurnata: %s" % str(prime))
-	for i in range(1, prime.size()):
+	# Solo fin dove il garage piglia: doppo 'o piazzale è chino e 'o prezzo
+	# resta ô pavimento (`VENNUTA_MINIMO`), e va bbuono accussì.
+	for i in range(1, mini(prime.size(), GameManager.GARAGE_MAX_JURNATA)):
 		if int(prime[i]) >= int(prime[i - 1]):
 			male("'a %da machina se paga 'o stesso o cchiù d''a primma" % (i + 1))
 	if int(prime[4]) > int(prime[0]) / 2:
@@ -321,13 +323,25 @@ func _prova_prezzo() -> void:
 	# prova che accettava il bug che il capo ha trovato giocando. Adesso si
 	# misura con la giornata tipo: la macchina più cara vale al massimo una
 	# giornata e mezza, l'utilitaria al massimo mezza.
-	var tetto: float = float(GameManager.GIORNATA_TIPO) * 1.5
+	#
+	# **0.62**: il capo ha chiesto che una macchina rubata valga un centinaio
+	# d'euro, «abbastanza per pagare le spese per qualche giorno». Allora la
+	# berlina deve stare fra 85 e 115 euro, la bmw al massimo due giornate e
+	# mezza, l'utilitaria al massimo una giornata.
+	var tetto: float = float(GameManager.GIORNATA_TIPO) * 2.5
 	if primma_bmw > int(tetto):
-		male("'a primma bmw vale €%d, cchiù 'e 'na jurnata e mmeza (€%.0f)"
+		male("'a primma bmw vale €%d, cchiù 'e dduje jurnate e mmeza (€%.0f)"
 			% [primma_bmw, tetto])
 	var primma_eco: int = GameManager.quanto_vale_a_machina("economica")
-	if primma_eco > GameManager.GIORNATA_TIPO / 2:
-		male("'n'utilitaria vale €%d: cchiù 'e meza jurnata" % primma_eco)
+	if primma_eco > GameManager.GIORNATA_TIPO:
+		male("'n'utilitaria vale €%d: cchiù 'e 'na jurnata" % primma_eco)
+	var primma_berlina: int = GameManager.quanto_vale_a_machina("berlina")
+	if primma_berlina < 85 or primma_berlina > 115:
+		male("'a primma berlina vale €%d: 'o capo ha ditto 'nu centinaro"
+			% primma_berlina)
+	else:
+		bbuono("'a primma berlina vale €%d: 'nu paro 'e juorne 'e spese"
+			% primma_berlina)
 	# E 'o piazzale se chiude.
 	GameManager.auto_vennute = GameManager.GARAGE_MAX_JURNATA
 	if not GameManager.garage_chino():
@@ -340,8 +354,8 @@ func _prova_prezzo() -> void:
 		tutto += GameManager.quanto_vale_a_machina("bmw")
 	print("  'o massimo 'e 'na jurnata 'e furti: €%d (jurnata tipo €%d)"
 		% [tutto, GameManager.GIORNATA_TIPO])
-	if tutto > GameManager.GIORNATA_TIPO * 3:
-		male("tre furti fanno €%d: cchiù 'e tre jurnate" % tutto)
+	if tutto > GameManager.GIORNATA_TIPO * 4:
+		male("tre furti fanno €%d: cchiù 'e quatto jurnate" % tutto)
 	GameManager.auto_vennute = 0
 
 	# 'O grimaldello adda servì a quaccosa, ma nun adda regalà niente.

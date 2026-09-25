@@ -2261,14 +2261,21 @@ func consume_cigarette() -> bool:
 ## contro una giornata onesta da settanta-novanta lascia da parte qualcosa
 ## ma non regala niente. E' la cifra che decide tutto il gioco: piu' alta e
 ## non si respira, piu' bassa e si torna alla 0.43.
+##
+## **0.62**: tutto giù di un sesto (spesa 11-18, luce 40-56, fitto 92-118:
+## circa **quarantasette euro al giorno** di fisse, sessanta con le
+## disgrazie). Con 55-66 al giorno contro una giornata onesta da settanta
+## i primi tre giorni erano un'apnea, e il capo ha chiesto un gioco
+## *«divertente, non frustrante»*: adesso una giornata fatta bene lascia
+## da parte una ventina d'euro, una fatta male non ti affoga.
 const SPESE_FISSE := {
 	"spesa": {
-		"nome": "'A spesa", "min": 14, "max": 22, "ogni": 1, "primo": 1,
+		"nome": "'A spesa", "min": 11, "max": 18, "ogni": 1, "primo": 1,
 		"grave": false,
 		"desc": "'O ppane, 'a pasta, quacche ccosa p''e criature.",
 	},
 	"luce": {
-		"nome": "'A luce", "min": 46, "max": 64, "ogni": 4, "primo": 3,
+		"nome": "'A luce", "min": 40, "max": 56, "ogni": 4, "primo": 3,
 		"grave": true,
 		"desc": "Se nun 'a pave, 'a stacca. E po' so' cchiù guaie.",
 	},
@@ -2278,7 +2285,7 @@ const SPESE_FISSE := {
 		"desc": "Libbre, 'o grembiule, 'a gita ca vanno tutte quante.",
 	},
 	"fitto": {
-		"nome": "'O fitto d''a casa", "min": 105, "max": 135, "ogni": 7,
+		"nome": "'O fitto d''a casa", "min": 92, "max": 118, "ogni": 7,
 		"primo": 6, "grave": true,
 		"desc": "'O padrone 'e casa nun tene pacienza. Mai tenuta.",
 	},
@@ -5789,14 +5796,25 @@ const SCASSO := {
 	# Adesso la misura è la giornata tipo (`GIORNATA_TIPO`): un'utilitaria
 	# ne vale mezza, una bmw poco più di una. Rubare resta il colpo grosso
 	# della giornata, ma non la giornata.
+	#
+	# **'E valure d''a 0.62.** Il capo, dopo averci giocato: *«rubando una
+	# macchina mi sembra giusto che si facciano 100 euro, abbastanza per
+	# pagare le spese per qualche giorno»*. Aveva ragione lui: a 55 euro una
+	# berlina rubata — con le stelle addosso, la corsa fino al garage e il
+	# rischio di perderla per strada — rendeva meno di una mattinata seduto
+	# sulla sedia, e il colpo grosso non sembrava un colpo grosso. Adesso
+	# la berlina vale cento (due giorni di spese), l'utilitaria sessanta, la
+	# bmw centosettanta. Il freno non sta più nel prezzo della prima, sta
+	# nel ricettatore che la seconda la paga la metà (`VENNUTA_CALO`) e alla
+	# quarta chiude il piazzale.
 	"economica": {"spille": 3, "zona": 0.300, "vel": 0.95, "oro": 0.34,
-		"rotte": 0, "valore": 36, "nomme": "facile"},
+		"rotte": 0, "valore": 60, "nomme": "facile"},
 	"berlina": {"spille": 4, "zona": 0.265, "vel": 1.12, "oro": 0.30,
-		"rotte": 1, "valore": 55, "nomme": "seria"},
+		"rotte": 1, "valore": 100, "nomme": "seria"},
 	"lusso": {"spille": 5, "zona": 0.235, "vel": 1.30, "oro": 0.27,
-		"rotte": 2, "valore": 80, "nomme": "tosta"},
+		"rotte": 2, "valore": 135, "nomme": "tosta"},
 	"bmw": {"spille": 6, "zona": 0.210, "vel": 1.48, "oro": 0.24,
-		"rotte": 2, "valore": 110, "nomme": "'a cchiù tosta"},
+		"rotte": 2, "valore": 170, "nomme": "'a cchiù tosta"},
 }
 
 ## Quanti secondi hai per ogni spillo prima che la mano ti tremi.
@@ -5864,7 +5882,10 @@ func scasso_nomme(tipo: String) -> String:
 # pavimento a un quarto: la prima macchina è una giornata di lavoro, la
 # quinta è una mancia. Rubare resta la cosa che paga di più **una volta al
 # giorno**, che è esattamente quanto dev'essere.
-const VENNUTA_CALO: float = 0.62
+## **0.62**: da 0.62 a 0.5 — la prima vale di più (vedi `SCASSO`), la
+## seconda la metà, la terza un quarto. Tre bmw in una giornata fanno
+## meno di trecento euro, non mezzo migliaio.
+const VENNUTA_CALO: float = 0.5
 const VENNUTA_MINIMO: float = 0.20
 ## **'O piazzale è chino** (0.61). Tre macchine al giorno, e basta: la
 ## quarta il ricettatore non la vuole vedere. Prima la pagava un quarto,
