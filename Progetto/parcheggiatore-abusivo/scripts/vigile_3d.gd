@@ -11,6 +11,7 @@ const SpeechBubbleScript := preload("res://scripts/speech_bubble.gd")
 const Human := preload("res://scripts/human_builder.gd")
 const Tex := preload("res://scripts/textures.gd")
 const KO := preload("res://scripts/knockout.gd")
+const Cammino := preload("res://scripts/cammino.gd")
 
 const LAYER_WORLD := 1
 
@@ -724,7 +725,10 @@ func _smonta(delta: float) -> bool:
 		global_position = Passo.verso(self, _meta_pausa, PATROL_SPEED * delta)
 		_animate_walk(PATROL_SPEED * delta)
 		_face_toward(_meta_pausa)
-		if _t_stato > SMONTA_CAMMINA \
+		# Fermo due secondi contro un muro = è girato dietro l'angolo
+		# (0.62: `prova_ntuppate` lunga, alle otto di sera, lo trovava a
+		# tremare per venti secondi contro un palazzo del Decumano).
+		if _t_stato > SMONTA_CAMMINA or _fermo_da(delta) > 2.0 \
 				or global_position.distance_to(_meta_pausa) < 1.2:
 			queue_free()
 		return true
@@ -752,6 +756,11 @@ func _smonta(delta: float) -> bool:
 	if not patrol_points.is_empty():
 		_meta_pausa = patrol_points[patrol_points.size() - 1] \
 			+ Vector3(0, 0, -34.0)
+	# Trentaquattro metri più in là può esserci un palazzo: si va alla
+	# cella libera più vicina che si raggiunge a piedi (0.62).
+	var q: Vector3 = Cammino.vicino_raggiungibile(_meta_pausa)
+	_meta_pausa = Vector3(q.x, _meta_pausa.y, q.z)
+	_fermo_da_qui = Vector3.INF
 	_say(SAY_SMONTA[randi() % SAY_SMONTA.size()])
 	SoundManager.play("pop", -10.0, 0.7)
 	GameManager.avvisa_strada(

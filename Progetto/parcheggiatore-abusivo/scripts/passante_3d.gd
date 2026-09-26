@@ -613,6 +613,19 @@ func _se_s_e_piantato(delta: float) -> void:
 			var fuori: Vector3 = Passo.fore(qui, 0.5)
 			if fuori.distance_to(qui) < 0.05:
 				fuori = Cammino.vicino_raggiungibile(qui)
+			# **'O passo 'e lato** (0.62). Contro lo spigolo di una cosa
+			# piccola (il tronco di un albero, 70 cm) uscire «di mezzo corpo»
+			# vuol dire spostarsi di venti centimetri, e la strada nuova
+			# punta di nuovo dritta nello spigolo: `prova_ntuppate` l'ha
+			# trovato fermo tre secondi contro un pino. Se l'uscita è troppo
+			# corta si fa un passo di lato (o indietro) dove c'è posto.
+			if fuori.distance_to(qui) < 0.35 and _dir_voluta.length_squared() > 0.5:
+				var lato := Vector3(-_dir_voluta.z, 0.0, _dir_voluta.x)
+				for prova in [lato * 0.7, -lato * 0.7, -_dir_voluta * 0.7]:
+					var c: Vector3 = qui + (prova as Vector3)
+					if Passo.fore(c, 0.35).distance_to(c) < 0.05:
+						fuori = c
+						break
 			if fuori.distance_to(qui) > 0.05:
 				global_position = Vector3(fuori.x, qui.y, fuori.z)
 			_nuova_strada()
