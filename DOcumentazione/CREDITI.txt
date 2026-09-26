@@ -1,0 +1,35 @@
+PARCHEGGIATORE ABUSIVO SIMULATOR - CREDITI
+======================================================================
+
+Gioco ideato da Massimo Giacca, sviluppato con Claude (Anthropic) in
+Godot 4.3.
+
+SUONI DELL'INTERFACCIA (dalla v0.62)
+  "Universal UI Soundpack" di Nathan Gibson
+  https://nathangibson.myportfolio.com
+  Licenza: Creative Commons Attribution 4.0 International (CC BY 4.0)
+  https://creativecommons.org/licenses/by/4.0/
+  File usati (convertiti in .ogg e rinominati): audio/ui_apri, ui_carta,
+  ui_chiudi, ui_click, ui_errore, ui_hover, ui_missione, ui_notifica,
+  ui_ok, ui_sblocco, ui_vittoria.
+
+CARATTERI (dalla v0.62)
+  Poppins (Regular, Black, Light) - Indian Type Foundry,
+  SIL Open Font License 1.1 (arrivato col pacchetto "Extra Clean UI").
+  DejaVu Sans - licenza libera DejaVu (Bitstream Vera derivata).
+
+ICONE DELL'INTERFACCIA (dalla v0.62)
+  Dal pacchetto "FREE modern ui elements" messo dal capo nella cartella
+  "UI elements" (assets/ui/icone/*.png, ricolorate).
+
+CARTE NAPOLETANE
+  Scansione "carte napoletane in transparent png" dalla cartella Texture
+  del progetto (ritagliata in assets/ui/carte_hd.png).
+
+MODELLI E ANIMAZIONI
+  Universal Animation Library e modelli di Quaternius (CC0), Low Poly
+  Animated Men, Pandazole, PSX Mega Pack, Car Pack: vedi le cartelle
+  delle librerie nel progetto e le note delle versioni 0.46-0.60.
+
+Se il gioco viene pubblicato (itch.io o altro), questa pagina va messa
+nei crediti: la licenza CC BY 4.0 dei suoni chiede di citare l'autore.

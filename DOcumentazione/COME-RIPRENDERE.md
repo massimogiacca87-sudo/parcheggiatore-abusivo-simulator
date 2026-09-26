@@ -1,64 +1,117 @@
 # Come riprendere il lavoro in una nuova chat
 
-Stato al **24 settembre 2026**, versione **v0.61 · 'O juoco, rifinito**.
+Stato al **25 settembre 2026**, versione **v0.62 · 'A faccia nova**.
 
 Questo documento è scritto per **chi apre la chat nuova** (cioè per me, senza
 memoria di questa). Si legge dall'alto: la sezione 1 dice cosa fare nei
 primi dieci minuti, il resto è il manuale.
 
-Documenti da leggere insieme a questo, tutti nella cartella del progetto:
+**Dalla 0.62 il metodo è cambiato** (istruzioni del progetto): una cartella
+sola, Git, commit a ogni lavoro finito. Niente più cartelle numerate, niente
+più pacchi spezzati da consegnare. La sezione 1.1 e la 2 lo spiegano.
+
+Documenti da leggere insieme a questo, tutti in
+`C:\Users\Max\Downloads\Parcheggiatore Abusivo Simulator\DOcumentazione\` e
+nei documenti del progetto (`claude/…`):
 
 | file | cosa c'è |
 |---|---|
-| `RIASSUNTO-CHAT-v0.61.md` | la cronaca della chat che ha fatto la 0.61: richieste, decisioni, pulizia delle versioni vecchie, cosa è rimasto aperto |
-| `NOVITA-v0.61.md` | le note della versione (per il capo, in italiano, con trappole e lezione) |
-| `ROADMAP.md` | cosa è fatto versione per versione, e cosa viene dopo (la 0.62 è **'E vvoce**, più i rimasti della 0.61) |
-| `CHANGELOG.md` | una riga per versione, dalla 0.44 alla 0.61 |
+| `RIASSUNTO-CHAT-v0.62.md` | la cronaca della chat che ha fatto la 0.62: richieste, decisioni, il passaggio a Git, cosa è rimasto aperto |
+| `NOVITA-v0.62.md` | le note della versione (per il capo, in italiano, con trappole e lezione) |
+| `ROADMAP.md` | cosa è fatto versione per versione, e cosa viene dopo (la 0.63 è **'E vvoce**, più i rimasti della 0.62) |
+| `CHANGELOG.md` | una riga per versione, dalla 0.44 alla 0.62 |
 | `PROMPT-NUOVA-CHAT.md` | il messaggio da incollare per aprire la chat nuova |
-| `LEGGIMI.txt` | per il capo: cosa c'è nella cartella della versione e come si usa |
+| `LEGGIMI.txt` | per il capo: com'è fatta la cartella e come si gioca |
+| `CREDITI.txt` | chi ha fatto i suoni, i caratteri, le icone (la CC BY dei suoni va citata) |
 
 ---
 
 ## 1. I primi dieci minuti
 
-### 1.1 Il contenitore della chat nuova è vuoto
+### 1.1 Dove sta il gioco, e come portarlo nel contenitore
 
-Il codice e gli asset **non stanno nei documenti del progetto** (sono troppo
-grossi): stanno nel pacco completo della versione, sul computer del capo, in
-`C:\Users\Max\Downloads\Parcheggiatore Abusivo Simulator\Claude outputs\v0.61\`:
-
-- `PAS-v0.61-Progetto.tar.xz.00.part`, `.01.part`, … — **il progetto Godot
-  intero**: `scripts/`, `scenes/`, `tools/`, `assets/` (tutti i modelli, le
-  texture, gli shader), `audio/`, `project.godot`, `export_presets.cfg`, i
-  documenti, e la cache `.godot/imported` (così non serve reimportare).
-- `UNISCI.bat` — su Windows rimette insieme i pezzi e li scompatta.
-- Le build giocabili: `PAS-v0.61-Windows.tar.xz.0*.part` e
-  `PAS-v0.61-Web-itchio.zip.0*.part`.
-
-**Per portarlo nel contenitore**, con il ponte del desktop acceso:
+Sul computer del capo, **una cartella sola**, che è anche il repository Git:
 
 ```text
-device_list_dir  C:\Users\Max\Downloads\Parcheggiatore Abusivo Simulator\Claude outputs\v0.61
-device_stage_files  (tutti i .part del Progetto; finiscono in /mnt/user-data/uploads/…)
+C:\Users\Max\Downloads\Parcheggiatore Abusivo Simulator\
+  .git\  .gitignore  .gitattributes      il repository (remote: GitHub,
+                                           massimogiacca87-sudo/parcheggiatore-abusivo-simulator)
+  Progetto\parcheggiatore-abusivo\        IL PROGETTO GODOT (project.godot, scripts, assets…)
+  DOcumentazione\                         note, roadmap, changelog, questo manuale
+  Build\                                  le build giocabili (ignorata da Git)
+  Animations\ Models\ Texture\ Audio\ UI elements\ addons\ demo\ …
+                                           le librerie di asset del capo: NON SI TOCCANO
 ```
 
-Poi nel contenitore:
+Il `.gitignore` del capo esclude `*.glb`, `*.wav`, `*.mp3`, `*.zip`,
+`Models/`; io ci ho aggiunto `.godot/`, `Build/` e `_claude_tmp/`. Quindi
+**il repository da solo non basta** a ricostruire il gioco (mancano i modelli
+.glb e i suoni .wav): **il progetto si prende dalla cartella**, non da GitHub.
+
+**Per portarlo nel contenitore** (il ponte del desktop dev'essere acceso; i
+comandi sul computer del capo si danno con Desktop Commander,
+`start_process`, PowerShell):
+
+```powershell
+cd "C:\Users\Max\Downloads\Parcheggiatore Abusivo Simulator"
+New-Item -ItemType Directory -Force _claude_tmp | Out-Null
+tar -cf _claude_tmp\progetto.tar -C Progetto parcheggiatore-abusivo   # ~130 MB con .godot
+```
+
+poi `device_stage_files` di `…\_claude_tmp\progetto.tar` (arriva in
+`/mnt/user-data/uploads/…`), e nel contenitore:
 
 ```bash
-cd /home/claude
-cat /mnt/user-data/uploads/*/PAS-v0.61-Progetto.tar.xz.*.part > /tmp/progetto.tar.xz
-tar -xJf /tmp/progetto.tar.xz          # crea /home/claude/parcheggiatore-abusivo
+cd /home/claude && tar -xf /mnt/user-data/uploads/*/_claude_tmp/progetto.tar
+cd parcheggiatore-abusivo && git init -q && git add -A && git commit -qm base && git tag pc_sync
 ```
 
-Se il ponte è spento: chiedere al capo di allegare i pezzi alla chat (vanno
-in `/mnt/user-data/uploads/`), stessa procedura. **Il percorso conta**: tutti
-gli script di prova hanno scritto `/home/claude/parcheggiatore-abusivo` e
-`/home/claude/godot4`.
+(il `.tar` sul computer del capo poi va nel Cestino, vedi 4.5). Il
+repository **del contenitore** serve solo a fare le patch: quello vero è
+sul computer del capo.
 
-Se il pacco completo non si trova, l'ultima spiaggia è quella usata nella
-0.59: estrarre il `index.pck` della build web con
-`tools/recupero/estrai_pck.py` (e `mux_ogg.py` per l'audio). Gli shader nel
-`.pck` non ci sono e vanno riscritti — sono tre, in `assets/shaders/`.
+### 1.1b Come si salva il lavoro: una patch per commit
+
+Si lavora nel contenitore (Godot, prove, fotografie), si fa **un commit per
+ogni lavoro finito e provato**, poi lo si porta sul computer del capo:
+
+```bash
+# nel contenitore: le patch dei commit nuovi (dal tag pc_sync), senza .godot
+cd /home/claude/parcheggiatore-abusivo
+rm -rf /mnt/user-data/outputs/_claude_tmp && mkdir -p /mnt/user-data/outputs/_claude_tmp
+git format-patch --binary -o /mnt/user-data/outputs/_claude_tmp pc_sync..HEAD -- . ':!.godot'
+```
+
+`device_commit_files` di ogni patch in
+`…\Parcheggiatore Abusivo Simulator\_claude_tmp\000N.patch`, e sul computer:
+
+```powershell
+cd "C:\Users\Max\Downloads\Parcheggiatore Abusivo Simulator"
+$ps = Get-ChildItem _claude_tmp\*.patch | Sort-Object Name
+foreach($p in $ps){ git am --directory=Progetto/parcheggiatore-abusivo $p.FullName }
+$ps | Move-Item -Destination $env:TEMP -Force
+git log --oneline -3
+```
+
+e nel contenitore `git tag -f pc_sync HEAD`. **Attenzione**: PowerShell non
+espande `_claude_tmp/*.patch` dentro a un argomento di `git am` (serve il
+`Get-ChildItem`), e `git am` è lento sulle patch grosse — il ponte può
+rispondere «did not respond within 60s» mentre il commit va in porto: si
+controlla con `git log` prima di rilanciare.
+
+I **documenti** (`DOcumentazione\`) stanno fuori dal progetto Godot: si
+scrivono nel contenitore, si portano con `device_commit_files` direttamente
+in `DOcumentazione\` e si committano sul computer con `git add
+DOcumentazione; git commit`.
+
+Per controllare che il contenitore e il computer abbiano lo stesso codice:
+`git rev-parse HEAD:scripts` nel contenitore deve dare lo stesso hash di
+`git rev-parse HEAD:Progetto/parcheggiatore-abusivo/scripts` sul computer.
+
+**Non si fa `git push`** se il capo non lo chiede: le istruzioni dicono
+`git add` e `git commit`. **Non si committano** le cartelle di asset che il
+capo ha lasciato fuori (`Animations/…`, `addons/`, `demo/`,
+`assets/materials/` in radice): sono sue.
 
 ### 1.2 Godot e gli attrezzi
 
@@ -99,7 +152,7 @@ nohup /tmp/batteriac.sh > /tmp/batteriac.log 2>&1 &     # ~45 minuti
 cat /tmp/batteriac.txt                                   # una riga per prova
 ```
 
-Risultato atteso alla chiusura della 0.61 (50 prove): **tutte a zero storte**, con tre
+Risultato atteso alla chiusura della 0.62 (53 prove): **tutte a zero storte**, con tre
 eccezioni che non sono guasti:
 
 - `prova_braccia` stampa `=== fernuto ===` (è una misura, non un collaudo);
@@ -131,24 +184,30 @@ Valgono sempre, senza che le ripeta:
    codice sono in italiano, coi titoletti in napoletano.
 2. **Ogni versione vuole**: `NOVITA-vX.md` (scritta raccontando anche gli
    sbagli: una sezione «Le trappole» e una «La lezione»), la `ROADMAP.md`
-   aggiornata con la sezione «Fatto», e questo documento aggiornato. Tutti e
-   tre **nei documenti del progetto** (`claude/…` con `project_write`) **e
-   dentro al pacco**.
-3. **Ogni versione si consegna intera** (istruzioni del progetto): una
-   cartella con il progetto completo — modelli, texture, asset, tutto — più
-   leggimi, changelog e i documenti per ripartire.
-4. **Le versioni vecchie le cancello io** (istruzioni del progetto, dalla
-   0.60): se ne tengono **almeno sei-sette**, e le più vecchie si tolgono man
-   mano. Sempre **nel Cestino di Windows, mai definitivo**. E il capo: *«non
-   toccare mai le librerie di asset (Car Pack, Low Poly, Animated,
-   Pandazole, PSX, Quaternius)»*. Come si fa sta nella sezione 4.5.
-5. **Consegna doppia**: i file con `SendUserFile` **e** scritti sul suo
-   computer con `device_commit_files` in
-   `C:\Users\Max\Downloads\Parcheggiatore Abusivo Simulator\Claude outputs\vX\`.
-6. **I pacchi grossi si spezzano in pezzi da 19 MB** (`split -b 19000000`),
-   con un `UNISCI.bat` accanto **con gli a capo CRLF**, se no Windows non lo
-   esegue. `SendUserFile` regge 30 MB a file, il ponte 20 MB a file e 100 MB
-   a chiamata.
+   aggiornata con la sezione «Fatto», il `CHANGELOG.md`, il
+   `RIASSUNTO-CHAT-vX.md`, il `LEGGIMI.txt` e questo documento aggiornato.
+   Tutti **in `DOcumentazione\`** (committati) **e nei documenti del
+   progetto** (`claude/…` con `project_write`).
+3. **Git, una cartella sola** (istruzioni del progetto dalla 0.62): *«Ti è
+   ASSOLUTAMENTE VIETATO creare nuove cartelle numerate per le versioni
+   future.»* Si lavora **per piccoli task atomici**; quando un task è
+   finito e funziona senza errori, **`git add` e `git commit -m 'breve
+   descrizione'`** (messaggi in italiano, `v0.XX: …`). Vedi 1.1b.
+4. **Le versioni vecchie le cancello io**, adesso sono i file vecchi rimasti
+   in giro (cartelle `Claude outputs\vX` se ricompaiono, pacchi `.part`,
+   le patch in `_claude_tmp`). Sempre **nel Cestino di Windows, mai
+   definitivo**. E il capo: *«non toccare mai le librerie di asset (Car
+   Pack, Low Poly, Animated, Pandazole, PSX, Quaternius)»*. Come si fa sta
+   nella sezione 4.5.
+5. **Le build** vanno in `Build\` (l'exe col suo `.pck`, e
+   `AVVIA-COMPATIBILITA.bat`), e il pacco web per itch.io in radice come
+   `PAS-v0.XX-Web-itchio.zip` (lo `.zip` è ignorato da Git). I file grossi
+   si portano sul computer a pezzi da 19 MB (`split -b 19000000`) e si
+   riattaccano sul computer con PowerShell/`cmd copy /b`: il ponte regge
+   20 MB a file e 100 MB a chiamata.
+6. **Multi-agente**: le istruzioni dicono che si possono aprire altre
+   istanze o sotto-agenti per dividere il lavoro, e usare altre IA (per
+   esempio Gemini) per generare asset.
 7. Il capo **preferisce file completi**, pronti da incollare, ai pezzetti.
 
 ---
@@ -432,21 +491,30 @@ mkdir -p build/windows build/web
 
 La build Windows va con `AVVIA-COMPATIBILITA.bat` accanto (lancia l'exe con
 `--rendering-driver opengl3`, per le schede video senza Vulkan); il pacco
-web per itch.io è lo zip del contenuto di `build/web/`.
+web per itch.io è lo zip del contenuto di `build/web/`. **Controllare prima
+che i modelli di esportazione ci siano** (`ls
+~/.local/share/godot/export_templates/4.3.stable/`): nella 0.62 la cartella
+risultava vuota dopo un riavvio del contenitore anche se il log diceva
+«FATTO».
+
+La consegna, dalla 0.62: l'exe e il `.pck` in `Build\` sul computer del capo
+(a pezzi da 19 MB se serve, riattaccati là), lo zip web in radice. **Non
+più** cartelle `Claude outputs\vX` né pacchi del progetto: il progetto è la
+cartella stessa.
 
 La versione si cambia in **due posti**: `const VERSIONE` in
 `scripts/caricamento.gd` e in `scripts/hud.gd`.
 
-Il pacco del progetto si fa dalla cartella madre, **senza** `build/`, senza
-`scripts/_prova_*.gd` / `scripts/_foto_*.gd` dimenticati, e con
-`project.godot` pulito (controllare che non ci sia una riga `Prova=` o
-`Foto=`).
+Prima di ogni commit: niente `scripts/_prova_*.gd` / `scripts/_foto_*.gd`
+dimenticati, e `project.godot` pulito (nessuna riga `Prova=` o `Foto=`: se
+una prova va in timeout, `/tmp/prova.sh` non fa in tempo a rimetterlo a
+posto — si ricopia `/tmp/pg.bak`).
 
-### 4.5 La pulizia delle versioni vecchie
+### 4.5 La pulizia
 
-Dalla 0.60 le cancello io. Nel ponte ci sono gli strumenti di Desktop
-Commander (`start_process` con PowerShell sul computer del capo): si manda
-tutto **nel Cestino**, mai `Remove-Item`:
+Nel ponte ci sono gli strumenti di Desktop Commander (`start_process` con
+PowerShell sul computer del capo): si manda tutto **nel Cestino**, mai
+`Remove-Item`:
 
 ```powershell
 Add-Type -AssemblyName Microsoft.VisualBasic
@@ -454,12 +522,12 @@ Add-Type -AssemblyName Microsoft.VisualBasic
 [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory($d, 'OnlyErrorDialogs', 'SendToRecycleBin')
 ```
 
-Si tengono almeno sei-sette versioni intere; **le cartelle delle librerie
-di asset (Car Pack, Low Poly, Animated, Pandazole, PSX, Quaternius) non si
-toccano mai**; prima si fa la lista, si scrive un registro
-(`Claude outputs\pulizia-log.txt`) e si dice al capo cosa è andato nel
-Cestino. Nella 0.60 il capo aveva chiesto di vedere la lista prima; per le
-pulizie successive le istruzioni del progetto dicono di farlo da me.
+Dalla 0.62 le cartelle numerate le ha tolte il capo stesso; restano da
+pulire le cose di passaggio (le patch spostate in `%TEMP%`, il `.tar` del
+progetto in `_claude_tmp`, vecchi `PAS-v0.XX-Web-itchio.zip` quando c'è il
+nuovo). **Le cartelle delle librerie di asset non si toccano mai**; si
+scrive il registro in `DOcumentazione\pulizia-log.txt` e si dice al capo cosa
+è andato nel Cestino.
 
 ---
 
@@ -481,11 +549,11 @@ sfasciacarrozze, la galera in cima al Vomero, il vascio con la famiglia.
 guagliuni assunti (dalla 0.61 lavorano davvero in tutte e quattro le
 piazze, e la sera si passa a ritirare), il turista da accompagnare, il
 panaro di Donna Filumena, e rubando le auto (minigioco dello scasso, guida
-fino al garage; dalla 0.61 da mezza a una giornata e mezza, tre al giorno).
+fino al garage; dalla 0.62 una berlina vale €100, la seconda della giornata la metà, tre al giorno).
 Tutto si misura con **la giornata tipo**, `GIORNATA_TIPO` = €80. Si perdono
 in cinque giochi d'azzardo, tutti sotto il 100%. Ogni oggetto che si compra
-si ripaga fra 1,2 e 6,5 giornate. Le spese di casa sono sui 68 euro al
-giorno (`prova_economia`): il margine lo danno i guagliuni.
+si ripaga fra 1,2 e 6,5 giornate. Le spese di casa dalla 0.62 sono sui 55-60
+euro al giorno (`prova_economia`), contro i 68-80 di una giornata onesta.
 
 **Le facce nove (0.61)**: Gennarino 'o Nuovo (l'abusivo dell'abusivo, nelle
 tue piazze), il turista spierzo, il panaro. Tutti e tre si costruiscono in
@@ -493,6 +561,19 @@ tue piazze), il turista spierzo, il panaro. Tutti e tre si costruiscono in
 
 **Le armi** (0.61) si vedono in prima persona (`arma_fp.gd`) e si vede il
 colpo; i furti pesano di più se c'è gente (`GameManager.testimoni`).
+
+**Le commissioni (0.62)** te le affida una persona (`committente_3d.gd`) che
+ti viene incontro con la roba (`robba_cummissione.gd`): la porti in mano in
+prima persona fino a chi la riceve. Otto tipi in `GameManager.CUMM_TIPI`.
+
+**L'interfaccia (0.62)** passa tutta dal tema (`assets/ui/tema.tres`, si
+rigenera con `tools/genera_tema.gd`) e da `ui_stile.gd`; la riga dei
+comandi è `riga_comandi.gd`, la minimappa `minimappa.gd`. Ogni pannello ha
+una fotografia: `foto_hud`, `foto_pannelli`, `foto_ui` (scopa), `foto_lotto`.
+
+**Le animazioni (0.62)**: i corpi omo e umano_q hanno la libreria del pupo
+tradotta (`assets/models/omo_ual.res`, `umano_q_ual.res`, rifatte da
+`tools/retarget_ual.gd`); la tabella è `RIG` in `human_builder.gd`.
 
 **La violenza** costa sciato (fiato), ossa che si ricomprano solo di notte,
 fermi (al terzo si passa la notte in cella, e ci si risveglia davanti alla
@@ -509,26 +590,20 @@ disegna la metà dei triangoli di prima grazie ai gruppi a quadretti.
 
 ### Subito (se la chat nuova trova qualcosa aperto)
 
-La 0.61 è stata chiusa e consegnata. Rimasti (vedi `ROADMAP.md`, «Rimasto
-aperto dalla 0.61»):
+La 0.62 è stata chiusa e committata. Rimasti (vedi `ROADMAP.md`, «Rimasto
+aperto dalla 0.62»):
 
-1. **Chiedere al capo come va la 0.61 giocata**: i guagliuni, le armi,
-   l'economia nuova. Le spese di casa (68 al giorno) contro una giornata
-   tipo di 68-80: se è troppo stretto, la manopola è `RESA_DIPENDENTE` o le
-   spese, non il furto.
-2. **La prova che gioca dieci giornate da sola**: dopo la 0.61 è chiaro che
-   è l'unico modo di vedere quello che vede il capo.
-3. **Il balcone del panaro** è fatto di scatole: uno del pacchetto sarebbe
-   meglio.
-4. Dalla 0.60: le trenta vetrine da guardare in fotografia, il negozio più
-   vicino alla tua piazza a 37 m, le signore sedute che sembrano vecchi.
+1. **Chiedere al capo come va la 0.62 giocata**: la UI nuova, le
+   commissioni col committente, l'economia (berlina a €100).
+2. **La prova che gioca dieci giornate da sola.**
+3. La sala scommesse è l'unico pannello col suo stile a parte.
+4. Il balcone del panaro, la traversata a piedi, il motorino con le chiavi.
 
-### La 0.62 — **'E vvoce**
+### La 0.63 — **'E vvoce**
 
 Voci registrate, clip di idle in prima persona, le criature con una
-corporatura loro; e, se il capo lo vuole, la traversata a piedi (il
-motorino con le chiavi). Come per la 0.61, **chiedere a lui** prima di
-cominciare, con la lista della roadmap in mano.
+corporatura loro. Come sempre, **chiedere a lui** prima di cominciare, con
+la lista della roadmap in mano.
 
 ---
 

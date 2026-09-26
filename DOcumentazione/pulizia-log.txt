@@ -133,3 +133,5 @@ Cestino: ParcheggiatoreAbusivo-v0.55-Sorgenti.tar.xz
 Cestino: ParcheggiatoreAbusivo-v0.55-Web-itchio.zip
 Cestino: ParcheggiatoreAbusivo-v0.55-Windows.tar.xz
 Restano: v0.56, v0.56b, v0.57, v0.58, v0.59, v0.60, v0.61 (sette versioni). Librerie di asset non toccate.
+2026-09-26 11:34  v0.62  Cestino: Build\ParcheggiatoreAbusivoSimulator.exe (sostituito dalla build v0.62)
+2026-09-26 11:34  v0.62  Cestino: PAS-v0.61-Web-itchio.zip (sostituito dalla build v0.62)

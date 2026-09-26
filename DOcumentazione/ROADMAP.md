@@ -1,6 +1,6 @@
 # Roadmap — dove stiamo e dove andiamo
 
-Aggiornata alla **v0.60 · 'A città vestuta**, 24 settembre 2026.
+Aggiornata alla **v0.62 · 'A faccia nova**, 25 settembre 2026.
 
 *Da questa versione le note e la roadmap sono scritte in italiano. Il
 napoletano resta dove si sente giocando: dialoghi, cartelli, scritte a
@@ -676,6 +676,60 @@ gameplay.»*
 
 ---
 
+## Fatto — v0.62 · 'A faccia nova
+
+Nove richieste del capo dopo una partita (UI, stemma col G, scopa, vigile,
+salto e arrampicata, lotto, commissioni, economia, animazioni). Racconto
+completo in `NOVITA-v0.62.md`. Da questa versione si lavora su **Git, in una
+cartella sola** (vedi `COME-RIPRENDERE.md`).
+
+- [x] **Tema unico** (`assets/ui/tema.tres` da `tools/genera_tema.gd`,
+      `ui_stile.gd`): Poppins + DejaVu, pannelli scuri col bordo oro,
+      icone e suoni UI (Nathan Gibson, CC BY 4.0 → `CREDITI.txt`).
+- [x] **Riga dei comandi** (`riga_comandi.gd`) alzata sopra alla pila in
+      basso, tastini veri, due righe se serve; **HUD a schede**;
+      **minimappa** (`minimappa.gd`) con freccia sull'obiettivo; pausa e
+      pannelli rifatti e fotografati (`foto_hud`, `foto_pannelli`).
+- [x] **Stemma con G** (G contestuale: stemma se c'è, se no cambia arma).
+- [x] **Scopa**: carte HD (`carte_hd.py`), tabellone, scala dei maestri,
+      «SFIDA SBLOCCATA».
+- [x] **Vigile**: nasce in `configura()`, giro con arrivo a 60 cm e
+      scavalco dei punti irraggiungibili.
+- [x] **Salto e arrampicata** fino a 2,2 m, sbroglio da incastrato,
+      capsule delle auto all'altezza vera (`prova_ncastro`).
+- [x] **Lotto**: insegne, `[2]` al tabaccaio e al bar, pannello nuovo con
+      istruzioni, vincite, probabilità vere e smorfia; esito nel
+      riepilogo.
+- [x] **Commissioni con committente** (`committente_3d.gd`) e roba vera
+      (`robba_cummissione.gd`), in mano in prima persona; otto tipi, la
+      torta fragile.
+- [x] **Economia**: auto 60/100/135/170, calo 0,5, spese −1/6.
+- [x] **Animazioni**: 28 clip del pupo tradotte su omini e umani
+      (`tools/retarget_ual.gd` → `omo_ual.res`, `umano_q_ual.res`); la
+      parlata che finisce (`parla_per`).
+
+### Rimasto aperto dalla 0.62
+
+- **La prova che gioca dieci giornate da sola** resta da scrivere (era già
+  nella lista della 0.61).
+- **L'economia nuova va giocata**: sulla carta una giornata onesta lascia
+  una ventina d'euro e una berlina ne vale cento. Alla prima partita lunga
+  guardare se il furto torna a mangiarsi il posteggio (la manopola è
+  `VENNUTA_CALO`).
+- **`prova_guagliune_vere` al mercato è al limite**: ogni tanto il
+  guaglione fa 2 clienti in quattro minuti contro una soglia di 3 (anche
+  sulla 0.61). Al mercato arrivano quattro auto in quattro minuti: o si
+  allunga la prova, o si guarda perché il mercato ne riceve così poche.
+- **La sala scommesse** ha ancora il suo stile a parte (blu e rosso, da
+  «football manager»): voluto, ma è l'unico pannello fuori dal tema.
+- **Il panaro**, la traversata a piedi e 'o motorino con le chiavi: fermi.
+- **Il repository e i file grossi**: il `.gitignore` del capo esclude
+  `*.glb`, `*.wav`, `*.mp3`, quindi il repo su GitHub da solo non basta a
+  ricostruire il gioco (servono i file della cartella). Se si vuole un
+  repo completo, Git LFS.
+
+---
+
 ## Fatto — v0.61 · 'O juoco, rifinito
 
 Il capo, dopo una giornata intera: A) i guagliuni non funzionano, B) le armi
@@ -724,14 +778,14 @@ vale tantissimo); poi rifinire e arricchire. Racconto completo in
 
 ---
 
-## v0.62 — **'E vvoce**
+## v0.63 — **'E vvoce**
 
 - **Le voci registrate**: l'introduzione parlata, e qualche riga dei
   personaggi principali. Il gioco è pieno di gente che parla e nessuno fa
   un suono. Adesso che sei clienti e quattro vicini hanno un nome, sono
   loro i primi a meritarsela.
-- **Altre animazioni** dalla libreria, **misurate prima** con
-  `tools/prova_pose.gd` — e in particolare **una clip di idle in prima
+- **Altre animazioni**: la 0.62 ha tradotto 28 clip della libreria sugli
+  altri due scheletri (`tools/retarget_ual.gd`); resta **una clip di idle in prima
   persona**, che è l'unico modo di vedersi le braccia camminando (la posa
   a mano non funziona, ed è misurato in `prova_braccia`).
 - **'E ccriature**: una quinta corporatura in `build_personaggi.py`.

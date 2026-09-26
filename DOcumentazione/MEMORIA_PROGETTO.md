@@ -1,31 +1,34 @@
 # MEMORIA DEL PROGETTO — Parcheggiatore Abusivo Simulator
 
-**Per il "nuovo me" che apre la chat successiva.** Aggiornato il 24 settembre
-2026, alla chiusura della **v0.61 · 'O juoco, rifinito**. Tutto quello che serve
+**Per il "nuovo me" che apre la chat successiva.** Aggiornato il 25 settembre
+2026, alla chiusura della **v0.62 · 'A faccia nova**. Tutto quello che serve
 per ripartire da qui senza aver visto la chat precedente.
 
 Ordine di lettura consigliato: questo file → `COME-RIPRENDERE.md` (manuale
-operativo lungo, con le 46 trappole) → `RIASSUNTO-CHAT-v0.61.md` (cronaca della
-chat) → `ROADMAP.md`. Tutti stanno nella radice del progetto Godot e nei
-documenti del progetto claude.ai (`claude/…`).
+operativo lungo, con le trappole) → `RIASSUNTO-CHAT-v0.62.md` (cronaca della
+chat) → `ROADMAP.md`. Tutti stanno in `DOcumentazione\` sul computer del capo
+e nei documenti del progetto claude.ai (`claude/…`).
 
 ---
 
 ## 0. RIPARTIRE IN CINQUE RIGHE
 
-1. Il codice **non** sta nei documenti del progetto: sta nel pacco completo
-   `C:\Users\Max\Downloads\Parcheggiatore Abusivo Simulator\Claude outputs\v0.61\PAS-v0.61-Progetto.tar.xz.00.part …`
-   (pezzi da 19 MB; dentro c'è l'intero progetto Godot con asset,
-   documenti e cache `.godot/imported`).
-2. Nel contenitore nuovo: `device_stage_files` di tutti i pezzi →
-   `cat …/PAS-v0.61-Progetto.tar.xz.*.part > /tmp/p.tar.xz && tar -xJf /tmp/p.tar.xz -C /home/claude`
-   → nasce `/home/claude/parcheggiatore-abusivo`.
-3. Godot 4.3 stabile in `/home/claude/godot4` (binario ufficiale Linux),
-   `xvfb-run` per le foto, `cp tools/sh/*.sh /tmp/ && chmod +x /tmp/*.sh`.
+1. **Una cartella sola, Git** (dalla 0.62): il repository è
+   `C:\Users\Max\Downloads\Parcheggiatore Abusivo Simulator\`, il progetto
+   Godot è `Progetto\parcheggiatore-abusivo\`, i documenti `DOcumentazione\`,
+   le build `Build\`. **Vietato creare cartelle numerate.**
+2. Nel contenitore nuovo: sul computer `tar -cf _claude_tmp\progetto.tar -C
+   Progetto parcheggiatore-abusivo` (Desktop Commander, PowerShell),
+   `device_stage_files`, `tar -xf` in `/home/claude` → nasce
+   `/home/claude/parcheggiatore-abusivo`; `git init`, commit, `git tag
+   pc_sync` (vedi `COME-RIPRENDERE.md` 1.1).
+3. Godot 4.3 stabile in `/home/claude/godot4`, `xvfb-run` per le foto,
+   `cp tools/sh/*.sh /tmp/ && chmod +x /tmp/*.sh`.
 4. Batteria di prove: `nohup /tmp/batteriac.sh &` → `/tmp/batteriac.txt`
    (attese tutte a zero storte).
-5. Primo lavoro: chiedere al capo com'è andata la 0.61 giocata (guagliuni,
-   armi, economia) e cosa vuole nella 0.62 ('E vvoce e i rimasti).
+5. Ogni lavoro finito e provato = un commit nel contenitore → `tools/sh/sincro.sh`
+   fa le patch → `device_commit_files` in `_claude_tmp\` → `git am
+   --directory=Progetto/parcheggiatore-abusivo` sul computer (1.1b).
 
 ---
 
@@ -98,7 +101,18 @@ sera, la casa, la famiglia come freno).
 
 ---
 
-## 2. STATO ATTUALE — v0.61
+## 2. STATO ATTUALE — v0.62
+
+### 2.00 La 0.62 in breve
+
+Nove richieste del capo dopo una partita: 1) UI intera più leggibile e bella
+(le scritte dei tasti coprivano il resto), 2) lo stemma col G non andava, 3)
+scopa con carte HD, tabellone e «sfida sbloccata», 4) il vigile sparito, 5)
+salto e arrampicata sempre (niente incastri), 6) lotto incomprensibile, 7)
+commissioni affidate da un personaggio con la roba vera, 8) economia (auto
+rubata ~€100), 9) animazioni ai corpi nuovi. Tutto fatto (dettagli in
+`NOVITA-v0.62.md`). A metà versione il capo ha spostato tutto in **una
+cartella sola con Git** (niente più `Claude outputs\vX`).
 
 ### 2.0 La 0.61 in breve
 
@@ -243,45 +257,30 @@ Note sugli asset:
 
 ### 4.1 Dove ci siamo fermati
 
-**La 0.61 è chiusa.** Rimasti suoi: le spese di casa (68 al giorno) contro
-una giornata tipo di 68-80 — da guardare alla prima partita lunga; la prova
-che gioca dieci giornate; il balcone del panaro fatto di scatole.
-
-Dalla 0.60 restano tre cose piccole
-(`COME-RIPRENDERE.md`, sezione 6):
-- il negozio più vicino alla **tua** piazza sta a 37 m (mercato 9 m, stadio
-  34, cornetteria 31): le facciate oltre il Decumano non passano i controlli
-  (`tools/sonda_vetrine.gd` stampa i perché, `_vetrine_scartate`);
-- le 30 vetrine della 0.59 non sono ancora state guardate tutte in foto;
-- le signore sedute davanti ai bassi da lontano sembrano vecchi.
-
-La prossima in roadmap è **v0.62 'E vvoce** (voci, idle in prima persona,
-criature), più la traversata a piedi se il capo la vuole.
+**La 0.62 è chiusa e committata.** Rimasti (`ROADMAP.md`, «Rimasto aperto
+dalla 0.62»): la prova che gioca dieci giornate; l'economia nuova da
+giocare (berlina a €100, spese −1/6); la sala scommesse col suo stile a
+parte; il panaro, la traversata a piedi, il motorino. La prossima in
+roadmap è **v0.63 'E vvoce** (voci, idle in prima persona, criature).
 
 ### 4.2 I primissimi 3 passi nella chat nuova
 
-1. **Rimettere in piedi il progetto e verificarlo.** Portare nel contenitore i
-   pezzi `PAS-v0.61-Progetto.tar.xz.0*.part` da `Claude outputs\v0.61`
-   (`device_stage_files`), unirli, scompattarli in
-   `/home/claude/parcheggiatore-abusivo`; Godot 4.3 in `/home/claude/godot4`;
-   `cp tools/sh/*.sh /tmp/`; poi `nohup /tmp/batteriac.sh &` e controllare
-   `/tmp/batteriac.txt`: tutte a zero, e **zero `SCRIPT ERROR`** su ogni riga.
-2. **Chiedere al capo cosa vuole nella 0.62** (`AskUserQuestion` con le
-   voci della roadmap), prima di toccare il codice — se non l'ha già
-   scritto lui nel primo messaggio, come nella 0.61.
-3. **Misurare prima di cambiare**: una prova che gioca da sola dieci
-   giornate e stampa soldi, stelle, fermi e tempo speso per giornata
-   risponde a metà delle domande aperte della roadmap.
+1. **Rimettere in piedi il progetto e verificarlo** (`COME-RIPRENDERE.md`
+   1.1: `tar` della cartella `Progetto\parcheggiatore-abusivo` sul computer,
+   stage, `tar -xf`, `git init` + tag `pc_sync`); Godot 4.3 in
+   `/home/claude/godot4`; `cp tools/sh/*.sh /tmp/`; `nohup /tmp/batteriac.sh &`.
+2. **Chiedere al capo cosa vuole nella 0.63**, se non l'ha già scritto.
+3. **Un commit per ogni lavoro finito**, portato sul computer con le patch
+   (`tools/sh/sincro.sh` + `git am`).
 
 ### 4.3 Regole del capo (Massimo), da non dimenticare
 
 - Dialoghi del gioco in napoletano; **note (`NOVITA-vX.md`) e roadmap in
   italiano**, con le sezioni «Le trappole» e «La lezione».
-- **Ogni versione si consegna intera** (codice, modelli, texture, audio,
-  documenti) in `Claude outputs\vX\`, **e** in chat con `SendUserFile`.
-  Pezzi da **19 MB** con `UNISCI.bat` in **CRLF**. Tenere 6–7 versioni (il
-  capo: «dalla v0.53 in poi»); **le vecchie le tolgo io**, sempre nel
-  Cestino; le librerie di asset non si toccano mai.
+- **Dalla 0.62: Git, una cartella sola**, vietate le cartelle numerate;
+  task atomici, `git add` + `git commit` a ogni task finito e provato.
+  Build in `Build\`. Quello che si cancella va **nel Cestino**; le
+  librerie di asset non si toccano mai.
 - Aggiornare sempre nei documenti del progetto `claude/NOVITA-vX.md`,
   `claude/ROADMAP.md`, `claude/COME-RIPRENDERE.md`.
 - Preferisce file completi, pronti all'uso; poche domande, molto fare.
