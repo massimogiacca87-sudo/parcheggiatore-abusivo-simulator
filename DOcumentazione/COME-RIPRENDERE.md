@@ -496,6 +496,17 @@ che rovinò la 0.47): si traducono i nomi.
     usato dal gioco va tolto dal filtro, se no nell'exe non c'è e il gioco
     non dà errore (`spawn` torna `null`).
 
+**Aggiunte nella 0.62.1**
+
+54. **Le prove saltano la volata, il giocatore no.** Fra la costruzione
+    della città e `start_shift()` il cronometro della giornata valeva zero
+    e `ora_d_o_juorno()` diceva le 28: tutto quello che guarda l'ora (i
+    vigili che smontano alle venti) agiva durante la volata. Ora `main.gd`
+    mette `shift_time_left = shift_duration` all'avvio se il turno non è
+    attivo, e il vigile non smonta a turno spento. Per guardare il gioco
+    vero, volata compresa: `foto_vigile_citta` (xvfb, chiama il «Gioca»
+    del menu da solo) — conta i vigili fotogramma per fotogramma.
+
 ### Come si prova
 
 Cinquantadue `tools/prova_*.gd` (una, `prova_scopa`, va a parte). Ognuna è un autoload temporaneo che stampa

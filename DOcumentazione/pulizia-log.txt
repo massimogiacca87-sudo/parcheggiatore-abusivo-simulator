@@ -229,3 +229,4 @@ Restano: v0.56, v0.56b, v0.57, v0.58, v0.59, v0.60, v0.61 (sette versioni). Libr
 2026-09-26 18:35  v0.62  Cestino: _claude_tmp\0013-v0.62-LimboAI-fuori-dall-esportazione-con-la-sua-lib.patch
 2026-09-26 18:35  v0.62  Cestino: _claude_tmp\0014-v0.62-sincro.sh-porta-a-LF-tutti-i-file-di-testo-del.patch
 Librerie di asset non toccate.
+2026-09-26 (0.62.1, vigile): nel Cestino la vecchia Build\ParcheggiatoreAbusivoSimulator.exe e i file di passaggio in _claude_tmp (base.tar, est.tar, 0001.patch, exe.part00-09).
