@@ -108,6 +108,14 @@ Per controllare che il contenitore e il computer abbiano lo stesso codice:
 `git rev-parse HEAD:scripts` nel contenitore deve dare lo stesso hash di
 `git rev-parse HEAD:Progetto/parcheggiatore-abusivo/scripts` sul computer.
 
+**Nello stesso repository può lavorare un'altra sessione** (nella 0.62 una
+ha aggiunto `assets/esterni/` e i plugin in `addons/`). Quindi: `git log
+--oneline -5` prima di applicare le patch; se una patch non entra, **`git am
+--quit`** (mai `--abort`: riporta indietro anche i commit degli altri) e si
+riapplica con `--exclude=<file>`; e prima di cominciare una versione nuova
+si riprende il progetto dal computer, non dalla copia vecchia del
+contenitore.
+
 **Non si fa `git push`** se il capo non lo chiede: le istruzioni dicono
 `git add` e `git commit`. **Non si committano** le cartelle di asset che il
 capo ha lasciato fuori (`Animations/…`, `addons/`, `demo/`,

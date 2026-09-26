@@ -57,6 +57,28 @@ Non ho committato le cartelle di asset non tracciate del capo
 `assets\materials\`, la foto del football manager): sono sue e pesano
 centinaia di MB. Non ho fatto `git push`.
 
+## Un'altra sessione nello stesso repository
+
+Mentre chiudevo la 0.62, nel repository del computer del capo sono comparsi
+tre commit **non miei** (25-26 settembre, autore Massimo Giacca):
+`b7d80f7` e `26f2f84` «Asset esterni CC0/open…» (plugin ProtonScatter,
+Dialogic, LimboAI in `Progetto\parcheggiatore-abusivo\addons\`, circa 6.800
+file in `assets\esterni\` con i loro crediti e `ASSET-ESTERNI.md`, modifiche a
+`project.godot` e `export_presets.cfg`, una prova
+`tools/test_asset_esterni`) e `cb15020` sul `.gitignore`. Li ho lasciati
+come stanno. Conseguenze:
+
+- il mio `git am` di una patch si è fermato a metà su un documento: l'ho
+  chiuso con `git am --quit` (**non** `--abort`, che avrebbe riportato
+  indietro anche i commit arrivati nel frattempo) e riapplicato con
+  `--exclude`;
+- **la build v0.62 in `Build\` non contiene quegli asset e quei plugin**
+  (è fatta dal mio contenitore, allineato ai commit della 0.62): gli
+  script sono identici (stesso hash dell'albero `scripts`), ma
+  `project.godot` sul computer adesso ha in più i plugin;
+- la prossima chat deve prendere il progetto **dal computer** (che ha
+  tutto), non da una copia vecchia.
+
 ## Cosa è stato fatto
 
 Vedi `NOVITA-v0.62.md` per il racconto. In breve: tema unico e UI rifatta
