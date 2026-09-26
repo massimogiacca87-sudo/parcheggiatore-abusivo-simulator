@@ -36,6 +36,10 @@ window/stretch/mode="canvas_items"
 
 enabled=PackedStringArray("res://addons/dialogic/plugin.cfg", "res://addons/proton_scatter/plugin.cfg")
 
+[filesystem]
+
+import/blender/enabled=false
+
 [gui]
 
 theme/custom="res://assets/ui/tema.tres"
