@@ -1,7 +1,8 @@
 # Come riprendere il lavoro in una nuova chat
 
-Stato al **26 settembre 2026**, versione **v0.62 · 'A faccia nova**, con la
-biblioteca di asset esterni agganciata al gioco (seconda metà della 0.62).
+Stato al **26 settembre 2026**, versione **v0.63 · 'O Duttore** (Borrelli
+torna: due porte col dado che cresce, non si tocca, si calma con sigaretta
+e caffè — vedi `NOVITA-v0.63.md`).
 
 Questo documento è scritto per **chi apre la chat nuova** (cioè per me, senza
 memoria di questa). Si legge dall'alto: la sezione 1 dice cosa fare nei
@@ -59,6 +60,22 @@ New-Item -ItemType Directory -Force _claude_tmp | Out-Null
 tar -cf _claude_tmp\progetto.tar -C Progetto parcheggiatore-abusivo   # ~130 MB con .godot
 ```
 
+**Dalla 0.63 non basta più un tar solo**: con la biblioteca esterna il
+progetto senza `.godot` è 560 MB, e il ponte ne regge 400 a file (e ~50
+secondi a trasferimento). Si fanno tre tar (circa 190, 205, 140 MB):
+
+```powershell
+tar -cf _claude_tmp\pA.tar --exclude=.godot --exclude=parcheggiatore-abusivo/assets/esterni/materiali -C Progetto parcheggiatore-abusivo
+tar -cf _claude_tmp\pB1.tar -C Progetto\parcheggiatore-abusivo\assets\esterni\materiali decals
+tar -cf _claude_tmp\pB2.tar --exclude=decals -C Progetto\parcheggiatore-abusivo\assets\esterni\materiali .
+```
+
+e nel contenitore `tar -xf pA.tar`, poi i due `pB` dentro a
+`parcheggiatore-abusivo/assets/esterni/materiali/`. (Attenzione al `-C`:
+se si passa il percorso intero come argomento, il tar se lo porta dietro e
+i materiali finiscono in una cartella annidata.) Poi `--import` in
+background (qualche minuto).
+
 poi `device_stage_files` di `…\_claude_tmp\progetto.tar` (arriva in
 `/mnt/user-data/uploads/…`), e nel contenitore:
 
@@ -81,6 +98,22 @@ ogni lavoro finito e provato**, poi lo si porta sul computer del capo:
 # con gli a-capo come li tiene il repo del PC (vedi sotto)
 /home/claude/parcheggiatore-abusivo/tools/sh/sincro.sh
 ```
+
+**Dalla 0.63**: `sincro.sh` e `sincro_lf.py` arrivano dal PC con gli a-capo
+di Windows e così non partono (`set: -: invalid option`). Si lanciano da
+una copia pulita:
+
+```bash
+sed 's/\r$//' tools/sh/sincro.sh > /tmp/sincro.sh
+sed 's/\r$//' tools/sh/sincro_lf.py > /tmp/sincro_lf.py
+sed -i 's#\$SRC/tools/sh/sincro_lf.py#/tmp/sincro_lf.py#' /tmp/sincro.sh
+bash /tmp/sincro.sh
+```
+
+Stessa cosa per gli altri `tools/sh/*.sh` se danno errori strani. E per
+riattaccare i pezzi delle build sul PC con .NET si usano **percorsi
+assoluti**: `[IO.File]::Create` parte da `C:\Windows\System32`, non dalla
+cartella di PowerShell.
 
 **Gli a-capo** (scoperto alla 0.62). Il repo del capo ha
 `core.autocrlf=true`: dentro a Git i file stanno con gli a-capo Unix (LF),
@@ -496,6 +529,15 @@ che rovinò la 0.47): si traducono i nomi.
     usato dal gioco va tolto dal filtro, se no nell'exe non c'è e il gioco
     non dà errore (`spawn` torna `null`).
 
+**Aggiunte nella 0.63**
+
+55. **Una bandierina che si accende e non si spegne più** è un «una volta
+    per partita» travestito. `_chiamata_fatta` del vigile spegneva la radio
+    per sempre dopo la prima chiamata, e con lei Borrelli.
+56. **Una regola che il capo ricorda può non esserci nel codice** («il
+    vigile mandato via tre volte chiama»): si controlla prima di
+    ricordarla, e se manca si fa.
+
 **Aggiunte nella 0.62.1**
 
 54. **Le prove saltano la volata, il giocatore no.** Fra la costruzione
@@ -717,7 +759,17 @@ aperto dalla 0.62»):
 3. La sala scommesse è l'unico pannello col suo stile a parte.
 4. Il balcone del panaro, la traversata a piedi, il motorino con le chiavi.
 
-### La 0.63 — **'E vvoce**
+### Borrelli e gli altri boss (0.63)
+
+Le regole di Borrelli stanno in `game_manager.gd` («'E BOSS D''E
+JURNATE»): `prob_borrelli_sera`, `prob_borrelli_chiamata`,
+`borrelli_venuto` (la ripartenza dei dadi: scelta mia, da confermare col
+capo). Le prove: `prova_borrelli` (i dadi) e `prova_borrelli_gioca` (in
+città). Il capo vuole **altri boss e un finale**: le proposte stanno nella
+`ROADMAP.md`, «I boss che verranno e il finale» — si sceglie con lui prima
+di scrivere codice.
+
+### La 0.64 — **'E vvoce**
 
 Voci registrate, clip di idle in prima persona, le criature con una
 corporatura loro. Come sempre, **chiedere a lui** prima di cominciare, con
