@@ -607,6 +607,18 @@ func _physics_process(delta: float) -> void:
 				_animate_walk(global_position.distance_to(pr))
 				_face_toward(_meta_pausa)
 				_t_stato = 0.0
+				# **'O banco ca nun se trova** (0.62). Il posto del caffè
+				# sta fra il bancone e i tavolini: se in due secondi non si
+				# è mosso di trenta centimetri, si appoggia dove sta (se è
+				# vicino) o lascia perdere. Prima tremava lì davanti fino al
+				# tetto dei quaranta secondi (`prova_ntuppate`, a (20, 13)).
+				if _fermo_da(delta) > 2.0:
+					_fermo_t = 0.0
+					if global_position.distance_to(_meta_pausa) < 3.0:
+						_meta_pausa = global_position
+					else:
+						_torna_in_ronda()
+						return
 			else:
 				_animate_walk(0.0)
 				if _t_stato > 1.2 and _t_stato < 1.4:
@@ -789,6 +801,7 @@ func _torna_in_ronda() -> void:
 	stato = Stato.RONDA
 	_t_stato = 0.0
 	_t_caffe = 0.0
+	_fermo_da_qui = Vector3.INF
 	# Con la pioggia le pause sono piu' fitte: uno che fa il giro sotto
 	# l'acqua ci mette meno a decidere che e' ora del caffe'.
 	var quanto: float = randf_range(PAUSA_OGNI_MIN, PAUSA_OGNI_MAX)
@@ -821,6 +834,7 @@ func _inizia_pausa() -> void:
 		stato = Stato.CAFFE
 		_t_stato = 0.0
 		_t_caffe = 0.0
+		_fermo_da_qui = Vector3.INF
 		_meta_pausa = vicino.global_position
 		return
 	stato = Stato.CHIACCHIERA
@@ -1037,6 +1051,12 @@ func _do_patrol(delta: float) -> void:
 		_meta_ferma = 0.0
 	else:
 		_meta_ferma += delta
+	# E se non si muove proprio (spinge contro uno spigolo), bastano due
+	# secondi: la prova dei piantati guarda a tre (0.62, asset esterni).
+	var fermo: bool = _fermo_da(delta) > 2.0
+	if fermo:
+		_fermo_t = 0.0
+		_meta_ferma = 6.1
 	if dist < 0.6 or _meta_ferma > 6.0:
 		if _meta_ferma > 6.0 and dist < 3.0:
 			patrol_points[_patrol_idx] = Vector3(global_position.x,
@@ -1048,6 +1068,21 @@ func _do_patrol(delta: float) -> void:
 
 var _meta_meglio: float = INF
 var _meta_ferma: float = 0.0
+var _fermo_t: float = 0.0
+var _fermo_da_qui: Vector3 = Vector3.INF
+
+
+## Da quanti secondi sta dentro a trenta centimetri dallo stesso punto
+## (lo chiama chi sta camminando, una volta a fotogramma).
+func _fermo_da(delta: float) -> float:
+	var d := Vector2(global_position.x - _fermo_da_qui.x,
+		global_position.z - _fermo_da_qui.z)
+	if _fermo_da_qui == Vector3.INF or d.length() > 0.3:
+		_fermo_da_qui = global_position
+		_fermo_t = 0.0
+	else:
+		_fermo_t += delta
+	return _fermo_t
 
 
 ## Camminata. `moved` è la distanza fatta nel frame: diviso il delta è la

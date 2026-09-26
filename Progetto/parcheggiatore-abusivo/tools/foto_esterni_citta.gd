@@ -41,6 +41,7 @@ const SCATTI := [
 	["ngombranti", "cerca", "_cerca_ngombranti"],
 	["bidone", "cerca", "_cerca_bidone"],
 	["scooter", "cerca", "_cerca_scooter"],
+	["cassa", "cerca", "_cerca_cassa"],
 ]
 
 const Citta := preload("res://scripts/citta_3d.gd")
@@ -169,7 +170,10 @@ func _guarda_gruppo(prefisso: String, dist: float, alto: float,
 	if tutte.is_empty():
 		return []
 	var migliore: Transform3D = tutte[0]
-	if vicino != Vector3.INF:
+	# `QUALE=2` fotografa la terza istanza invece della prima.
+	if OS.get_environment("QUALE") != "":
+		migliore = tutte[int(OS.get_environment("QUALE")) % tutte.size()]
+	elif vicino != Vector3.INF:
 		var dm := INF
 		for t in tutte:
 			var dd: float = (t as Transform3D).origin.distance_to(vicino)
@@ -360,6 +364,10 @@ func _cerca_bidone() -> Array:
 
 func _cerca_scooter() -> Array:
 	return _guarda_gruppo("Gruppo_esterni_scooter", 3.4, 1.6, 0.5, Vector3(120, 0, 95))
+
+
+func _cerca_cassa() -> Array:
+	return _guarda_gruppo("Gruppo_esterni_cassa", 3.2, 1.6, 0.3)
 
 
 func _cerca_ngombranti() -> Array:

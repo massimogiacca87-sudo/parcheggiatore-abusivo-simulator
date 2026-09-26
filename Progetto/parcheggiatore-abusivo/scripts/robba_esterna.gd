@@ -65,7 +65,9 @@ static func metti(c: Node3D) -> void:
 	# motorini restano dove stanno.
 	var rng2 := RandomNumberGenerator.new()
 	rng2.seed = 62003
-	_motorini_fore_ê_vasci(c, rng2)
+	# (I motorini davanti ai bassi sono usciti prima di entrare: i bassi
+	# stanno nei vicoli da quattro metri, e un motorino lungo quasi due
+	# metri contro il muro lì tappa il passaggio — `prova_ntuppate`.)
 	_motorini_ô_marciappiede(c, rng2)
 	_coni_ê_cantieri(c, rng2)
 	_segge_vienna(c, rng2)
@@ -428,35 +430,6 @@ static func _metti(c: Node3D, nome: String, p: Vector3, giro: float,
 	return true
 
 
-## **'O motorino fore 'o vascio.** Chi abita al piano terra il motorino se
-## lo tiene davanti alla porta, dall'altra parte della finestra (dove
-## `RobbaPsx` mette le sedie), parallelo al muro.
-static func _motorini_fore_ê_vasci(c: Node3D, rng: RandomNumberGenerator) -> void:
-	var messi := 0
-	for v in c._vasci_fore:
-		if messi >= 14:
-			break
-		if rng.randf() > 0.35:
-			continue
-		var porta: Vector3 = v[0]
-		var fen: Vector3 = v[1]
-		var fuori: Vector3 = v[2]
-		var lungo: Vector3 = (fen - porta).normalized()
-		# Quarantasei centimetri dal muro e non di più: nei vicoli di quattro
-		# metri la corsia libera comincia a novanta.
-		# E a due metri e trentacinque dal centro della porta: il portone
-		# non si tappa (`_davanti_ô_portone` vuole un metro più il raggio).
-		var p: Vector3 = porta - lungo * 2.35 + fuori * 0.46
-		var giro: float = atan2(lungo.x, lungo.z) + (PI if rng.randf() < 0.5 else 0.0)
-		giro += rng.randf_range(-0.08, 0.08)
-		var nome: String = MOTORINI[rng.randi() % MOTORINI.size()]
-		if not _ce_sta(c, p, MOTORINO_DIM, giro):
-			continue
-		if _metti(c, nome, p, giro, MOTORINO_DIM, "esterni_" + nome):
-			messi += 1
-	c.set_meta(&"motorini_vasci", messi)
-
-
 ## **'E motorini ô marciappiede.** Sulle strade larghe, fra una macchina e
 ## l'altra, i motorini stanno in fila contro il cordolo, a due o tre: come
 ## a Napoli, dove un buco di un metro è un posto. Di punta non ci stanno:
@@ -600,7 +573,12 @@ static func _ai_cassonetti(c: Node3D, rng: RandomNumberGenerator) -> void:
 		var p0: Vector3 = cs[0]
 		var giro: float = float(cs[1])
 		var lungo := Vector3(cos(giro), 0, -sin(giro))
-		for d in [2.1, -2.1, 2.8, -2.8, 3.5, -3.5]:
+		# Da vicino ci stanno già i sacchetti, l'ingombrante e la campana
+		# (`_munnezza_attuorno`) e la roba PSX (`_munnezza_cchiu`, a tre-
+		# cinque metri): la cassa va dove resta posto, fino a sei metri e
+		# mezzo. Con solo i tre metri e mezzo di prima non ne entrava
+		# nessuna (sonda_esterni, 0.62).
+		for d in [2.1, -2.1, 2.8, -2.8, 3.5, -3.5, 5.5, -5.5, 6.5, -6.5]:
 			var p: Vector3 = p0 + lungo * float(d)
 			var g: float = giro + rng.randf_range(-0.3, 0.3)
 			if not _ce_sta(c, p, CASSA_DIM, g):
