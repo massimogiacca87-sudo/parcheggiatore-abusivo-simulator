@@ -7,6 +7,7 @@ extends Node3D
 const CittaScript := preload("res://scripts/citta_3d.gd")
 const PlayerScript := preload("res://scripts/player_fps.gd")
 const HudScript := preload("res://scripts/hud.gd")
+const FiltriScript := preload("res://scripts/filtri_schermo.gd")
 const IntroScript := preload("res://scripts/intro_screen.gd")
 const CaricamentoScript := preload("res://scripts/caricamento.gd")
 const VolataScript := preload("res://scripts/volata.gd")
@@ -112,6 +113,12 @@ func _ready() -> void:
 	hud.name = "HUD"
 	add_child(hud)
 	hud.set_player(player)
+
+	# 'E filtre d''o schermo (0.62): quello scelto nel menu di pausa e la
+	# botta quando ti colpiscono (vedi `filtri_schermo.gd`).
+	var filtri := FiltriScript.new()
+	filtri.name = "FiltriSchermo"
+	add_child(filtri)
 
 	# **'O rummore d''a citta'.** Voci vere registrate per strada, sotto a
 	# tutto. Non e' musica e non e' un effetto: e' il fondo su cui sta il

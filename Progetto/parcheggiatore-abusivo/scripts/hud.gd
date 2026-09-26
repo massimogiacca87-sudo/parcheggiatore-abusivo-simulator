@@ -2164,8 +2164,9 @@ func _build_pause_menu() -> void:
 	# per metà.
 	# 0.62: più largo e più alto, bottoni da 44, la versione in fondo
 	# (prima stava a 336 — sotto a "Esci dal gioco").
-	pause_panel.position = Vector2(-200, -262)
-	pause_panel.size = Vector2(400, 524)
+	# 0.62: ancora più alto, per il bottone del filtro dello schermo.
+	pause_panel.position = Vector2(-200, -288)
+	pause_panel.size = Vector2(400, 576)
 	pause_panel.visible = false
 	pause_panel.add_theme_stylebox_override("panel",
 		_stile_pannello(Color(0.6, 0.52, 0.34)))
@@ -2227,15 +2228,25 @@ func _build_pause_menu() -> void:
 	_slider_volume("Musica", 362, SoundManager.vol_musica,
 		func(v): SoundManager.set_vol_musica(v))
 
+	# **'O filtro d''o schermo** (0.62, asset esterni): Nisciuno, Pellicola,
+	# Videocassetta, Lente sporca. Un bottone che gira, come F5 per la
+	# grafica; si ricorda da solo (`filtri_schermo.gd`).
+	var filtro_btn := Button.new()
+	filtro_btn.position = Vector2(60, 400)
+	filtro_btn.size = Vector2(280, 44)
+	filtro_btn.text = "Filtro: " + _nome_filtro()
+	filtro_btn.pressed.connect(_gira_filtro.bind(filtro_btn))
+	pause_panel.add_child(filtro_btn)
+
 	var quit_btn := Button.new()
-	quit_btn.position = Vector2(60, 400)
+	quit_btn.position = Vector2(60, 452)
 	quit_btn.size = Vector2(280, 44)
 	quit_btn.text = "Esci dal gioco"
 	quit_btn.pressed.connect(func(): get_tree().quit())
 	pause_panel.add_child(quit_btn)
 
 	var hint := Label.new()
-	hint.position = Vector2(10, 452)
+	hint.position = Vector2(10, 504)
 	hint.size = Vector2(380, 22)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", 12)
@@ -2248,7 +2259,7 @@ func _build_pause_menu() -> void:
 	# Il numero di versione, in piccolo. Serve a chi segnala un problema:
 	# "non mi funziona" senza la versione non si puo' nemmeno cercare.
 	var ver := Label.new()
-	ver.position = Vector2(10, 480)
+	ver.position = Vector2(10, 532)
 	ver.size = Vector2(380, 18)
 	ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ver.add_theme_font_size_override("font_size", 10)
@@ -2258,6 +2269,18 @@ func _build_pause_menu() -> void:
 	pause_panel.add_child(ver)
 
 	_build_slot_panel()
+
+
+func _nome_filtro() -> String:
+	var f := get_tree().get_first_node_in_group("filtri_schermo")
+	return str(f.nome()) if f != null else "Nisciuno"
+
+
+func _gira_filtro(b: Button) -> void:
+	var f := get_tree().get_first_node_in_group("filtri_schermo")
+	if f == null:
+		return
+	b.text = "Filtro: " + str(f.prossimo())
 
 
 # ---------------------------------------------------------------------------
