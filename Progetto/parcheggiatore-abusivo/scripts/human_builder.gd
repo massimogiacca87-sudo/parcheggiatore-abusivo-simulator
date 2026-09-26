@@ -230,6 +230,24 @@ const RIG := {
 			"lavora": "ual/Fixing_Kneeling"},
 		"ual": "res://assets/models/omo_ual.res",
 	},
+	# (0.62) 'E cuorpe 'e fore: vedi `QUAT`. L'altezza è dalla pianta del
+	# piede a `Head_end` nella `Idle_Neutral` (misurata: 1,83).
+	"quat": {
+		"altezza": 1.83,
+		"ossa": {"head": "Head", "chest": "Chest", "hand_l": "Wrist.L",
+			"hand_r": "Wrist.R", "spalla_l": "UpperArm.L", "spalla_r": "UpperArm.R"},
+		"clip": {"idle": "Idle_Neutral", "walk": "Walk", "jog": "ual/Jog_Fwd",
+			"run": "Run", "crouch": "ual/Crouch_Idle", "crouch_walk": "ual/Crouch_Fwd",
+			"morto": "Death", "seduto": "ual/Sitting_Idle",
+			"seduto_parla": "ual/Sitting_Talking", "parla": "ual/Idle_Talking",
+			"punch": "Punch_Right", "jab": "Punch_Left", "pugno": "Punch_Right",
+			"pugno_sinistro": "Punch_Left", "coltellata": "ual/Sword_Attack",
+			"colpo": "HitRecieve", "colpo_capa": "HitRecieve_2",
+			"point": "Interact", "shrug": "ual/PickUp_Table",
+			"guida": "ual/Driving", "applaude": "Wave",
+			"lavora": "ual/Fixing_Kneeling"},
+		"ual": "res://assets/models/quat_ual.res",
+	},
 	"umano_q": {
 		"altezza": 5.24,
 		"ossa": {"head": "Head", "chest": "Spine2", "hand_l": "LeftHand",
@@ -250,6 +268,31 @@ const RIG := {
 		"ual": "res://assets/models/umano_q_ual.res",
 	},
 }
+
+## **'E cuorpe 'e fore** (0.62, asset esterni). Sei persone animate dalla
+## biblioteca esterna (Poly Pizza, Quaternius "Ultimate Animated Character
+## Pack", CC0): il signore in giacca e cravatta, il ragazzo in maglietta,
+## l'operaio col casco giallo, il contadino col cappello di paglia e due
+## donne. Stesso scheletro per tutti e sei (`CharacterArmature`, parente di
+## quello degli omini), 24 clip loro — e le mosse del pupo tradotte da
+## `tools/retarget_ual.gd` in `quat_ual.res`. Sono le prime **donne** che
+## non sono il pupo: i pacchetti della 0.59 erano di soli uomini.
+##
+## I file restano nella biblioteca (`assets/esterni/modelli/npc_animati/`);
+## le clip hanno il prefisso `CharacterArmature|`, che si toglie la prima
+## volta che il corpo si costruisce (`_alias_quat`).
+const QUAT := {
+	"quat_giacca": "res://assets/esterni/modelli/npc_animati/Business_Man_JFrLIKqvCH.glb",
+	"quat_maglietta": "res://assets/esterni/modelli/npc_animati/Casual_Character_kZ3DmIoGip.glb",
+	"quat_operaio": "res://assets/esterni/modelli/npc_animati/Worker_Yg2bQZO6Hj.glb",
+	"quat_cafone": "res://assets/esterni/modelli/npc_animati/Farmer_7pn3R6hPvE.glb",
+	"quat_donna_verde": "res://assets/esterni/modelli/npc_animati/Animated_Woman_nIItLV9nxS.glb",
+	"quat_donna_bionda": "res://assets/esterni/modelli/npc_animati/Animated_Woman_qJ2gsTUBHL.glb",
+}
+const QUAT_DONNE := ["quat_donna_verde", "quat_donna_bionda"]
+## Le clip che girano in tondo (il file le ha tutte "una volta sola").
+const QUAT_CICLI := ["Idle", "Idle_Neutral", "Walk", "Run", "Run_Back",
+	"Run_Left", "Run_Right", "Idle_Sword", "Idle_Gun", "Wave"]
 
 static var _librerie_ual: Dictionary = {}
 
@@ -277,12 +320,63 @@ static var _adattatori: Dictionary = {}   # "modello:chiave" → Basis
 
 
 static func rig_di(modello: String) -> String:
+	if modello.begins_with("quat_"):
+		return "quat"
 	return "umano_q" if modello.begins_with("umano_q") else "omo"
+
+
+## Le clip dei corpi `quat` senza il prefisso `CharacterArmature|`, e i
+## cicli accesi. La libreria è quella del file, condivisa da tutti i corpi
+## dello stesso modello: si sistema una volta sola.
+static func _alias_quat(ap: AnimationPlayer) -> void:
+	if ap == null or not ap.has_animation_library(""):
+		return
+	var lib: AnimationLibrary = ap.get_animation_library("")
+	if lib.has_animation("Idle_Neutral"):
+		return
+	for nome in lib.get_animation_list():
+		var n: String = str(nome)
+		var k: int = n.find("|")
+		if k < 0:
+			continue
+		var corto: String = n.substr(k + 1)
+		if lib.has_animation(corto):
+			continue
+		var a: Animation = lib.get_animation(n)
+		if QUAT_CICLI.has(corto):
+			a.loop_mode = Animation.LOOP_LINEAR
+		lib.add_animation(corto, a)
+
+
+## I vestiti dei corpi `quat`: sono disegnati, e restano i loro. Si cambia
+## solo il colore del pezzo grande — la giacca del signore, la maglietta del
+## ragazzo — così due signori in giacca non sono gemelli.
+const QUAT_TINTA := {"Suit": "pantaloni", "White": "camicia"}
+
+
+static func _vesti_quat(m: Node3D, modello: String, camicia: Color,
+		pantaloni: Color) -> void:
+	if not (modello == "quat_giacca" or modello == "quat_maglietta"):
+		return
+	for mi in m.find_children("*", "MeshInstance3D", true, false):
+		var me: Mesh = (mi as MeshInstance3D).mesh
+		if me == null:
+			continue
+		for k in me.get_surface_count():
+			var mat: Material = me.surface_get_material(k)
+			if not (mat is StandardMaterial3D) or not QUAT_TINTA.has(mat.resource_name):
+				continue
+			var nuovo: StandardMaterial3D = (mat as StandardMaterial3D).duplicate()
+			var quale: String = str(QUAT_TINTA[mat.resource_name])
+			nuovo.albedo_color = (pantaloni if quale == "pantaloni" else camicia)
+			(mi as MeshInstance3D).set_surface_override_material(k, nuovo)
 
 
 static func _build_rig(modello: String, camicia: Color, pantaloni: Color,
 		height: float, opts: Dictionary) -> Dictionary:
 	var percorso := "res://assets/models/%s.scn" % modello
+	if QUAT.has(modello):
+		percorso = str(QUAT[modello])
 	if not _scene_rig.has(modello):
 		if not ResourceLoader.exists(percorso):
 			return {}
@@ -304,9 +398,13 @@ static func _build_rig(modello: String, camicia: Color, pantaloni: Color,
 	var suonatore: AnimationPlayer = _trova_player(m)
 	if id_rig == "umano_q" and suonatore != null:
 		_prepara_fermo(suonatore)
+	if id_rig == "quat":
+		_alias_quat(suonatore)
 	_aggiungi_ual(suonatore, str(rig.get("ual", "")))
 	if id_rig == "omo":
 		_vesti_omo(m, camicia, pantaloni, opts)
+	elif id_rig == "quat":
+		_vesti_quat(m, modello, camicia, pantaloni)
 	else:
 		_vesti_umano(m, camicia, pantaloni, opts)
 
@@ -460,6 +558,10 @@ static func _adattatore(modello: String, chiave: String, m: Node3D,
 	# La posa di riferimento è quella in cui il corpo sta **fermo**: per
 	# l'umano di Quaternius dalla 0.60 è `Fermo`, non più `Idle`.
 	var riposo: String = "Fermo" if ap != null and ap.has_animation("Fermo") else "Idle"
+	# (0.62) I corpi `quat` stanno fermi in `Idle_Neutral` (la loro `Idle`
+	# molleggia sulle gambe).
+	if riposo == "Idle" and ap != null and ap.has_animation("Idle_Neutral"):
+		riposo = "Idle_Neutral"
 	if POSA_PUPO.has(chiave) and ap != null and ap.has_animation(riposo):
 		var posa: Transform3D = posa_osso(m, sk, ap, ap.get_animation(riposo), osso)
 		var s: float = posa.basis.get_scale().x

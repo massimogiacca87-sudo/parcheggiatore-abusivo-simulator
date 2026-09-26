@@ -2545,6 +2545,7 @@ func _dint_ô_cantiere(centro: Vector3, lungo: Vector3, muro: Vector3,
 
 
 var _cantieri_fatti: int = 0
+var _operai_fatti: int = 0
 ## I cantieri fatti, per chi ci aggiunge roba dopo (0.60, `RobbaPsx`):
 ## `[centro, lungo, verso il muro, distanza dal muro]`.
 var _cantieri_info: Array = []
@@ -2552,9 +2553,15 @@ var _cantieri_info: Array = []
 
 ## L'operaio inginocchiato che lavora, girato verso il muro.
 func _operaio(p: Vector3, muro: Vector3) -> void:
+	# (0.62) Un operaio su due è quello della biblioteca esterna, col casco
+	# giallo e il gilet: in ginocchio ad aggiustare (la clip del pupo
+	# tradotta). L'altro resta l'umano di Quaternius che lavora in piedi.
+	var casco: bool = _operai_fatti % 2 == 0 and Human.QUAT.has("quat_operaio")
+	_operai_fatti += 1
+	var opts := {"modello": "quat_operaio", "clip": "ual/Fixing_Kneeling"} if casco \
+		else {"modello": "umano_q", "clip": "Working"}
 	var parti: Dictionary = Human.build(Color(0.95, 0.48, 0.10),
-		Color(0.16, 0.22, 0.40), "", randf_range(1.70, 1.80),
-		{"modello": "umano_q", "clip": "Working"})
+		Color(0.16, 0.22, 0.40), "", randf_range(1.70, 1.80), opts)
 	var n: Node3D = parti.get("root")
 	if n == null:
 		return

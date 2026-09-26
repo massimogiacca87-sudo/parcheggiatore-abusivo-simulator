@@ -345,20 +345,30 @@ func _costruisci() -> void:
 ## il turista i pantaloncini, l'operaio le maniche lunghe o la maglietta
 ## dell'umano. Le donne restano del pupo: i due pacchetti sono di soli
 ## uomini.
+##
+## **E dalla 0.62 'e cuorpe 'e fore** (vedi `HumanBuilder.QUAT`): il signore
+## in giacca per il guappo e lo studente, il ragazzo in maglietta per il
+## quartiere e il turista, l'operaio col casco per l'operaio, il contadino
+## col cappello per chi vende al mercato. E due donne, finalmente: una
+## donna su tre non è più il pupo.
 const CUORPE_MESTIERE := {
-	"quartiere": ["casual", "maniche", "camicia", "umano"],
-	"turista": ["casual", "umano"],
-	"operaio": ["maniche", "umano"],
+	"quartiere": ["casual", "maniche", "camicia", "umano", "quat_maglietta"],
+	"turista": ["casual", "umano", "quat_maglietta"],
+	"operaio": ["maniche", "umano", "quat_operaio", "quat_operaio"],
 	"pizzaiuolo": ["camicia"],
 	"prevete": ["giacca"],
-	"studente": ["casual", "maniche", "umano"],
-	"guappo": ["giacca", "camicia"],
-	"marenaro": ["casual", "maniche"],
+	"studente": ["casual", "maniche", "umano", "quat_giacca"],
+	"guappo": ["giacca", "camicia", "quat_giacca"],
+	"marenaro": ["casual", "maniche", "quat_cafone"],
 }
 
 
 func _che_cuorpo(femmina: bool) -> String:
-	if femmina or randf() < 0.4:
+	if femmina:
+		if randf() < 0.36:
+			return str(Human.QUAT_DONNE[randi() % Human.QUAT_DONNE.size()])
+		return ""
+	if randf() < 0.4:
 		return ""
 	var scelte: Array = CUORPE_MESTIERE.get(str(mestiere.get("id", "")), [])
 	if scelte.is_empty():
@@ -366,6 +376,8 @@ func _che_cuorpo(femmina: bool) -> String:
 	var c: String = str(scelte[randi() % scelte.size()])
 	if c == "umano":
 		return "umano_q"
+	if c.begins_with("quat_"):
+		return c
 	return "omo_" + c + ("_liscio" if randf() < 0.5 else "")
 
 

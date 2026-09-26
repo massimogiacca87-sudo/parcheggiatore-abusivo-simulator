@@ -89,6 +89,28 @@ const MAPPA_OMO := {
 	"thigh_r": "UpperLeg.R", "calf_r": "LowerLeg.R", "foot_r": "Foot.R",
 }
 
+## (0.62) I sei corpi della biblioteca esterna (`CharacterArmature` di
+## Quaternius): stessa famiglia degli omini, con un osso in più nella
+## schiena (`Chest`) e il polso al posto del palmo. `Hips` resta com'è.
+const MAPPA_QUAT := {
+	"pelvis": "Body", "spine_01": "Abdomen", "spine_02": "Torso",
+	"spine_03": "Chest", "neck_01": "Neck", "Head": "Head",
+	"clavicle_l": "Shoulder.L", "upperarm_l": "UpperArm.L",
+	"lowerarm_l": "LowerArm.L", "hand_l": "Wrist.L",
+	"middle_01_l": "Middle1.L", "middle_02_l": "Middle2.L",
+	"index_01_l": "Index1.L", "index_02_l": "Index2.L",
+	"thumb_01_l": "Thumb1.L", "thumb_02_l": "Thumb2.L",
+	"clavicle_r": "Shoulder.R", "upperarm_r": "UpperArm.R",
+	"lowerarm_r": "LowerArm.R", "hand_r": "Wrist.R",
+	"middle_01_r": "Middle1.R", "middle_02_r": "Middle2.R",
+	"index_01_r": "Index1.R", "index_02_r": "Index2.R",
+	"thumb_01_r": "Thumb1.R", "thumb_02_r": "Thumb2.R",
+	"thigh_l": "UpperLeg.L", "calf_l": "LowerLeg.L", "foot_l": "Foot.L",
+	"thigh_r": "UpperLeg.R", "calf_r": "LowerLeg.R", "foot_r": "Foot.R",
+}
+
+const Human := preload("res://scripts/human_builder.gd")
+
 ## Ossa lunghe: si correggono con la direzione verso il figlio (sorgente →
 ## figlio nella sorgente, arrivo → figlio nell'arrivo).
 const LUNGHE := {
@@ -105,10 +127,19 @@ const FIGLIO_ARRIVO_OMO := {"LowerLeg.L": "LowerLeg.L_end", "LowerLeg.R": "Lower
 
 func _initialize() -> void:
 	var sorgente := _carica("res://assets/models/pupo.scn")
-	for arrivo in [["res://assets/models/umano_q.scn", MAPPA_UMANO,
+	var arrivi: Array = [["res://assets/models/umano_q.scn", MAPPA_UMANO,
 			"res://assets/models/umano_q_ual.res", false],
 			["res://assets/models/omo_casual.scn", MAPPA_OMO,
-			"res://assets/models/omo_ual.res", true]]:
+			"res://assets/models/omo_ual.res", true],
+			# (0.62) Un modello solo basta: i sei corpi `quat` hanno lo
+			# stesso scheletro.
+			[str(Human.QUAT["quat_giacca"]), MAPPA_QUAT,
+			"res://assets/models/quat_ual.res", true]]
+	# `SOLO=quat` rifà solo la libreria dei corpi nuovi (le altre due
+	# restano identiche byte per byte).
+	if OS.get_environment("SOLO") != "":
+		arrivi = arrivi.filter(func(a): return str(a[2]).contains(OS.get_environment("SOLO")))
+	for arrivo in arrivi:
 		var t := _carica(str(arrivo[0]))
 		var lib := _traduci(sorgente, t, arrivo[1], bool(arrivo[3]))
 		var err := ResourceSaver.save(lib, str(arrivo[2]))
@@ -123,6 +154,9 @@ func _carica(p: String) -> Dictionary:
 	var m: Node3D = (load(p) as PackedScene).instantiate()
 	var sk: Skeleton3D = m.find_children("*", "Skeleton3D", true, false)[0]
 	var ap: AnimationPlayer = m.find_children("*", "AnimationPlayer", true, false)[0]
+	# Le clip `CharacterArmature|Walk` diventano `Walk` (serve per il
+	# davanti, che si prende dalla camminata).
+	Human._alias_quat(ap)
 	var radice: Node = ap.get_node_or_null(ap.root_node)
 	if radice == null:
 		radice = ap.get_parent()
