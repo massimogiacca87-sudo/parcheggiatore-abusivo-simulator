@@ -2911,26 +2911,43 @@ func _on_prompt_changed(text: String) -> void:
 
 
 func _on_money_changed(amount: int) -> void:
-	# Popup fluttuante quando si guadagna
-	if _last_money >= 0 and amount > _last_money:
+	# Popup fluttuante quando i soldi cambiano. (0.62) Anche quando se ne
+	# vanno: prima si vedeva solo il guadagno, e una multa, la spesa o la
+	# scommessa persa toglievano soldi in silenzio.
+	if _last_money >= 0 and amount != _last_money:
 		_spawn_money_popup(amount - _last_money)
 	_last_money = amount
 	# L'euro ce lo mette l'icona accanto (0.62).
 	money_label.text = "%d" % amount
 
 
+## Il numero che sale accanto ai soldi, col borsello che si riempie o che
+## si svuota (icone di Kenney, CC0, dalla biblioteca esterna).
 func _spawn_money_popup(delta_money: int) -> void:
-	var popup := _make_label(Vector2(0, 0), "+€%d" % delta_money, 22)
+	var entra: bool = delta_money > 0
+	var colore: Color = Color(0.4, 1.0, 0.5) if entra else Color(1.0, 0.42, 0.36)
+	var riga := HBoxContainer.new()
+	riga.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	riga.add_theme_constant_override("separation", 4)
+	riga.add_child(UiStile.figura("borsa_entra" if entra else "borsa_esce", 24.0, colore))
+	var popup := _make_label(Vector2(0, 0),
+		("+€%d" % delta_money) if entra else ("−€%d" % absi(delta_money)), 22)
 	popup.add_theme_font_override("font", UiStile.font_titolo())
-	popup.position = money_label.global_position + Vector2(
-		money_label.size.x + randf_range(14, 40), 0)
-	popup.modulate = Color(0.4, 1.0, 0.5)
+	popup.add_theme_color_override("font_color", colore)
 	popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(popup)
+	riga.add_child(popup)
+	riga.position = money_label.global_position + Vector2(
+		money_label.size.x + randf_range(14, 40), -4)
+	add_child(riga)
+	# Chi entra sale, chi esce scivola via di lato: scendendo sarebbe finito
+	# sopra alla scritta del sospetto.
 	var tween := create_tween()
-	tween.tween_property(popup, "position:y", popup.position.y - 40.0, 1.0)
-	tween.parallel().tween_property(popup, "modulate:a", 0.0, 1.0)
-	tween.tween_callback(popup.queue_free)
+	if entra:
+		tween.tween_property(riga, "position:y", riga.position.y - 40.0, 1.0)
+	else:
+		tween.tween_property(riga, "position:x", riga.position.x + 60.0, 1.2)
+	tween.parallel().tween_property(riga, "modulate:a", 0.0, 1.2 if not entra else 1.0)
+	tween.tween_callback(riga.queue_free)
 
 
 ## Il corpo del cartello a scaletta: le frasi corte restano grosse (sono

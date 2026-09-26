@@ -202,6 +202,25 @@ const PAGINE := [
 		],
 		"chiusa": "",
 	},
+	# **'E credite** (0.62). Le Vespe della biblioteca esterna, il graffito
+	# e i suoni dell'interfaccia hanno licenze CC BY: vanno citati dentro al
+	# gioco, non solo in un file accanto. L'elenco intero sta in CREDITI.txt.
+	{
+		"titolo": "CHI HA FATTO 'O JOCO",
+		"sopra": "Ideato da Massimo Giacca, costruito con Claude (Anthropic) in Godot 4.3.",
+		"righe": [
+			["Vespa", "Jasmine Roberts — CC BY 3.0 (poly.pizza)"],
+			["Scooter", "Poly by Google — CC BY 3.0 (poly.pizza)"],
+			["Low poly scooter", "Thomas Saint Pierre (s1pierro) — CC BY 3.0 (poly.pizza)"],
+			["Graffiti", "karlwirbelwind — CC BY 4.0 (zenodo.org)"],
+			["Suoni dell'interfaccia", "Universal UI Soundpack, Nathan Gibson — CC BY 4.0"],
+			["Persone, arredo, auto", "Quaternius e autori di Poly Pizza — CC0"],
+			["Asfalto, intonaco, decalcomanie", "Poly Haven, ambientCG — CC0"],
+			["Suoni di strada", "Freesound — CC0 · icone Kenney — CC0"],
+			["Filtri dello schermo", "godotshaders.com: Ructoon, mujtaba-io, hailyn, blblblblb, shadecore_dev — CC0"],
+		],
+		"chiusa": "Caratteri: Poppins (SIL OFL) e DejaVu Sans. Tutto l'elenco sta in CREDITI.txt.",
+	},
 ]
 
 

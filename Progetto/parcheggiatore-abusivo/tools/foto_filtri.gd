@@ -5,7 +5,7 @@ extends Node
 ## `/tmp/filtro_*.png`. Con `NOTTE=1` di notte (la lente sporca si vede coi
 ## lampioni).
 
-const SCATTI := ["nisciuno", "pellicola", "videocassetta", "lente_sporca", "botta", "pausa"]
+const SCATTI := ["nisciuno", "pellicola", "videocassetta", "lente_sporca", "botta", "soldi", "pausa"]
 
 var _t := 0.0
 var _n := 0
@@ -39,7 +39,7 @@ func _process(d: float) -> void:
 		_cam.current = true
 		return
 	_t += d
-	if _t < 0.8:
+	if _t < (0.25 if _n % 2 == 0 and _n >= 2 and (_n - 2) / 2 < SCATTI.size() and SCATTI[(_n - 2) / 2] == "soldi" else 0.8):
 		return
 	_t = 0.0
 	_n += 1
@@ -64,6 +64,14 @@ func _process(d: float) -> void:
 			f.set_process(false)
 			f._botta.visible = true
 			f._botta_mat.set_shader_parameter("forza", 0.8)
+		elif nome == "soldi":
+			f.set_process(true)
+			f._forza = 0.0
+			# Il borsello che si riempie e quello che si svuota (0.62).
+			GameManager.money += 15
+			GameManager.money_changed.emit(GameManager.money)
+			GameManager.money -= 8
+			GameManager.money_changed.emit(GameManager.money)
 		elif nome == "pausa":
 			f.set_process(true)
 			f._forza = 0.0
