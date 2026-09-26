@@ -1,4 +1,4 @@
-PARCHEGGIATORE ABUSIVO SIMULATOR - v0.62 "'A faccia nova"
+PARCHEGGIATORE ABUSIVO SIMULATOR - v0.63 "'O Duttore"
 ======================================================================
 
 COM'E' FATTA LA CARTELLA (dalla v0.62: una cartella sola, con Git)
@@ -10,7 +10,7 @@ COM'E' FATTA LA CARTELLA (dalla v0.62: una cartella sola, con Git)
                                        ParcheggiatoreAbusivoSimulator.exe
                                        (+ AVVIA-COMPATIBILITA.bat se la
                                        scheda video non regge Vulkan)
-  PAS-v0.62-Web-itchio.zip ........... il pacchetto per itch.io
+  PAS-v0.63-Web-itchio.zip ........... il pacchetto per itch.io
   DOcumentazione\ .................... note, roadmap, changelog, crediti e i
                                        documenti per ripartire in una chat
                                        nuova
@@ -25,7 +25,7 @@ COME SI GIOCA
   Doppio clic su Build\ParcheggiatoreAbusivoSimulator.exe.
   Se parte nero o si chiude: Build\AVVIA-COMPATIBILITA.bat.
 
-  Per itch.io: carica PAS-v0.62-Web-itchio.zip cosi' com'e' (non
+  Per itch.io: carica PAS-v0.63-Web-itchio.zip cosi' com'e' (non
   scompattarlo) e spunta "This file will be played in the browser".
 
 PER CONTINUARE IN UNA CHAT NUOVA
@@ -36,56 +36,25 @@ PER CONTINUARE IN UNA CHAT NUOVA
   computer: la chat nuova prende il progetto direttamente da questa
   cartella.
 
-CHE C'E' DI NUOVO
+CHE C'E' DI NUOVO (v0.63)
 
-  L'INTERFACCIA E' NUOVA. Un carattere solo, pannelli scuri col bordo oro,
-  icone e suoni sui bottoni. Le scritte dei tasti ("[G] arruobbe 'o
-  stemma") stanno in una pillola sopra a tutto il resto e non coprono
-  niente. In basso a destra c'e' la minimappa con la freccia verso dove
-  devi andare.
+  BORRELLI E' TORNATO. Non usciva piu'. Adesso arriva in due modi:
 
-  LO STEMMA SI PRENDE COL G, come dice la scritta.
+  - LA SERA: dal secondo giorno, quando cala la notte. Il secondo giorno
+    c'e' il 5%, il terzo il 10%, il quarto il 15%... finche' non arriva.
+  - QUANDO IL VIGILE CHIAMA I CARABINIERI (sospetto al massimo, oppure la
+    terza volta che lo mandi via nella stessa giornata): dal secondo
+    giorno, la prima volta l'1%, poi l'11%, il 21%... finche' non arriva.
 
-  LA SCOPA ha le carte in alta risoluzione, il tabellone dei punti sempre
-  a schermo, e quando vinci ti dice chi e' il prossimo maestro da sfidare.
+  Quando arriva, si riparte da capo.
 
-  IL VIGILE E' TORNATO (nelle piazze non di casa non nasceva, e quello di
-  casa si piantava).
+  NON LO PUOI TOCCARE: ti riprende col telefonino. Pugni, mazza, coltello,
+  pistola: non vanno a segno, e lo fanno arrabbiare di piu'.
 
-  SI SALTA E CI SI ARRAMPICA su macchine, muretti e bancarelle fino a due
-  metri; se ti incastri, il gioco ti libera.
+  COME SI BATTE: fai finta di niente. Accenditi una sigaretta o bevi un
+  caffe', e stagli lontano. Quando si calma si ferma: vai da lui, premi E,
+  e spiegagli che e' per le criature.
 
-  IL LOTTO si trova (insegna LOTTO al tabaccaio e sotto al bar, tasto 2) e
-  si capisce: istruzioni, vincite, probabilita', smorfia.
-
-  LE COMMISSIONI te le affida qualcuno: il pizzaiolo a cui hanno rubato il
-  motorino ti viene incontro, ti racconta, ti da' le pizze in mano. Otto
-  tipi; la torta si rovina se corri.
-
-  L'ECONOMIA: una berlina rubata vale 100 euro (la seconda del giorno la
-  meta'), e le spese di casa sono scese di un sesto.
-
-  LE ANIMAZIONI: gli omini e gli umani nuovi parlano, si accovacciano,
-  incassano, indicano, guidano come il personaggio principale.
-
-  E POI LA ROBA NUOVA DELLA BIBLIOTECA ESTERNA: l'asfalto vero sulle
-  strade larghe, la muffa sui muri della Sanita', tombini, rattoppi e
-  macchie d'olio a terra, l'acqua che cola sotto ai condizionatori, le
-  Vespe parcheggiate al marciapiede, le sedie di Vienna fuori dai bassi,
-  i coni ai cantieri; le chiavi, il clacson della MiTo, le monete, la
-  folla che s'arrabbia, il motorino che si sente passare; sei facce nuove
-  fra la gente (due donne); quando perdi soldi te lo dice il borsello.
-
-  NEL MENU DI PAUSA (Esc) c'e' il bottone "Filtro": Pellicola,
-  Videocassetta, Lente sporca, o niente. Quando ti menano lo schermo
-  sbanda per mezzo secondo.
-
-  QUANDO PIOVE, sull'exe, a terra ci sono le pozzanghere che riflettono
-  (nella versione per il browser no: il browser non ce la fa).
-
-  I CREDITI stanno nell'ultima pagina del tutoriale (tasto T) e in
-  DOcumentazione\CREDITI.txt: la Vespa, i due scooter e i graffiti sono
-  CC BY e chiedono di citare l'autore, come i suoni dei bottoni.
-
-  Tutto spiegato in DOcumentazione\NOVITA-v0.62.md (anche gli sbagli).
+  Tutto spiegato in DOcumentazione\NOVITA-v0.63.md (anche gli sbagli).
+  Le novita' della versione prima stanno in NOVITA-v0.62.md.
   I suoni dei bottoni sono di Nathan Gibson (CC BY 4.0): vedi CREDITI.txt.

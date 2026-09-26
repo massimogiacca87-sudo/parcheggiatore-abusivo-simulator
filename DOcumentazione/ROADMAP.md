@@ -1,6 +1,6 @@
 # Roadmap — dove stiamo e dove andiamo
 
-Aggiornata alla **v0.62 · 'A faccia nova**, 26 settembre 2026 (con la biblioteca esterna).
+Aggiornata alla **v0.63 · 'O Duttore**, 26 settembre 2026.
 
 *Da questa versione le note e la roadmap sono scritte in italiano. Il
 napoletano resta dove si sente giocando: dialoghi, cartelli, scritte a
@@ -813,7 +813,29 @@ vale tantissimo); poi rifinire e arricchire. Racconto completo in
 
 ---
 
-## v0.63 — **'E vvoce**
+## Fatto — v0.63 · 'O Duttore
+
+Una richiesta sola: *«Borrelli non esce più.»* Racconto completo in
+`NOVITA-v0.63.md`.
+
+- [x] **Due porte col dado che cresce.** A: la sera, dal secondo giorno,
+      5% +5% per ogni giorno senza di lui. B: dal secondo giorno, quando il
+      vigile chiama i carabinieri, 1% +10 punti a chiamata. Quando arriva,
+      i dadi ripartono. La violenza vista non lo chiama più
+- [x] **La radio del vigile non si scarica più** (`_chiamata_fatta` restava
+      acceso per sempre dopo la prima chiamata)
+- [x] **Il vigile mandato via tre volte** in una giornata chiama i
+      carabinieri
+- [x] **Borrelli non si tocca**: pugni, ferri e pistole non vanno a segno,
+      alzano furia e sospetto
+- [x] **Fare finta di niente**: sigaretta o caffè, e lontano; vicino la
+      furia scende a meno della metà, a mani vuote non scende sotto 44
+- [x] **Nasce a 20-30 m dal giocatore**, in strada, e cammina sulla collina
+- [x] Prove: `prova_borrelli` (riscritta), `prova_borrelli_gioca` (nuova)
+
+---
+
+## v0.64 — **'E vvoce**
 
 - **Le voci registrate**: l'introduzione parlata, e qualche riga dei
   personaggi principali. Il gioco è pieno di gente che parla e nessuno fa
@@ -840,6 +862,60 @@ caso. Per guidare ufficialmente un mezzo devi avere le chiavi.»*
       ora candidati della 0.61 (rifinire il gameplay)
 - [ ] **Chi te lo vede fare**: adesso il prezzo lo fa solo il vigile, la
       folla non conta ancora → candidato della 0.61
+
+---
+
+## I boss che verranno e il finale
+
+Il capo, alla 0.63: *«Col tempo dobbiamo ideare e implementare altri boss ed
+un vero finale del gioco.»* Qui le proposte, da scegliere insieme prima di
+scrivere una riga. La regola resta quella della 0.55: **ogni boss è una
+meccanica diversa**, non un Borrelli con un'altra faccia.
+
+Oggi ci sono: **Borrelli** (non si tocca: si fa finta di niente e si
+spiega), e i tre **boss di capitolo** ('O Cardinale vuole soldi, Donna
+Carmela vuole una quota, Tonino 'e Notte non tratta).
+
+### Boss possibili
+
+1. **'O Carro attrezzi** — un ausiliario del traffico col carro che si
+   porta via le macchine dei tuoi clienti una dopo l'altra. Non si mena
+   e non si convince: è una **gara di tempo**. Svegli i clienti, gli fai
+   spostare la macchina, o ti metti davanti al carro (e lo paghi in
+   sospetto). Ogni macchina portata via è un cliente perso per sempre.
+2. **'A Finanza** — un accertamento: sanno quanto guadagni. Per una sera
+   i soldi in tasca sono un problema: vanno **nascosti** (a casa dalla
+   moglie, dai guagliuni, nel panaro di Donna Filumena) prima che ti
+   fermino. Quello che trovano addosso te lo tolgono. Il boss che rende
+   utile tutto il quartiere che hai costruito.
+3. **'O Re d''e Strisce** — l'abusivo più grosso della città vuole la tua
+   piazza. **Sfida di mestiere**: tre minuti, chi posteggia più macchine e
+   incassa di più. Si vince lavorando meglio, non menando.
+4. **'E Strisce Blu** — il Comune dipinge le strisce blu nella tua piazza
+   e mette il parchimetro: per una settimana le macchine pagano la
+   macchinetta e non te. Un boss lungo, a giornate: si vince facendo
+   rompere il parchimetro, convincendo i clienti fissi, o cambiando
+   piazza.
+5. **'O Cugino d''o Sindaco** — arriva col macchinone e vuole il posto
+   migliore gratis, ogni giorno. Dirgli di no costa, dirgli di sì pure: un
+   boss **di scelta**, che cambia i rapporti con i clienti fissi.
+
+### Il finale
+
+Due strade, che la roadmap già chiamava «l'arco lungo»:
+
+- **'O garage 'e famiglia (il finale onesto).** Metti da parte i soldi e
+  ti compri un garage vero, in regola, con la famiglia. Ultima sera:
+  Borrelli viene un'ultima volta — e stavolta non scappi, lo inviti al
+  taglio del nastro. Il gioco finisce con il riepilogo di una vita.
+- **'O Re d''a città (il finale di potere).** Tutte e quattro le piazze,
+  tutti i boss di capitolo battuti, i guagliuni che lavorano per te e tu
+  che non posteggi più. Ultimo boss: tutti quelli che hai incontrato,
+  insieme, la stessa sera. Il gioco finisce con la domanda della moglie:
+  *«E mo'? Ch'è cagnato?»*
+
+Le due strade possono convivere: il giocatore sceglie quale diventa senza
+dichiararlo, con quello che fa nelle ultime giornate.
 
 ---
 
