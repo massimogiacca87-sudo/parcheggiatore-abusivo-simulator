@@ -1,7 +1,8 @@
 # MEMORIA DEL PROGETTO — Parcheggiatore Abusivo Simulator
 
-**Per il "nuovo me" che apre la chat successiva.** Aggiornato il 25 settembre
-2026, alla chiusura della **v0.62 · 'A faccia nova**. Tutto quello che serve
+**Per il "nuovo me" che apre la chat successiva.** Aggiornato il 26 settembre
+2026, alla chiusura della **v0.62 · 'A faccia nova** (con la biblioteca di
+asset esterni agganciata al gioco). Tutto quello che serve
 per ripartire da qui senza aver visto la chat precedente.
 
 Ordine di lettura consigliato: questo file → `COME-RIPRENDERE.md` (manuale
@@ -113,6 +114,20 @@ commissioni affidate da un personaggio con la roba vera, 8) economia (auto
 rubata ~€100), 9) animazioni ai corpi nuovi. Tutto fatto (dettagli in
 `NOVITA-v0.62.md`). A metà versione il capo ha spostato tutto in **una
 cartella sola con Git** (niente più `Claude outputs\vX`).
+
+**Seconda metà (26 settembre, chat a parte)**: il capo ha chiesto di fare la
+build della 0.62 e di **integrare gli asset esterni** che un'altra sessione
+aveva messo in `assets/esterni/` (+ tre plugin in `addons/`). Entrato quello
+che si vede o si sente e non fa doppione: asfalto PBR e muffa (`Tex.PBR`),
+decalcomanie e arredo (`scripts/robba_esterna.gd`: tombini, olio, colature,
+graffiti, Vespe/scooter al cordolo, sedie di Vienna, coni, bidoni, casse),
+lo split rifatto a codice (il modello era un palazzo in miniatura), dodici
+suoni (`tools/prepara_esterni.py`), filtri dello schermo e la botta
+(`filtri_schermo.gd`), pozzanghere solo Forward+ (`pozzanghere.gd`), sei
+corpi Quaternius (`Human.QUAT`, `quat_ual.res`), il borsello in uscita, la
+pagina dei crediti. **Plugin installati ma non usati** (ProtonScatter,
+Dialogic, LimboAI: il perché in `NOVITA-v0.62.md`). Tabella completa in
+`assets/esterni/ASSET-ESTERNI.md`.
 
 ### 2.0 La 0.61 in breve
 
@@ -240,6 +255,7 @@ Quello che segue è lo stato scritto alla 0.60, ancora valido.
 | `res://assets/splash_1.jpg`, `splash_2.jpg` | schermate | `caricamento.gd`, intro |
 | `res://audio/` | **40 `.ogg`, 13 `.wav`, 5 `.mp3`** di effetti (+ `.import`) | `SoundManager.play("nome", vol, pitch)`: all'avvio carica ogni nome di `SOUND_NAMES` da `res://audio/<nome>.ogg|mp3|wav` (vince il primo che esiste); `play_uno`, `soldi`, `pugno`, `vuoto` |
 | `res://audio/musica/` | brani (`base`, `boss`, `caccia`, `giorno`, `lavoro`…); la `tarantella` sta in `res://audio/tarantella.ogg` | dizionario `BRANI` in `sound_manager.gd`; `SoundManager.metti(nome, fade)`; la scelta la fa `regia_musicale.gd` |
+| `res://assets/esterni/` | **(0.62)** la biblioteca libera (Poly Haven, ambientCG, Poly Pizza, Quaternius, Freesound, Kenney, godotshaders), con i `CREDITI_*.txt` per cartella e la guida `ASSET-ESTERNI.md`. **Fuori dall'esportazione** tranne quello che il gioco usa (`exclude_filter`) | i modelli con `Models.ESTERNI` (nome → percorso, guardato per primo da `_find_path`); le persone con `Human.QUAT`; texture, decalcomanie e suoni **derivati** in `assets/textures/pbr/`, `assets/textures/decal/`, `audio/` da `tools/prepara_esterni.py` (poi `--import`) |
 | `tools/sorgenti/` | `PandaMat_originale.png` (atlante originale, con `.gdignore`) | non caricato: sorgente per `tools/tinge_pandazole.py` |
 
 Note sugli asset:
@@ -257,7 +273,8 @@ Note sugli asset:
 
 ### 4.1 Dove ci siamo fermati
 
-**La 0.62 è chiusa e committata.** Rimasti (`ROADMAP.md`, «Rimasto aperto
+**La 0.62 è chiusa e committata**, con la biblioteca esterna dentro e la
+build (exe + web) in `Build\` e in radice. Rimasti (`ROADMAP.md`, «Rimasto aperto
 dalla 0.62»): la prova che gioca dieci giornate; l'economia nuova da
 giocare (berlina a €100, spese −1/6); la sala scommesse col suo stile a
 parte; il panaro, la traversata a piedi, il motorino. La prossima in
@@ -307,3 +324,9 @@ roadmap è **v0.63 'E vvoce** (voci, idle in prima persona, criature).
    l'`Idle` di Quaternius è una guardia, un gruppo `strada_…` per
    `prova_quote` sta per terra. Un asset nuovo si guarda in foto prima di
    usarlo.
+9. **Gli a-capo** (0.62): il repo del capo ha `core.autocrlf=true`; le
+   patch si fanno con `tools/sh/sincro.sh` (copia normalizzata a LF), e chi
+   riscrive un file in Python usa `newline=''`.
+10. **La biblioteca esterna è esclusa dall'esportazione**: un asset di
+    `assets/esterni/` usato davvero va tolto dall'`exclude_filter` dei due
+    preset, se no nell'exe non c'è (e `spawn` torna `null` in silenzio).

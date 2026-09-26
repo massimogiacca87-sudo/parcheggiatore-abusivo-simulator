@@ -1,6 +1,7 @@
 # Come riprendere il lavoro in una nuova chat
 
-Stato al **25 settembre 2026**, versione **v0.62 · 'A faccia nova**.
+Stato al **26 settembre 2026**, versione **v0.62 · 'A faccia nova**, con la
+biblioteca di asset esterni agganciata al gioco (seconda metà della 0.62).
 
 Questo documento è scritto per **chi apre la chat nuova** (cioè per me, senza
 memoria di questa). Si legge dall'alto: la sezione 1 dice cosa fare nei
@@ -76,11 +77,28 @@ Si lavora nel contenitore (Godot, prove, fotografie), si fa **un commit per
 ogni lavoro finito e provato**, poi lo si porta sul computer del capo:
 
 ```bash
-# nel contenitore: le patch dei commit nuovi (dal tag pc_sync), senza .godot
-cd /home/claude/parcheggiatore-abusivo
-rm -rf /mnt/user-data/outputs/_claude_tmp && mkdir -p /mnt/user-data/outputs/_claude_tmp
-git format-patch --binary -o /mnt/user-data/outputs/_claude_tmp pc_sync..HEAD -- . ':!.godot'
+# nel contenitore: le patch dei commit nuovi (dal tag pc_sync), senza .godot,
+# con gli a-capo come li tiene il repo del PC (vedi sotto)
+/home/claude/parcheggiatore-abusivo/tools/sh/sincro.sh
 ```
+
+**Gli a-capo** (scoperto alla 0.62). Il repo del capo ha
+`core.autocrlf=true`: dentro a Git i file stanno con gli a-capo Unix (LF),
+nella cartella alcuni `.gd` hanno quelli di Windows (CRLF). Il contenitore
+parte dal tar della cartella, quindi qui quei file hanno CRLF — e gli hash
+degli alberi (`HEAD:scripts`) **non** sono gli stessi del PC anche a codice
+identico. `sincro.sh` fa le patch su una copia in cui, in tutti i commit
+(base compresa), i file di testo toccati sono portati a LF, e stampa
+l'hash dell'albero `scripts` normalizzato: **quello** va confrontato con
+`git rev-parse HEAD:Progetto/parcheggiatore-abusivo/scripts` sul PC. Chi
+riscrive un file con Python lo apre con `newline=''` (o in binario), se no
+gli a-capo cambiano tutti e la patch diventa il file intero.
+
+`sincro.sh` lascia fuori anche i file che sul PC **non sono tracciati**
+(`ESCLUSI` in cima allo script): alla 0.62 i vecchi
+`assets/models/condizionatore*`, che il `.gitignore` del capo (`Models/`,
+e Windows non distingue le maiuscole) tiene fuori da Git. Quelli si
+sistemano a mano sul PC (nel Cestino).
 
 `device_commit_files` di ogni patch in
 `…\Parcheggiatore Abusivo Simulator\_claude_tmp\000N.patch`, e sul computer:
@@ -105,8 +123,9 @@ in `DOcumentazione\` e si committano sul computer con `git add
 DOcumentazione; git commit`.
 
 Per controllare che il contenitore e il computer abbiano lo stesso codice:
-`git rev-parse HEAD:scripts` nel contenitore deve dare lo stesso hash di
-`git rev-parse HEAD:Progetto/parcheggiatore-abusivo/scripts` sul computer.
+l'hash che stampa `sincro.sh` alla fine («albero scripts (LF)») deve essere
+lo stesso di `git rev-parse HEAD:Progetto/parcheggiatore-abusivo/scripts`
+sul computer, dopo il `git am`.
 
 **Nello stesso repository può lavorare un'altra sessione** (nella 0.62 una
 ha aggiunto `assets/esterni/` e i plugin in `addons/`). Quindi: `git log
@@ -151,7 +170,15 @@ Se la cache `.godot/imported` non c'è (o si aggiungono asset nuovi):
 cd /home/claude/parcheggiatore-abusivo && /home/claude/godot4 --headless --path . --import
 ```
 
-**Mai insieme a una prova** (trappola 14).
+**Mai insieme a una prova** (trappola 14). Dalla 0.62 l'import di Blender è
+spento (`[filesystem] import/blender/enabled=false` in `project.godot`): le
+demo di ProtonScatter hanno un `.blend` e senza finestra Godot restava
+fermo lì per sempre. E dopo `tools/prepara_esterni.py` (che rigenera le
+texture e i suoni presi dalla biblioteca esterna) **si reimporta sempre**.
+
+Per le fotografie col renderer vero dell'exe (Forward+, serve per le
+pozzanghere) c'è `tools/sh/foto_vk.sh`: Vulkan in software, con
+`apt-get install -y mesa-vulkan-drivers`.
 
 ### 1.3 Controllare che tutto sia come l'ho lasciato
 
@@ -262,6 +289,9 @@ Valgono sempre, senza che le ripeta:
 | `scripts/nuovo_abusivo_3d.gd` | 535 | **(0.61)** Gennarino 'o Nuovo, l'abusivo dell'abusivo |
 | `scripts/turista_spierzo_3d.gd` | 417 | **(0.61)** il turista da accompagnare alla colonna gialla |
 | `scripts/panaro_3d.gd` | 225 | **(0.61)** il panaro di Donna Filumena (+ `panaro_corpo.gd`) |
+| `scripts/robba_esterna.gd` | 615 | **(0.62)** la biblioteca esterna in città: decalcomanie (tombini, rattoppi, olio, gomme, colature, umido, graffiti) e arredo (motorini al cordolo, sedie di Vienna, coni, bidoni, casse, sedie d'ufficio); seme suo, `rifiuti` conta i perché |
+| `scripts/filtri_schermo.gd` | 130 | **(0.62)** i filtri a schermo intero del menu di pausa e la botta |
+| `scripts/pozzanghere.gd` | 60 | **(0.62)** le pozzanghere quando piove (solo Forward+) |
 
 ### I tre scheletri delle persone
 
@@ -273,6 +303,15 @@ Valgono sempre, senza che le ripeta:
   clip più `Fermo` (0.60), che si costruisce la prima volta in
   `_prepara_fermo`: la sua `Idle` è una guardia da pugile e non va usata
   per chi sta fermo.
+
+- **'e quat** (0.62, dalla biblioteca esterna: Quaternius, rig
+  «CharacterArmature»): sei corpi in `Human.QUAT` (`quat_giacca`,
+  `quat_maglietta`, `quat_operaio`, `quat_cafone`, due donne in
+  `QUAT_DONNE`), con le loro 24 clip più le 28 del pupo tradotte in
+  `assets/models/quat_ual.res` (`tools/retarget_ual.gd`, tabella
+  `MAPPA_QUAT`); `RIG["quat"]` in `human_builder.gd`. I file stanno in
+  `assets/esterni/modelli/npc_animati/`: se si cambia quali si usano, va
+  cambiato anche l'`exclude_filter` dei due preset d'esportazione.
 
 `Human.build(camicia, pantaloni, …, {"modello": "umano_q", "clip":
 "Working"})` restituisce sempre lo stesso dizionario (`root`, `anim`,
@@ -436,9 +475,30 @@ che rovinò la 0.47): si traducono i nomi.
     `_programma()`) azzera quello che una prova gli ha dato prima: nella
     prova si scrive prima la giornata (`_giornata`/`_visto_oggi`).
 
+**Aggiunte nella 0.62 (la biblioteca esterna)**
+
+47. **Un `.blend` in un plugin blocca l'import senza finestra.** Import di
+    Blender spento in `project.godot`.
+48. **Texture rigenerate = reimportare.** Se no Godot usa quelle vecchie
+    (la colatura invisibile).
+49. **Un modello si conta, non si guarda da lontano.** Il condizionatore
+    era un palazzo in miniatura da 182 superfici.
+50. **Gli a-capo** (vedi 1.1b): `newline=''` in Python, patch da
+    `sincro.sh`.
+51. **Una cosa lunga contro il muro di un vicolo da quattro metri è un
+    tappo** per chi cammina rasente: i motorini davanti ai bassi sono
+    usciti per questo.
+52. **Un posto dove un personaggio «si appoggia»** (il banco del bar)
+    può stare dove non si arriva: ogni meta ha bisogno di un «fermo da
+    due secondi = sono arrivato», e la prova dei piantati guarda a tre.
+53. **La biblioteca esterna è fuori dall'esportazione per default**
+    (`exclude_filter`, tutti e due i preset): un asset di `assets/esterni/`
+    usato dal gioco va tolto dal filtro, se no nell'exe non c'è e il gioco
+    non dà errore (`spawn` torna `null`).
+
 ### Come si prova
 
-Quarantotto `tools/prova_*.gd`. Ognuna è un autoload temporaneo che stampa
+Cinquantadue `tools/prova_*.gd` (una, `prova_scopa`, va a parte). Ognuna è un autoload temporaneo che stampa
 `=== N storte ===` e chiude; lo script la infila in `project.godot`, la fa
 girare e rimette a posto.
 
@@ -469,6 +529,17 @@ modelli PSX), `prova_ngombri` (niente dentro a niente), `prova_ntuppate`
 terra sta a terra), `prova_conti` (istanze e triangoli, anche dentro al
 raggio di vista), `prova_mira`, `prova_commissione`, `prova_confronto`,
 `prova_vascio_fondale` (xvfb).
+
+Le fotografie e le sonde della 0.62 (biblioteca esterna):
+`foto_esterni_citta` (asfalto, muffa, facciate, tombino, olio, colature,
+umido, split, graffito, gomme, motorini, sedie, coni, cassette,
+ingombranti, bidone, scooter, cassa; `SOLO=a,b`, `NOTTE=1`, `PIOGGIA=1`,
+`PREFISSO=x`, `QUALE=n` per l'n-esima istanza → `/tmp/est_*.png`),
+`foto_esterni` (i modelli uno per uno), `foto_filtri` (i filtri, la botta,
+i soldi, la pausa → `/tmp/filtro_*.png`), `foto_tutoriale` (tutte le
+pagine, crediti compresi); `sonda_esterni` (quanta roba è entrata e i
+rifiuti, headless), `sonda_decal`, `sonda_punto` (`PX=… PZ=… R=…`: che
+c'è attorno a un punto, corpi solidi e istanze dei gruppi — con xvfb).
 
 Le fotografie della 0.61: `foto_armi` (i cinque fierri fermi e a metà
 colpo, `/tmp/arma_*.png`) e `foto_sessantuno` (Gennarino, il turista e il
@@ -504,6 +575,24 @@ che i modelli di esportazione ci siano** (`ls
 ~/.local/share/godot/export_templates/4.3.stable/`): nella 0.62 la cartella
 risultava vuota dopo un riavvio del contenitore anche se il log diceva
 «FATTO».
+
+**Dalla biblioteca esterna (0.62)**: `addons/limboai/*` è **fuori
+dall'esportazione** (tutti e due i preset). Con la sua libreria dentro, la
+build web **non partiva nemmeno**: il caricatore di Godot si ferma con
+«GDExtension libraries are not supported by this engine version» perché il
+modello d'esportazione normale non è «dlink». L'ho visto solo aprendo la
+build in un browser vero (`tools/web/serve_build.py` +
+`node tools/web/prova_build_web.js`: Chromium senza finestra, la console
+riga per riga, fotografie in `/tmp/web_*.png`). Senza la libreria, all'avvio
+restano tre righe d'errore («Error loading extension») e il gioco parte.
+Nel contenitore Chromium usa SwiftShader: la pagina muore di memoria dopo
+circa due minuti di città, **anche con la build della prima metà della
+0.62** (provato) — è un limite della prova, non del gioco. E serve
+`build/.gdignore`, se no Godot importa i PNG della build web come risorse
+del progetto e li mette nel pacchetto successivo.
+Ogni export sporca `addons/proton_scatter/.../compute_relax.glsl.import`
+(«Cannot import custom .glsl shaders when running in headless mode»):
+dopo, `git checkout` di quel file.
 
 La consegna, dalla 0.62: l'exe e il `.pck` in `Build\` sul computer del capo
 (a pezzi da 19 MB se serve, riattaccati là), lo zip web in radice. **Non
@@ -582,6 +671,16 @@ una fotografia: `foto_hud`, `foto_pannelli`, `foto_ui` (scopa), `foto_lotto`.
 **Le animazioni (0.62)**: i corpi omo e umano_q hanno la libreria del pupo
 tradotta (`assets/models/omo_ual.res`, `umano_q_ual.res`, rifatte da
 `tools/retarget_ual.gd`); la tabella è `RIG` in `human_builder.gd`.
+
+**La biblioteca esterna (0.62, seconda metà)**: asfalto vero sulle strade
+larghe e muffa alla Sanità, tombini e macchie a terra, colature sotto agli
+split (rifatti a codice), Vespe e scooter al cordolo, sedie di Vienna,
+coni, bidoni, casse, dodici suoni di strada, tre filtri dello schermo nel
+menu di pausa e la botta quando ti colpiscono, le pozzanghere quando piove
+(solo exe), sei persone nuove di Quaternius, il borsello che si svuota, la
+pagina dei crediti. Cosa è entrato e cosa no: `assets/esterni/ASSET-ESTERNI.md`
+(la tabella in cima) e `NOVITA-v0.62.md`. I tre plugin (ProtonScatter,
+Dialogic, LimboAI) sono installati ma **non usati**.
 
 **La violenza** costa sciato (fiato), ossa che si ricomprano solo di notte,
 fermi (al terzo si passa la notte in cella, e ci si risveglia davanti alla

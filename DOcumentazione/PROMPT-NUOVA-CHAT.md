@@ -7,7 +7,8 @@ Claude aperta sul computer, così la chat nuova vede la cartella del gioco).
 ---
 
 > Riprendiamo *Parcheggiatore Abusivo Simulator* esattamente da dove ci siamo
-> fermati: la **v0.62 · 'A faccia nova**, chiusa e committata.
+> fermati: la **v0.62 · 'A faccia nova**, chiusa e committata, con dentro la
+> biblioteca di asset esterni (vedi `assets/esterni/ASSET-ESTERNI.md`).
 >
 > 1. Prima leggi, nei documenti del progetto, `claude/COME-RIPRENDERE.md`
 >    (il manuale: come rimettere in piedi il lavoro, le regole, le

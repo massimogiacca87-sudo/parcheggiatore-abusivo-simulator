@@ -1,6 +1,6 @@
 # Roadmap — dove stiamo e dove andiamo
 
-Aggiornata alla **v0.62 · 'A faccia nova**, 25 settembre 2026.
+Aggiornata alla **v0.62 · 'A faccia nova**, 26 settembre 2026 (con la biblioteca esterna).
 
 *Da questa versione le note e la roadmap sono scritte in italiano. Il
 napoletano resta dove si sente giocando: dialoghi, cartelli, scritte a
@@ -707,6 +707,27 @@ cartella sola** (vedi `COME-RIPRENDERE.md`).
 - [x] **Animazioni**: 28 clip del pupo tradotte su omini e umani
       (`tools/retarget_ual.gd` → `omo_ual.res`, `umano_q_ual.res`); la
       parlata che finisce (`parla_per`).
+- [x] **La biblioteca esterna dentro al gioco** (seconda metà, 26
+      settembre; `ASSET-ESTERNI.md` dice cosa c'era, `NOVITA-v0.62.md` cosa
+      è entrato e perché il resto no):
+      - asfalto PBR sulle strade larghe e muffa alla Sanità
+        (`Tex.PBR`, shader `intonaco` con normale e ruvidezza vere);
+      - decalcomanie (`robba_esterna.gd`): 154 tombini, rattoppi, macchie
+        d'olio nei posti auto, gomme, colature sotto agli split, umido,
+        graffiti a tag;
+      - lo split rifatto a codice (il modello era un palazzo in miniatura:
+        70 file nel Cestino);
+      - arredo: Vespe e scooter al cordolo, sedie di Vienna con la
+        cassetta, coni, bidoni di ferro, casse, sedie d'ufficio;
+      - dodici suoni (`tools/prepara_esterni.py`), varianti automatiche in
+        `SoundManager`, motorino in 3D;
+      - filtri dello schermo nel menu di pausa e la botta
+        (`filtri_schermo.gd`); pozzanghere con la pioggia, solo Forward+
+        (`pozzanghere.gd`);
+      - sei corpi Quaternius (`Human.QUAT`, `quat_ual.res`) nei mestieri dei
+        passanti e nei cantieri;
+      - soldi in uscita col borsello; pagina dei crediti nel tutoriale;
+      - il vigile che non trema davanti al banco del bar.
 
 ### Rimasto aperto dalla 0.62
 
@@ -723,6 +744,20 @@ cartella sola** (vedi `COME-RIPRENDERE.md`).
 - **La sala scommesse** ha ancora il suo stile a parte (blu e rosso, da
   «football manager»): voluto, ma è l'unico pannello fuori dal tema.
 - **Il panaro**, la traversata a piedi e 'o motorino con le chiavi: fermi.
+- **I tre plugin della biblioteca** (ProtonScatter, Dialogic, LimboAI)
+  sono installati ma il gioco non li usa (il perché in `NOVITA-v0.62.md`).
+  Se si decide di non usarli mai, si possono togliere: l'autoload di
+  Dialogic parte a ogni avvio per niente, e LimboAI (già fuori
+  dall'esportazione: bloccava la build web) lascia tre righe d'errore
+  all'avvio.
+- **Le pozzanghere nella build web**: lì non ci sono (niente profondità
+  negli shader del renderer Compatibility). Un ripiego possibile: una
+  decalcomania di pozzanghera e l'asfalto più lucido quando piove.
+- **I motorini davanti ai bassi**: tolti perché tappavano i vicoli da
+  quattro metri. Se si vogliono, vanno nei vicoli larghi o di sbieco.
+- **`prova_ntuppate` è una prova a caso** (passanti e pause dei vigili
+  pescano col dado): alla 0.62 ha trovato due piantati veri, uno per giro.
+  Prima di dire «zero», farla girare lunga (`DURATA_NTUPPATE=600`).
 - **Il repository e i file grossi**: il `.gitignore` del capo esclude
   `*.glb`, `*.wav`, `*.mp3`, quindi il repo su GitHub da solo non basta a
   ricostruire il gioco (servono i file della cartella). Se si vuole un

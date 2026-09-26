@@ -68,5 +68,24 @@ CHE C'E' DI NUOVO
   LE ANIMAZIONI: gli omini e gli umani nuovi parlano, si accovacciano,
   incassano, indicano, guidano come il personaggio principale.
 
+  E POI LA ROBA NUOVA DELLA BIBLIOTECA ESTERNA: l'asfalto vero sulle
+  strade larghe, la muffa sui muri della Sanita', tombini, rattoppi e
+  macchie d'olio a terra, l'acqua che cola sotto ai condizionatori, le
+  Vespe parcheggiate al marciapiede, le sedie di Vienna fuori dai bassi,
+  i coni ai cantieri; le chiavi, il clacson della MiTo, le monete, la
+  folla che s'arrabbia, il motorino che si sente passare; sei facce nuove
+  fra la gente (due donne); quando perdi soldi te lo dice il borsello.
+
+  NEL MENU DI PAUSA (Esc) c'e' il bottone "Filtro": Pellicola,
+  Videocassetta, Lente sporca, o niente. Quando ti menano lo schermo
+  sbanda per mezzo secondo.
+
+  QUANDO PIOVE, sull'exe, a terra ci sono le pozzanghere che riflettono
+  (nella versione per il browser no: il browser non ce la fa).
+
+  I CREDITI stanno nell'ultima pagina del tutoriale (tasto T) e in
+  DOcumentazione\CREDITI.txt: la Vespa, i due scooter e i graffiti sono
+  CC BY e chiedono di citare l'autore, come i suoni dei bottoni.
+
   Tutto spiegato in DOcumentazione\NOVITA-v0.62.md (anche gli sbagli).
   I suoni dei bottoni sono di Nathan Gibson (CC BY 4.0): vedi CREDITI.txt.

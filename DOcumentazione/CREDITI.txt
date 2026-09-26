@@ -31,5 +31,41 @@ MODELLI E ANIMAZIONI
   Animated Men, Pandazole, PSX Mega Pack, Car Pack: vedi le cartelle
   delle librerie nel progetto e le note delle versioni 0.46-0.60.
 
+DALLA BIBLIOTECA ESTERNA (dalla v0.62, seconda meta')
+
+  Con licenza CC BY: citare l'autore e' OBBLIGATORIO.
+  - "Vespa" di Jasmine Roberts, CC BY 3.0
+    https://poly.pizza/m/blGLclvvdEM   (in gioco: vespa)
+  - "Scooter" di Poly by Google, CC BY 3.0
+    https://poly.pizza/m/fPLXByG4Vx5   (in gioco: scooter_bianco)
+  - "low poly scooter" di Thomas Saint Pierre (s1pierro), CC BY 3.0
+    https://poly.pizza/m/awXCP7LUcz6   (in gioco: scooter_blu)
+  - "Decal - Graffiti Textures" di karlwirbelwind, CC BY 4.0
+    https://zenodo.org/records/10234475   (in gioco: graffito_tag)
+  Licenza CC BY 3.0: https://creativecommons.org/licenses/by/3.0/
+  Licenza CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
+
+  CC0 (nessun obbligo, citati per gentilezza):
+  - Modelli: Quaternius (sedia di Vienna, sedia d'ufficio, coni, cassa,
+    bidone, e i sei personaggi animati: Business Man, Casual Character,
+    Worker, Farmer, due Animated Woman), smallbigsquare (cono basso),
+    BlenderVoyage (cassetta della frutta) - da poly.pizza.
+  - Materiali: Poly Haven (asphalt_02, concrete_wall_003).
+  - Decalcomanie: ambientCG (ManholeCover001 e 005, AsphaltDamage001,
+    ChewingGum001, Leaking003, 006, 008).
+  - Suoni da Freesound: Jarebear1223, joliestarr, contramundum (chiavi);
+    boedie (clacson della Alfa MiTo), keweldog (clacson); Gerent, pinchos,
+    DavidFrbr (monete); donut-kiss (folla arrabbiata); IENBA e
+    nickpursehouse (motorino).
+  - Icone del borsello: Kenney, "Board Game Icons".
+  - Shader: shadecore_dev (pozzanghere, con parti dell'SSR di marcelb),
+    Ructoon (aberrazione cromatica),
+    mujtaba-io (grana della pellicola), hailyn e blblblblb (videocassetta)
+    - da godotshaders.com; la lente sporca e' scritta per il gioco.
+  - I dettagli file per file stanno in Progetto\parcheggiatore-abusivo\
+    assets\esterni\ (i file CREDITI_*.txt di ogni cartella).
+
 Se il gioco viene pubblicato (itch.io o altro), questa pagina va messa
-nei crediti: la licenza CC BY 4.0 dei suoni chiede di citare l'autore.
+nei crediti: le licenze CC BY dei suoni dell'interfaccia, della Vespa, dei
+due scooter e dei graffiti chiedono di citare l'autore. Dentro al gioco
+c'e' gia' la pagina "Chi ha fatto 'o joco" (ultima pagina del tutoriale).

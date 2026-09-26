@@ -117,3 +117,71 @@ Vedi `ROADMAP.md`, «Rimasto aperto dalla 0.62»: la prova delle dieci
 giornate, l'economia nuova da giocare, la sala scommesse fuori tema, il
 panaro, la traversata a piedi, il repository che senza `.glb`/`.wav` non
 basta da solo.
+
+---
+
+# La seconda chat della 0.62: la biblioteca esterna e la build
+
+*26 settembre 2026*
+
+## La richiesta
+
+> *«Costruisci la build 0.62, basandoti sugli ultimi file che hai creato
+> nell'ultima chat. Inoltre, integra anche i nuovi asset che tu stesso hai
+> caricato in un'altra chat ancora.»*
+
+Cioè: partire dalla 0.62 chiusa, agganciare al gioco la biblioteca che
+l'altra sessione aveva messo in `assets/esterni/` (con i plugin in
+`addons/`), e rifare la build. La versione resta **v0.62**.
+
+## Come è andata
+
+1. **Il progetto dal computer** (tre tar in `_claude_tmp`, perché intero
+   non passava dal ponte), `git init` + tag `pc_sync` nel contenitore.
+2. **L'import si piantava**: le demo di ProtonScatter hanno un `.blend`, e
+   Godot senza finestra cerca Blender e aspetta per sempre. Import di
+   Blender spento in `project.godot` — ed è la stessa ragione per cui
+   all'altra sessione, su Windows, `--headless --import` si fermava.
+3. **Un commit per ogni pezzo**, ognuno fotografato e provato prima:
+   asfalto PBR e muffa; decalcomanie e split rifatto (il condizionatore era
+   un palazzo in miniatura); suoni; arredo; filtri e botta; pozzanghere;
+   gente nuova; borsello e crediti; vigile al bar, motorini dei bassi,
+   casse; la guida `ASSET-ESTERNI.md` aggiornata. Il dettaglio sta nei
+   messaggi dei commit (`git log`) e in `NOVITA-v0.62.md`.
+4. **Due piantati veri** trovati da `prova_ntuppate`, uno per giro: un
+   passante contro una Vespa davanti a un basso a Spaccanapoli (i motorini
+   davanti ai bassi sono usciti) e il vigile davanti al banco del bar (ora
+   dopo due secondi fermo si appoggia dove sta).
+5. **Gli a-capo.** Preparando le patch è venuto fuori che tre file già
+   committati erano passati dagli a-capo di Windows a quelli Unix (uno
+   script Python li riscriveva), e che il repo del capo ha
+   `core.autocrlf=true`. Riscritti i commit nel contenitore, e
+   `tools/sh/sincro.sh` adesso fa le patch su una copia normalizzata.
+
+## Decisioni
+
+- **I plugin non si usano** (installati, fuori dal gioco): la città è a
+  codice (ProtonScatter serve nell'editor), i dialoghi ci sono già
+  (Dialogic li farebbe rifare), LimboAI romperebbe la build web.
+- **Doppioni fuori**: auto, personaggi uguali a quelli che c'erano, sedia
+  di plastica, cestini; materiali dei quartieri e cielo HDRI.
+- **Le pozzanghere solo sull'exe**: nel browser lo shader non si compila.
+
+## Le verifiche della seconda chat
+
+- **Batteria completa** (51 prove più `prova_scopa`): zero storte e zero
+  `SCRIPT ERROR`, tranne `prova_ntuppate` che ha dato 1 (un passante contro
+  il tronco di un pino). Rifatta **lunga, dieci minuti** (`DURATA_NTUPPATE=600`):
+  ha trovato anche il vigile che, smontando alle otto di sera, tremava contro
+  un palazzo (la prova da due minuti non arriva mai alle otto). Sistemati
+  tutti e due; di nuovo dieci minuti: **zero piantati**. Poi `prova_vigile`,
+  `prova_mure`, `prova_ntuppate` di nuovo a zero.
+- **Fotografie** di ogni pezzo nuovo (`foto_esterni_citta`, `foto_filtri`,
+  `foto_tutoriale` per la pagina dei crediti) prima di committarlo.
+- **La build web nel browser vero** (Chromium senza finestra): la prima
+  esportazione **non partiva** per colpa della libreria di LimboAI. Tolta
+  dall'esportazione, parte (restano tre righe d'errore innocue). La pagina
+  poi muore di memoria dopo un paio di minuti, ma è SwiftShader: la stessa
+  cosa succede con la build della prima metà, rifatta apposta per il
+  confronto.
+- Build: exe 186 MB (era 171), web 98 MB zippato (era 84).
