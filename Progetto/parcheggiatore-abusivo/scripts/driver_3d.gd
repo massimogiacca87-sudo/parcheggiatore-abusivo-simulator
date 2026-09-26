@@ -927,6 +927,8 @@ func _parte_a_mmazzate() -> void:
 	_hunt_left = HUNT_DURATION
 	_hunt_hit_cd = 0.7
 	GameManager.add_heat(12.0)
+	# E 'a strada se ne accorge (0.62): le voci arrabbiate di chi guarda.
+	SoundManager.play("folla_arrabbiata", -21.0, randf_range(0.95, 1.05))
 	GameManager.event_started.emit("'O padrone s'è 'ncazzato overamente.")
 
 

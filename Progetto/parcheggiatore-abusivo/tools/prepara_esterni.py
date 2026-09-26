@@ -149,6 +149,68 @@ def graffito() -> None:
     _salva_png(rgb, DEC / "graffito_tag.png")
 
 
+# ---------------------------------------------------------------------------
+# 'E suone (Freesound CC0): tagliati alla misura del gioco
+# ---------------------------------------------------------------------------
+#
+# Le registrazioni della biblioteca durano da uno a ottanta secondi: il
+# clacson della MiTo ne ha tre in fila, le monete un minuto di manciate.
+# Si ritaglia il pezzo che serve (i tempi sono presi dall'inviluppo, a
+# finestre di due decimi di secondo), con due centesimi di dissolvenza ai
+# capi per non fare il clic, e si salva in `audio/` col nome da gioco:
+# `SoundManager` li trova da solo.
+SUONI = [
+    # nome da gioco, file, inizio, fine (secondi; None = fino in fondo)
+    ("chiavi1", "chiavi/618539_Jingling_of_Keys.ogg", 0.0, None),
+    ("chiavi2", "chiavi/827500_jingling_keys.ogg", 0.9, 3.4),
+    ("chiavi_porta", "chiavi/266441_keys_jingling_and_door_opening.ogg", 0.0, None),
+    ("clacson_mito1", "clacson_traffico/457425_boedie_alfa_romeo_MiTo_honking_car_horn.ogg", 0.95, 1.75),
+    ("clacson_mito2", "clacson_traffico/457425_boedie_alfa_romeo_MiTo_honking_car_horn.ogg", 4.1, 4.95),
+    ("clacson_lungo2", "clacson_traffico/182474_car_horn_wav.ogg", 1.1, 2.75),
+    ("spiccioli2", "monete/558991_coins_falling_022_wav.ogg", 0.0, None),
+    ("monete3", "monete/444257_Coins_wav.ogg", 1.3, 2.3),
+    ("monete_mano", "monete/327517_Throwing_coins_in_hand_OWI_wav.ogg", 7.2, 8.6),
+    ("folla_arrabbiata", "folla_voci_arrabbiate/130328_Angry_Crowd.ogg", 0.0, 2.8),
+    ("motorino_passa", "scooter/828204_Small_Motorbike_Passing_By.ogg", 0.0, None),
+    # Il giro di motore per il motorino che passa (si suona in ciclo, in
+    # 3D, attaccato al mezzo): il tratto fermo di `Scooter_drive`.
+    ("vespa_motore", "scooter/509522_Scooter_drive.ogg", 4.4, 6.8),
+]
+
+
+def suoni() -> None:
+    import subprocess
+    sorg = RADICE / "assets/esterni/audio"
+    dest = RADICE / "audio"
+    for nome, f, da, a in SUONI:
+        # `-ss` prima di `-i`: il taglio azzera i tempi, e le dissolvenze
+        # contano dall'inizio del pezzo e non dall'inizio del file.
+        ingresso = ["ffmpeg", "-v", "info", "-y", "-ss", str(da), "-i", str(sorg / f)]
+        durata = None
+        if a is not None:
+            durata = a - da
+            ingresso += ["-t", str(durata)]
+        filtri = ["afade=t=in:d=0.02"]
+        if durata is not None and nome != "vespa_motore":
+            filtri.append("afade=t=out:st=%.3f:d=0.08" % max(0.0, durata - 0.08))
+        # Prima si misura il picco del pezzo tagliato, poi lo si porta a
+        # −1 dB: le registrazioni stanno fra −3 e −45, e il volume lo decide
+        # chi suona (`SoundManager.play(nome, db)`), non il file.
+        misura = subprocess.run(ingresso + ["-af", ",".join(filtri + ["volumedetect"]),
+                                            "-ac", "1", "-f", "null", "-"],
+                                capture_output=True, text=True).stderr
+        picco = 0.0
+        for riga in misura.splitlines():
+            if "max_volume:" in riga:
+                picco = float(riga.split("max_volume:")[1].split("dB")[0])
+        filtri.append("volume=%.1fdB" % (-1.0 - picco))
+        subprocess.run(ingresso + ["-af", ",".join(filtri), "-ac", "1",
+                                   "-c:a", "libvorbis", "-q:a", "4",
+                                   str(dest / f"{nome}.ogg")],
+                       check=True, capture_output=True)
+        print(f"  audio/{nome}.ogg  (picco {picco:+.1f} dB → −1)")
+
+
 def main() -> None:
     print("=== materiali PBR ===")
     materiale("asfalto/asphalt_02", "asfalto")
@@ -169,6 +231,8 @@ def main() -> None:
           ritocco=_sporca)
     decal("macchie_olio_perdite/Leaking003", "colatura_muro")
     graffito()
+    print("=== suoni ===")
+    suoni()
 
 
 if __name__ == "__main__":

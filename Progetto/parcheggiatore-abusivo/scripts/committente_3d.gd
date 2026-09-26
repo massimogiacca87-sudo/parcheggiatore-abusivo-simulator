@@ -392,6 +392,9 @@ func player_interact() -> void:
 		if GameManager.prendi_commissione(cid):
 			_dici(str(_c.get("grazie", "Grazie, guagliò! Curre!")), 3.2)
 			SoundManager.ui("ui_missione")
+			# 'E cchiave d''o garage si sentono passare di mano (0.62).
+			if str(_c.get("robba", "")) == "chiave":
+				SoundManager.play_uno(["chiavi1", "chiavi2"], -7.0)
 			_passa_robba_al_player()
 		return
 	if stato != "in_mano":
@@ -405,6 +408,8 @@ func player_interact() -> void:
 		GameManager.event_started.emit("Cummissione fatta: +€%d. %s" % [paga,
 			str(_c.get("coda", "Chi cammina, magna."))])
 		SoundManager.ui("ui_ok")
+		if str(_c.get("robba", "")) == "chiave":
+			SoundManager.play("chiavi1", -8.0)
 		# La roba passa a lui: gliela si vede in mano.
 		_robba = Robba.costruisci(str(_c.get("robba", "pacco")))
 		add_child(_robba)

@@ -1213,7 +1213,9 @@ func entra(player: Node3D) -> void:
 	_ritorno_rot = player.rotation.y
 	GameManager.dentro_casa = true
 	GameManager.casa_entrata.emit(true)
-	SoundManager.play("door")
+	# Le chiavi e la porta di casa (0.62, Freesound): si entra con le
+	# chiavi, si esce tirandosi la porta.
+	SoundManager.play("chiavi_porta", -6.0)
 	SoundManager.ambiente(0.22)
 	player.global_position = _dentro_nodo.global_position \
 		+ Vector3(LARG * 0.5 - 1.0, 0.55, PROF * 0.5 - 1.0)

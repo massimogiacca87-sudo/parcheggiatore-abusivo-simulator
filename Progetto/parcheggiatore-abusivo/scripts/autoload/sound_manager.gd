@@ -25,7 +25,24 @@ const SOUND_NAMES := ["honk", "bump", "punch", "coin", "kaching", "success",
 	# --- 0.62: 'e suone 'e ll'interfaccia (Universal UI Soundpack di
 	# Nathan Gibson, CC BY 4.0 — vedi CREDITI.txt) ---------------------
 	"ui_hover", "ui_click", "ui_ok", "ui_apri", "ui_chiudi", "ui_errore",
-	"ui_notifica", "ui_carta", "ui_vittoria", "ui_sblocco", "ui_missione"]
+	"ui_notifica", "ui_carta", "ui_vittoria", "ui_sblocco", "ui_missione",
+	# --- 0.62: 'a robba 'e fore (Freesound CC0, tagliati da
+	# `tools/prepara_esterni.py`: vedi `assets/esterni/audio/CREDITI_freesound.txt`)
+	"chiavi1", "chiavi2", "chiavi_porta", "clacson_mito1", "clacson_mito2",
+	"clacson_lungo2", "spiccioli2", "monete3", "monete_mano",
+	"folla_arrabbiata", "motorino_passa", "vespa_motore"]
+
+## **'E variante** (0.62). Chi chiede uno di questi suoni ne riceve uno a
+## caso della sua lista: il clacson di chi arriva in piazza è a volte il
+## suo e a volte quello di un'Alfa MiTo registrata a Napoli, e dopo venti
+## auto non è più lo stesso "pè" ripetuto. Chi chiama non cambia niente.
+const VARIANTI := {
+	"horn_arrivo": ["horn_arrivo", "clacson_mito1"],
+	"horn_impaziente": ["horn_impaziente", "clacson_mito2", "clacson_lungo2"],
+	"clacson_lungo": ["clacson_lungo", "clacson_lungo2"],
+	"clacson_corto": ["clacson_corto", "clacson_mito1"],
+	"moto_pass": ["moto_pass", "motorino_passa"],
+}
 const POOL_SIZE := 18
 const MASTER_OFFSET_DB := -6.0 # tutto un po' più discreto
 const MUSIC_VOLUME_DB := -19.0 # sottofondo: c'è, ma non copre il gioco
@@ -311,6 +328,11 @@ func carica_volume() -> void:
 
 ## Riproduce un effetto. pitch_rand dà una leggera variazione naturale.
 func play(sound_name: String, volume_db: float = 0.0, pitch: float = 1.0, pitch_rand: float = 0.06) -> void:
+	if VARIANTI.has(sound_name):
+		var v: Array = VARIANTI[sound_name]
+		var scelto: String = str(v[randi() % v.size()])
+		if _streams.has(scelto):
+			sound_name = scelto
 	if not _streams.has(sound_name):
 		return
 	if vol_effetti <= 0.001:
@@ -340,16 +362,46 @@ func play_uno(nomi: Array, volume_db: float = 0.0, pitch: float = 1.0) -> void:
 ## versa. Non e' realismo: e' che **si sente quanto hai preso** senza
 ## guardare il numero in alto a destra.
 func soldi(quanti: int, volume_db: float = 0.0) -> void:
-	var nome := "moneta1" if randf() < 0.5 else "moneta2"
+	# (0.62) Tre registrazioni in più dalla biblioteca esterna: gli spiccioli
+	# che cadono, la manciata in mano, le monete contate.
+	var nome: String = ["moneta1", "moneta2", "spiccioli2"][randi() % 3]
 	if quanti >= 60:
 		nome = "mucchio"
 	elif quanti >= 20:
-		nome = "monete_tante"
+		nome = "monete_tante" if randf() < 0.7 else "monete_mano"
 	elif quanti >= 5:
-		nome = "monete" if randf() < 0.5 else "monete2"
+		nome = ["monete", "monete2", "monete3"][randi() % 3]
 	if not _streams.has(nome):
 		nome = "coin"
 	play(nome, volume_db)
+
+
+## **'O suono ca sta a 'nu posto** (0.62). Un lettore 3D già pronto col
+## suono chiesto, da appendere a chi fa rumore (il motorino che passa):
+## si sente da dove viene, cresce quando si avvicina e cala quando se ne
+## va. Il volume degli effetti vale anche per lui, letto adesso.
+func suono_3d(nome: String, volume_db: float = 0.0, unita: float = 6.0,
+		lontano: float = 60.0) -> AudioStreamPlayer3D:
+	var p := AudioStreamPlayer3D.new()
+	if not _streams.has(nome):
+		return p
+	var s = _streams[nome]
+	if nome == "vespa_motore":
+		s = (s as AudioStream).duplicate()
+		if s is AudioStreamOggVorbis:
+			(s as AudioStreamOggVorbis).loop = true
+	p.stream = s
+	p.unit_size = unita
+	p.max_distance = lontano
+	p.volume_db = volume_db + MASTER_OFFSET_DB + _db_effetti()
+	p.doppler_tracking = AudioStreamPlayer3D.DOPPLER_TRACKING_IDLE_STEP
+	return p
+
+
+## Il volume giusto per un lettore 3D già fatto (la manopola può essere
+## cambiata nel frattempo).
+func volume_3d(volume_db: float) -> float:
+	return -80.0 if vol_effetti <= 0.001 else volume_db + MASTER_OFFSET_DB + _db_effetti()
 
 
 ## 'E sei registrazioni 'e pugne, una a caso. Sei bastano: sotto le
