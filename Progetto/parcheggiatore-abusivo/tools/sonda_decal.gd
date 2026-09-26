@@ -57,6 +57,10 @@ func _process(d: float) -> void:
 			tot = a if primo else tot.merge(a)
 			primo = false
 		print("  %s: centro %s ngombro %s" % [nome, str(c._centro_modello(nome)), str(tot)])
+	for m in c.get_meta_list():
+		print("  meta %s = %s" % [m, str(c.get_meta(m))])
+	print("scartati: ", c._solidi_scartati.keys())
+	print("rifiuti esterni: ", preload("res://scripts/robba_esterna.gd").rifiuti)
 	print("split posti: ", c._split_posti.size())
 	var senza := 0
 	var visti := {}

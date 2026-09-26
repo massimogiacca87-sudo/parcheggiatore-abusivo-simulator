@@ -1156,6 +1156,11 @@ func _muro_semplice(centro: Vector3, dim: Vector3, q: Dictionary,
 	var muri: Array = q["muri"]
 	var tinte: Array = q["tinte"]
 	var nome: String = str(muri[abs(indice) % muri.size()])
+	# L'intonaco con la muffa della Sanità (0.62, vedi `Quartieri`): metà
+	# dei muri scrostati, scelti con la posizione e non col caso.
+	if q.has("muffa") and nome == str(q["muffa"]) \
+			and absi(int(centro.x * 7.0) + int(centro.z * 13.0)) % 2 == 0:
+		nome = "muro_muffa"
 	var i_tinta: int = abs(indice / 3) % tinte.size()
 	var tinta: Color = tinte[i_tinta]
 	# **'A chiave d''o gruppo mo è cchiù corta, e chesto è 'nu guadagno.**

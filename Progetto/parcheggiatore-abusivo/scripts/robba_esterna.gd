@@ -61,6 +61,16 @@ static func metti(c: Node3D) -> void:
 	_strade(c, rng)
 	_colature_split(c, rng)
 	_mure(c, rng)
+	# L'arredo ha un seme suo: se domani le decalcomanie cambiano, i
+	# motorini restano dove stanno.
+	var rng2 := RandomNumberGenerator.new()
+	rng2.seed = 62003
+	_motorini_fore_ê_vasci(c, rng2)
+	_motorini_ô_marciappiede(c, rng2)
+	_coni_ê_cantieri(c, rng2)
+	_segge_vienna(c, rng2)
+	_ai_cassonetti(c, rng2)
+	_segge_ufficio(c, rng2)
 
 
 # ---------------------------------------------------------------------------
@@ -148,6 +158,9 @@ static func _strade(c: Node3D, rng: RandomNumberGenerator) -> void:
 	var m_ghisa := _mat("tombino_ghisa", false, 0.55, 0.35)
 	var m_grata := _mat("tombino_grata", false, 0.6, 0.3)
 	var m_rattoppo := _mat("rattoppo", true, 0.95)
+	# La foto del rattoppo è cemento chiaro: sull'asfalto scuro veniva un
+	# quadrato bianco. Il rattoppo vero è asfalto più nuovo, cioè più scuro.
+	m_rattoppo.albedo_color = Color(0.42, 0.41, 0.40)
 	var m_olio := _mat("macchia_olio", true, 0.35)
 	var m_gomme := _mat("gomme", false, 0.7)
 	var tombini := 0
@@ -337,3 +350,289 @@ static func _mure(c: Node3D, rng: RandomNumberGenerator) -> void:
 			tag += 1
 	c.set_meta(&"colature_muro", umidi)
 	c.set_meta(&"graffiti_tag", tag)
+
+
+# ---------------------------------------------------------------------------
+# L'arredo: motorini, coni, sedie, bidoni, casse
+# ---------------------------------------------------------------------------
+#
+# Tutti modelli di Poly Pizza (nomi da gioco in `Models.ESTERNI`). Ogni
+# pezzo si mette solo se c'è posto (`_sta_libero`, `_scatola_libera`), se
+# può avere un corpo (`_puo_avere_corpo`: fuori dalla corsia e dai varchi)
+# e poi il corpo ce l'ha (`_solido`). Si guarda da sessanta metri.
+
+const MOTORINI := ["vespa", "scooter_bianco", "scooter_blu", "vespa"]
+const MOTORINO_DIM := Vector3(0.72, 1.15, 1.85)
+const CONI := ["cono_grande", "cono_striato", "cono_basso"]
+const VIENNA_DIM := Vector3(0.46, 0.9, 0.5)
+const CASCETTA_DIM := Vector3(0.56, 0.26, 0.47)
+const BIDONE_DIM := Vector3(0.62, 0.95, 0.62)
+const CASSA_DIM := Vector3(0.56, 0.56, 0.56)
+const UFFICIO_DIM := Vector3(0.68, 1.05, 0.76)
+
+
+## Il pezzo ci sta? Le domande della città, tutte. I perché dei no si
+## contano in `rifiuti` (li stampa `sonda_decal`).
+static var rifiuti: Dictionary = {}
+
+
+static func _no(perche: String) -> bool:
+	rifiuti[perche] = int(rifiuti.get(perche, 0)) + 1
+	return false
+
+
+static func _ce_sta(c: Node3D, p: Vector3, dim: Vector3, giro: float) -> bool:
+	if not _dint_a_mappa(c, p):
+		return _no("mappa")
+	var r: float = maxf(dim.x, dim.z) * 0.5
+	var perche: String = c._perche_nun_sta(p, r, minf(r, 0.4))
+	if perche != "":
+		return _no("libero:" + perche)
+	if not c._scatola_libera(p, dim, giro):
+		return _no("scatola")
+	if not c._puo_avere_corpo(p + Vector3(0, dim.y * 0.5, 0), dim, giro):
+		return _no("corpo")
+	return true
+
+
+static func _dint_a_mappa(c: Node3D, p: Vector3) -> bool:
+	return p.x > 1.0 and p.x < float(c.LARGHEZZA) - 1.0 \
+		and p.z > 1.0 and p.z < float(c.PROFONDITA) - 1.0
+
+
+## Quanto sta sotto all'origine il modello (i motorini di Poly Pizza hanno
+## l'origine a mezz'altezza: messi a terra così, affondavano di mezzo
+## metro nell'asfalto — prima foto dei motorini).
+static var _sotto: Dictionary = {}
+
+
+static func _base(c: Node3D, nome: String) -> float:
+	if _sotto.has(nome):
+		return _sotto[nome]
+	var y := INF
+	for pz in c._pezzi_modello(nome):
+		var a: AABB = (pz["trasf"] as Transform3D) * (pz["mesh"] as Mesh).get_aabb()
+		y = minf(y, a.position.y)
+	var fore: float = 0.0 if y == INF else y
+	_sotto[nome] = fore
+	return fore
+
+
+static func _metti(c: Node3D, nome: String, p: Vector3, giro: float,
+		dim: Vector3, gruppo: String) -> bool:
+	if not Models.has_model(nome):
+		return false
+	if not c._panda_c(nome, p - Vector3(0, _base(c, nome), 0), giro, gruppo, 60.0):
+		return false
+	c._solido(p + Vector3(0, dim.y * 0.5, 0), dim, giro)
+	return true
+
+
+## **'O motorino fore 'o vascio.** Chi abita al piano terra il motorino se
+## lo tiene davanti alla porta, dall'altra parte della finestra (dove
+## `RobbaPsx` mette le sedie), parallelo al muro.
+static func _motorini_fore_ê_vasci(c: Node3D, rng: RandomNumberGenerator) -> void:
+	var messi := 0
+	for v in c._vasci_fore:
+		if messi >= 14:
+			break
+		if rng.randf() > 0.35:
+			continue
+		var porta: Vector3 = v[0]
+		var fen: Vector3 = v[1]
+		var fuori: Vector3 = v[2]
+		var lungo: Vector3 = (fen - porta).normalized()
+		# Quarantasei centimetri dal muro e non di più: nei vicoli di quattro
+		# metri la corsia libera comincia a novanta.
+		# E a due metri e trentacinque dal centro della porta: il portone
+		# non si tappa (`_davanti_ô_portone` vuole un metro più il raggio).
+		var p: Vector3 = porta - lungo * 2.35 + fuori * 0.46
+		var giro: float = atan2(lungo.x, lungo.z) + (PI if rng.randf() < 0.5 else 0.0)
+		giro += rng.randf_range(-0.08, 0.08)
+		var nome: String = MOTORINI[rng.randi() % MOTORINI.size()]
+		if not _ce_sta(c, p, MOTORINO_DIM, giro):
+			continue
+		if _metti(c, nome, p, giro, MOTORINO_DIM, "esterni_" + nome):
+			messi += 1
+	c.set_meta(&"motorini_vasci", messi)
+
+
+## **'E motorini ô marciappiede.** Sulle strade larghe, fra una macchina e
+## l'altra, i motorini stanno in fila contro il cordolo, a due o tre: come
+## a Napoli, dove un buco di un metro è un posto. Di punta non ci stanno:
+## la carreggiata del Decumano è larga quattro metri e due, e la corsia
+## libera se ne prende due e due.
+static func _motorini_ô_marciappiede(c: Node3D, rng: RandomNumberGenerator) -> void:
+	var messi := 0
+	for s in c.STRADE:
+		var x0: float = float(s[0])
+		var z0: float = float(s[1])
+		var x1: float = float(s[2])
+		var z1: float = float(s[3])
+		var w: float = x1 - x0
+		var l: float = z1 - z0
+		if minf(w, l) <= 5.5:
+			continue
+		var lungo_z: bool = l > w
+		var corsa: float = l if lungo_z else w
+		var larga: float = w if lungo_z else l
+		var mezzo: float = (x0 + x1) * 0.5 if lungo_z else (z0 + z1) * 0.5
+		var inizio: float = z0 if lungo_z else x0
+		var t: float = rng.randf_range(8.0, 20.0)
+		while t < corsa - 6.0:
+			var lato: float = 1.0 if rng.randf() < 0.5 else -1.0
+			var trasv: float = mezzo + lato * (larga * 0.5 - 1.4 - MOTORINO_DIM.x * 0.5 - 0.06)
+			var giro: float = 0.0 if lungo_z else PI * 0.5
+			var quanti: int = rng.randi_range(1, 3)
+			for k in range(quanti):
+				var lungo_t: float = t + float(k) * 2.0
+				var p := Vector3(trasv, 0.0, inizio + lungo_t) if lungo_z \
+					else Vector3(inizio + lungo_t, 0.0, trasv)
+				var g: float = giro + (PI if rng.randf() < 0.5 else 0.0) \
+					+ rng.randf_range(-0.06, 0.06)
+				var nome: String = MOTORINI[rng.randi() % MOTORINI.size()]
+				if not _strada_bbona(c, p):
+					_no("strada")
+					continue
+				if _ce_sta(c, p, MOTORINO_DIM, g):
+					if _metti(c, nome, p, g, MOTORINO_DIM, "esterni_" + nome):
+						messi += 1
+			t += rng.randf_range(14.0, 26.0)
+	c.set_meta(&"motorini_strada", messi)
+
+
+## Due coni per testa di cantiere, sul lato della strada: chi arriva vede
+## prima i coni e poi la transenna.
+static func _coni_ê_cantieri(c: Node3D, rng: RandomNumberGenerator) -> void:
+	var messi := 0
+	for ci in c._cantieri_info:
+		var centro: Vector3 = ci[0]
+		var lungo: Vector3 = ci[1]
+		var muro: Vector3 = ci[2]
+		for verso in [-1.0, 1.0]:
+			for k in range(2):
+				# In fila sulla linea della transenna e poi verso il muro:
+				# dalla parte della strada c'è la corsia libera.
+				var p: Vector3 = centro + lungo * (verso * (4.4 + float(k) * 0.8)) \
+					+ muro * (0.1 + float(k) * 0.4)
+				var nome: String = CONI[(messi + k) % CONI.size()]
+				var dim := Vector3(0.45, 0.7, 0.45)
+				if _ce_sta(c, p, dim, 0.0):
+					if _metti(c, nome, p, rng.randf_range(-PI, PI), dim, "esterni_cono"):
+						messi += 1
+	c.set_meta(&"coni_cantieri", messi)
+
+
+## **'A seggia 'e Vienna e 'a cascetta pe' tavulino.** Davanti a qualche
+## basso, dove non ci sono già le sedie: una sedia da bar di legno curvato
+## (quelle che i bar buttano e i vicini si prendono) e accanto due
+## cassette della frutta una sopra l'altra, con sopra il caffè.
+static func _segge_vienna(c: Node3D, rng: RandomNumberGenerator) -> void:
+	var messe := 0
+	for v in c._vasci_fore:
+		if messe >= 12:
+			break
+		if rng.randf() > 0.3:
+			continue
+		var porta: Vector3 = v[0]
+		var fen: Vector3 = v[1]
+		var fuori: Vector3 = v[2]
+		var lungo: Vector3 = (fen - porta).normalized()
+		var giro: float = atan2(fuori.x, fuori.z)
+		# Oltre la finestra (le sedie di `RobbaPsx` stanno sotto).
+		var p: Vector3 = fen + lungo * 1.15 + fuori * 0.5
+		var g: float = giro + rng.randf_range(-0.4, 0.4)
+		if not _ce_sta(c, p, VIENNA_DIM, g):
+			continue
+		var tav: Vector3 = p + lungo * 0.72 + fuori * 0.05
+		var g_t: float = giro + rng.randf_range(-0.2, 0.2)
+		if not _ce_sta(c, tav, CASCETTA_DIM, g_t):
+			continue
+		_metti(c, "seggia_vienna", p, g, VIENNA_DIM, "esterni_seggia_vienna")
+		var giu := Vector3(0, _base(c, "cascetta_frutta"), 0)
+		c._panda_c("cascetta_frutta", tav - giu, g_t, "esterni_cascetta", 45.0)
+		c._panda_c("cascetta_frutta", tav + Vector3(0, CASCETTA_DIM.y, 0) - giu,
+			g_t + rng.randf_range(-0.15, 0.15), "esterni_cascetta_sopra", 45.0)
+		c._solido(tav + Vector3(0, CASCETTA_DIM.y, 0),
+			Vector3(CASCETTA_DIM.x, CASCETTA_DIM.y * 2.0, CASCETTA_DIM.z), g_t)
+		if Models.has_model("tazzulella") and rng.randf() < 0.7:
+			c._panda("tazzulella", tav + Vector3(0.05, CASCETTA_DIM.y * 2.0 + 0.01, 0.0),
+				rng.randf_range(-PI, PI), "esterni_tazzulella", 30.0)
+		messe += 1
+	c.set_meta(&"segge_vienna", messe)
+
+
+## I bidoni di ferro sul marciapiede delle strade larghe (i cestini che il
+## Comune mette ogni tanto e che nessuno svuota), e accanto ai cassonetti,
+## dove c'è posto, una cassa di legno buttata.
+static func _ai_cassonetti(c: Node3D, rng: RandomNumberGenerator) -> void:
+	var bidoni := 0
+	var casse := 0
+	for s in c.STRADE:
+		var x0: float = float(s[0])
+		var z0: float = float(s[1])
+		var x1: float = float(s[2])
+		var z1: float = float(s[3])
+		var w: float = x1 - x0
+		var l: float = z1 - z0
+		if minf(w, l) <= 5.5:
+			continue
+		var lungo_z: bool = l > w
+		var corsa: float = l if lungo_z else w
+		var larga: float = w if lungo_z else l
+		var mezzo: float = (x0 + x1) * 0.5 if lungo_z else (z0 + z1) * 0.5
+		var inizio: float = z0 if lungo_z else x0
+		var t: float = rng.randf_range(10.0, 30.0)
+		while t < corsa - 5.0:
+			var lato: float = 1.0 if rng.randf() < 0.5 else -1.0
+			# Sul marciapiede, dalla parte della strada.
+			var trasv: float = mezzo + lato * (larga * 0.5 - 1.05)
+			var p := Vector3(trasv, 0.16, inizio + t) if lungo_z \
+				else Vector3(inizio + t, 0.16, trasv)
+			var g: float = rng.randf_range(-PI, PI)
+			if _strada_bbona(c, p) and _ce_sta(c, p, BIDONE_DIM, g):
+				if _metti(c, "bidone_ferro", p, g, BIDONE_DIM, "esterni_bidone"):
+					bidoni += 1
+			t += rng.randf_range(30.0, 55.0)
+	for cs in c._cassonetti:
+		if rng.randf() > 0.5:
+			continue
+		var p0: Vector3 = cs[0]
+		var giro: float = float(cs[1])
+		var lungo := Vector3(cos(giro), 0, -sin(giro))
+		for d in [2.1, -2.1, 2.8, -2.8, 3.5, -3.5]:
+			var p: Vector3 = p0 + lungo * float(d)
+			var g: float = giro + rng.randf_range(-0.3, 0.3)
+			if not _ce_sta(c, p, CASSA_DIM, g):
+				continue
+			if _metti(c, "cassa_legno", p, g, CASSA_DIM, "esterni_cassa"):
+				casse += 1
+			break
+	c.set_meta(&"bidoni_ferro", bidoni)
+	c.set_meta(&"casse_legno", casse)
+
+
+## **'A seggia 'e ll'ufficio** buttata contro un muro, vicino a una scena
+## d'angolo: l'ingombrante di chi ha svuotato uno studio. Il posto lo trova
+## `_posto_pe_scena`, come per i materassi.
+static func _segge_ufficio(c: Node3D, rng: RandomNumberGenerator) -> void:
+	var messe := 0
+	var k := 0
+	while messe < 3 and k < c.ANGOLI.size():
+		var a: Array = c.ANGOLI[(k * 5 + 4) % c.ANGOLI.size()]
+		k += 1
+		var pezzi := [["seggia_ufficio", 0.0, UFFICIO_DIM.x * 0.5,
+			UFFICIO_DIM.z * 0.5, 0.0, UFFICIO_DIM]]
+		var posto: Dictionary = c._posto_pe_scena(Vector3(float(a[0]), 0.0,
+			float(a[1]) - 3.0), pezzi)
+		if posto.is_empty():
+			continue
+		var giro: float = float(posto["giro"])
+		var fuori := Vector3(sin(giro), 0, cos(giro))
+		var p: Vector3 = (posto["muro"] as Vector3) + fuori * (UFFICIO_DIM.z * 0.5 + 0.05)
+		var g: float = giro + rng.randf_range(-0.9, 0.9)
+		if not _ce_sta(c, p, UFFICIO_DIM, g):
+			continue
+		if _metti(c, "seggia_ufficio", p, g, UFFICIO_DIM, "esterni_seggia_ufficio"):
+			messe += 1
+	c.set_meta(&"segge_ufficio", messe)

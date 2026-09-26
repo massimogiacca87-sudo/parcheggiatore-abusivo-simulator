@@ -29,6 +29,7 @@ var _t: float = 0.0
 var _attesa: float = 0.0
 var _suonato: bool = false
 var _colpito: bool = false
+var _motore: AudioStreamPlayer3D = null
 
 
 func _ready() -> void:
@@ -40,13 +41,28 @@ func _ready() -> void:
 func _costruisci() -> void:
 	_mezzo = Node3D.new()
 	add_child(_mezzo)
-	var vespa := Models.spawn_by_length("motorino", 1.85)
+	# (0.62) Uno su tre è la Vespa della biblioteca esterna: ha l'origine a
+	# mezz'altezza, e si alza di quanto sta sotto.
+	var nome_mezzo: String = "vespa" if randi() % 3 == 0 and Models.has_model("vespa") \
+		else "motorino"
+	var vespa := Models.spawn_by_length(nome_mezzo, 1.85)
+	if vespa != null and nome_mezzo == "vespa":
+		vespa.position.y = -Models._aabb_of(vespa).position.y * vespa.scale.y
 	if vespa != null:
 		Models.tint(vespa, ["body", "scooter", "paint", "carrozzeria"],
 			[Color(0.72, 0.72, 0.7), Color(0.2, 0.3, 0.5),
 			Color(0.7, 0.25, 0.2), Color(0.25, 0.4, 0.28)][randi() % 4],
 			0.35, 0.35)
 		_mezzo.add_child(vespa)
+
+	# **'O rummore ca passa** (0.62): il motore gira in ciclo attaccato al
+	# mezzo, in 3D. Prima c'era un "passaggio" registrato suonato a tutto
+	# schermo nel momento in cui il motorino partiva, anche a cento metri e
+	# dietro sei palazzi.
+	_motore = SoundManager.suono_3d("vespa_motore", -3.0, 5.0, 55.0)
+	_motore.name = "Motore"
+	_mezzo.add_child(_motore)
+	_motore.position = Vector3(0, 0.5, 0)
 
 	# Due ncopp'â Vespa, assettate overo (vedi `HumanBuilder.in_sella`):
 	# prima stavano in croce, piegati a mano su ossa che non esistevano più.
@@ -67,6 +83,8 @@ func _riparti(fra: float) -> void:
 	_velocita = randf_range(VELOCITA_MIN, VELOCITA_MAX)
 	if _mezzo:
 		_mezzo.visible = false
+	if _motore != null:
+		_motore.stop()
 
 
 func _process(delta: float) -> void:
@@ -74,7 +92,10 @@ func _process(delta: float) -> void:
 		_attesa -= delta
 		if _attesa <= 0.0 and _mezzo:
 			_mezzo.visible = true
-			SoundManager.play("moto_pass", -12.0, randf_range(0.9, 1.1))
+			if _motore != null and _motore.stream != null:
+				_motore.volume_db = SoundManager.volume_3d(-3.0)
+				_motore.pitch_scale = randf_range(0.92, 1.12) * _velocita / 11.0
+				_motore.play(randf_range(0.0, 2.0))
 		return
 
 	var tratta: Vector3 = arrivo - partenza

@@ -31,7 +31,32 @@ static func has_model(model_name: String) -> bool:
 	return _find_path(model_name) != ""
 
 
+## **'A robba 'e fore** (0.62). I modelli della biblioteca esterna
+## (`assets/esterni/modelli/`, Poly Pizza) che il gioco usa restano dove
+## sono, col loro nome d'origine e la misura giusta scritta nel loro
+## `.import` (`root_scale`): qui gli si dà un nome da gioco. Chi chiede
+## `Models.spawn("vespa")` non deve sapere da dove viene. Le licenze stanno
+## in `assets/esterni/modelli/CREDITI_polypizza.txt` (le tre Vespe sono
+## CC-BY 3.0: vanno citate, e lo sono nella schermata dei crediti).
+const ESTERNI := {
+	"vespa": "res://assets/esterni/modelli/scooter/Vespa_blGLclvvdEM.glb",
+	"scooter_bianco": "res://assets/esterni/modelli/scooter/Scooter_fPLXByG4Vx5.glb",
+	"scooter_blu": "res://assets/esterni/modelli/scooter/low_poly_scooter_awXCP7LUcz6.glb",
+	"seggia_vienna": "res://assets/esterni/modelli/plastic_chair/Chair_kLViSk9EhX.glb",
+	"seggia_ufficio": "res://assets/esterni/modelli/plastic_chair/Office_Chair_UfKvrZBK6C.glb",
+	"cono_grande": "res://assets/esterni/modelli/traffic_cone/Traffic_Cone_lAx8JytxGD.glb",
+	"cono_striato": "res://assets/esterni/modelli/traffic_cone/Traffic_Cone_aDIrUbMbW3.glb",
+	"cono_basso": "res://assets/esterni/modelli/traffic_cone/Road_Cone_ZPhinXAGtY.glb",
+	"cascetta_frutta": "res://assets/esterni/modelli/crate/Fruit_Crate_aXulVWHOeV.glb",
+	"cassa_legno": "res://assets/esterni/modelli/crate/Crate_3VGWnZPXmG.glb",
+	"bidone_ferro": "res://assets/esterni/modelli/trash_can/Trashcan_vlVx279xut.glb",
+}
+
+
 static func _find_path(model_name: String) -> String:
+	if ESTERNI.has(model_name):
+		var e: String = str(ESTERNI[model_name])
+		return e if ResourceLoader.exists(e) else ""
 	for ext in EXTENSIONS:
 		var path: String = DIR + model_name + str(ext)
 		if ResourceLoader.exists(path):

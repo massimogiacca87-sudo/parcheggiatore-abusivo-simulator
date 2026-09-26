@@ -38,6 +38,8 @@ const SCATTI := [
 	["coni", "cerca", "_cerca_coni"],
 	["cassette", "cerca", "_cerca_cassette"],
 	["ngombranti", "cerca", "_cerca_ngombranti"],
+	["bidone", "cerca", "_cerca_bidone"],
+	["scooter", "cerca", "_cerca_scooter"],
 ]
 
 const Citta := preload("res://scripts/citta_3d.gd")
@@ -335,11 +337,11 @@ func _cerca_gomme() -> Array:
 
 
 func _cerca_motorini() -> Array:
-	return _guarda_gruppo("Gruppo_esterni_vespa", 3.4, 1.6, 0.6, Vector3(60, 0, 76))
+	return _guarda_gruppo("Gruppo_esterni_vespa", 2.6, 1.3, 0.5, Vector3(10, 0, 60))
 
 
 func _cerca_sedie_bar() -> Array:
-	return _guarda_gruppo("Gruppo_esterni_seggia_bar", 3.6, 1.7, 0.5)
+	return _guarda_gruppo("Gruppo_esterni_seggia_vienna", 3.6, 1.7, 0.5)
 
 
 func _cerca_coni() -> Array:
@@ -348,6 +350,14 @@ func _cerca_coni() -> Array:
 
 func _cerca_cassette() -> Array:
 	return _guarda_gruppo("Gruppo_esterni_cascetta", 2.8, 1.6, 0.3)
+
+
+func _cerca_bidone() -> Array:
+	return _guarda_gruppo("Gruppo_esterni_bidone", 3.0, 1.6, 0.5)
+
+
+func _cerca_scooter() -> Array:
+	return _guarda_gruppo("Gruppo_esterni_scooter", 3.4, 1.6, 0.5, Vector3(120, 0, 95))
 
 
 func _cerca_ngombranti() -> Array:

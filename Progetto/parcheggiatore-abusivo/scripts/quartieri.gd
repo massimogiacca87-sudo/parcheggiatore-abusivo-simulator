@@ -40,9 +40,14 @@ const QUARTIERI := {
 		"nome": "'A Sanità",
 		"rect": [0.0, 95.0, 55.0, 172.0],
 		# Tufo giallo a vista, alto e strettissimo, mezzo sbriciolato.
-		# (0.62) Più l'intonaco con la muffa, che dei muri della Sanità è
-		# quello che si ricorda.
-		"muri": ["muro_tufo", "muro_scrostato", "muro_terracotta", "muro_muffa"],
+		"muri": ["muro_tufo", "muro_scrostato", "muro_terracotta"],
+		# (0.62) Metà dei muri scrostati diventano l'intonaco con la muffa
+		# (Poly Haven), che dei muri della Sanità è quello che si ricorda.
+		# Non è un quarto muro nella lista: la lista decide anche il numero
+		# del caso della facciata, e un elemento in più rimescolava tutte
+		# le botteghe e i tetti del quartiere (`prova_arredo`: sparita la
+		# cisterna grossa). Si sceglie con la posizione della campata.
+		"muffa": "muro_scrostato",
 		"tinte": [Color(1, 1, 1), Color(0.94, 0.92, 0.88)],
 		"h": [13.5, 18.0], "campata": [5.0, 8.0],
 		"zoccolo": "piperno", "zoccolo_tinta": Color(0.8, 0.78, 0.76),
