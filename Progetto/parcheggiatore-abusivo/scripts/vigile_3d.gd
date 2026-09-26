@@ -576,6 +576,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_pieta = maxf(0.0, _pieta - delta)
+	_chiamata_cd = maxf(0.0, _chiamata_cd - delta)
 	_t_stato += delta
 
 	# **'E otto 'e sera smonta** (0.56, punto 9).
@@ -662,6 +663,7 @@ func _physics_process(delta: float) -> void:
 				_say("E vabbuo'. Ma nun te facesse vedé.")
 				_pieta = 8.0
 				_torna_in_ronda()
+				_mannato_via()
 			return
 		Stato.MULTA:
 			_avvicinati(delta)
@@ -930,13 +932,20 @@ func _avvicinati(delta: float) -> void:
 ## il calendario faceva il resto; adesso che il calendario non c'è più, la
 ## tirata è una sola e sta in un posto solo — `GameManager.PROB_BORRELLI`,
 ## una su cento.
-var _chiamata_fatta: bool = false
+##
+## **E 'a radio nun se scarreca cchiù (0.63).** C'era un `_chiamata_fatta`
+## che si accendeva alla prima chiamata e non si spegneva mai: dal secondo
+## verbale in poi il vigile non chiamava più nessuno — né la pattuglia, né
+## Borrelli. Adesso è solo un fermo di venti secondi contro le chiamate
+## doppie.
+const CHIAMATA_FERMO: float = 20.0
+var _chiamata_cd: float = 0.0
 
 
 func _chiamma_rinforzi() -> void:
-	if _chiamata_fatta:
+	if _chiamata_cd > 0.0:
 		return
-	_chiamata_fatta = true
+	_chiamata_cd = CHIAMATA_FERMO
 	SoundManager.play("radio_polizia", -1.0)
 	if GameManager.forse_chiamma_borrelli(
 			"'O vigile ha chiammato 'O DUTTORE. Borrelli sta venenno."):
@@ -996,6 +1005,7 @@ func answer(indice: int) -> void:
 		GameManager.event_started.emit(
 			"'O vigile t'ha creduto. Pe' mo' te lassa sta' — ma 'o sospetto resta.")
 		_torna_in_ronda()
+		_mannato_via()
 		return
 	SoundManager.play("fail", -6.0, 0.9)
 	GameManager.add_heat(14.0)
@@ -1005,6 +1015,25 @@ func answer(indice: int) -> void:
 		_t_stato = 0.0
 	else:
 		_torna_in_ronda()
+		_mannato_via()
+
+
+## **'A terza vota nun se ne va: chiamma** (0.63).
+##
+## Ogni volta che ti viene a parlare e se ne torna in ronda senza averti
+## fatto il verbale — gli hai fatto pena, gli hai risposto storto, o te ne
+## sei andato — l'hai mandato via. Alla terza volta nella stessa giornata
+## non torna più a chiederti niente: alza la radio. È la seconda strada per
+## i carabinieri, accanto al sospetto pieno, e passa dalla stessa radio —
+## quindi anche da lì può arrivare Borrelli.
+func _mannato_via() -> void:
+	GameManager.vigile_mannato_oggi += 1
+	if GameManager.vigile_mannato_oggi < GameManager.VIGILE_MANNATO_MAX:
+		return
+	GameManager.vigile_mannato_oggi = 0
+	_say("N'ata vota? E mo' abbasta.")
+	_chiamata_cd = 0.0
+	_chiamma_rinforzi()
 
 
 func _fai_la_multa() -> void:

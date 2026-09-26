@@ -702,6 +702,10 @@ var notte: bool = false
 var boss_phase: bool = false
 var boss_defeated: bool = false
 var boss_wrong_answers: int = 0
+## **Quante vote hê mannato via 'o vigile oggi** (0.63): alla terza chiama
+## i carabinieri. Vedi `vigile_3d._mannato_via`.
+var vigile_mannato_oggi: int = 0
+const VIGILE_MANNATO_MAX: int = 3
 # Attività secondarie del turno
 var pickpockets: int = 0
 ## Decorazioni che il giocatore ha piazzato lui, in giro per la piazza:
@@ -942,6 +946,7 @@ func start_shift() -> void:
 	# ogni mattina: se no bastavano tre giornate distratte, una presa
 	# ciascuna, e da lì in poi ogni fermo era una nottata in cella.
 	fermi_oggi = 0
+	vigile_mannato_oggi = 0
 	notte_ncella = false
 	# E i gol pagati ripartono da zero: quattro al giorno, tutti i giorni.
 	gol_pavate = 0
@@ -2963,40 +2968,87 @@ func _passo_fasce() -> void:
 # rovinarlo: un boss che arriva perché è martedì non è una conseguenza, è
 # un appuntamento. E un appuntamento non fa paura la seconda volta.
 #
-# Adesso Borrelli non ha più un calendario. Ha **due porte, e tutte e due
-# le apri tu**:
+# **E mo' 'e porte songo doje, ma cu 'o dado ca cresce (0.63).**
 #
-#   * il vigile che ti fa il verbale alza la radio e, una volta su cento,
-#     invece della pattuglia chiama 'O Duttore;
-#   * qualcuno in divisa ti vede menare, e vale lo stesso uno per cento.
+# Il capo: *"Il boss di fine livello non esce più."* Con l'uno per cento
+# fisso e la sera che rispondeva sempre di no, era vero: si poteva giocare
+# una settimana intera senza vederlo. Adesso le porte sono queste due, e
+# tutte e due hanno un dado che **cresce finché lui non arriva**:
 #
-# Una su cento è poco, ed è voluto. Non è la probabilità di incontrarlo in
-# una partita — chi mena e si fa multare tira quel dado decine di volte —
-# è la probabilità che **quella volta lì** sia quella sbagliata. È così
-# che si tiene addosso la sensazione giusta: non "stasera tocca a me", ma
-# "e mo' che succede?".
-const PROB_BORRELLI: float = 0.01
+#   * **A — 'a sera.** Quando cala la notte, dal secondo giorno in poi:
+#     cinque per cento il secondo giorno, dieci il terzo, quindici il
+#     quarto... (`PROB_SERA_PASSO` per ogni giorno passato senza di lui).
+#     Il primo giorno non viene mai: è il giorno in cui si impara il
+#     mestiere.
+#   * **B — 'a chiamata.** Dal secondo giorno, ogni volta che il vigile
+#     chiama i carabinieri (sospetto al massimo, o la terza volta che l'hai
+#     mandato via): uno per cento la prima volta, poi più dieci ogni
+#     chiamata (1, 11, 21, 31...).
+#
+# Quando arriva, tutti e due i dadi ripartono da capo: è un «prima o poi»,
+# non un appuntamento. La violenza vista non lo chiama più: per quella ci
+# sono i carabinieri.
+const PROB_SERA_PASSO: float = 0.05
+const PROB_CHIAMATA_BASE: float = 0.01
+const PROB_CHIAMATA_PASSO: float = 0.10
+## Tenuto per le prove e i salvataggi vecchi: è la B alla prima chiamata.
+const PROB_BORRELLI: float = PROB_CHIAMATA_BASE
+
+## L'ultimo giorno in cui è venuto (0 = mai). Da qui si conta la A.
+var borrelli_ultimo_juorno: int = 0
+## Le chiamate ai carabinieri dal secondo giorno, da quando è venuto
+## l'ultima volta. Da qui si conta la B.
+var borrelli_chiamate: int = 0
 
 
-## Una tirata di dado sola, in un posto solo. La chiamano il vigile (col
-## verbale) e la violenza vista: se esce, Borrelli si mette in cammino.
-## Torna `true` se è uscita, così chi chiama sa che non deve fare l'altra
-## cosa che avrebbe fatto.
+## La probabilità della A stasera.
+func prob_borrelli_sera() -> float:
+	if giornata < 2:
+		return 0.0
+	var dall_ultima: int = giornata - maxi(1, borrelli_ultimo_juorno)
+	return clampf(PROB_SERA_PASSO * float(dall_ultima), 0.0, 1.0)
+
+
+## La probabilità della B alla prossima chiamata.
+func prob_borrelli_chiamata() -> float:
+	if giornata < 2:
+		return 0.0
+	return clampf(PROB_CHIAMATA_BASE + PROB_CHIAMATA_PASSO * float(borrelli_chiamate),
+		0.0, 1.0)
+
+
+## È venuto: i due dadi ripartono.
+func borrelli_venuto() -> void:
+	borrelli_ultimo_juorno = giornata
+	borrelli_chiamate = 0
+
+
+## **'A porta B.** La chiama il vigile quando alza la radio per i
+## carabinieri. Torna `true` se al posto della pattuglia arriva lui, così
+## il vigile sa che non deve fare l'altra cosa.
 func forse_chiamma_borrelli(pecche: String) -> bool:
 	if boss_spawned or boss_phase or not shift_active:
 		return false
-	if randf() >= PROB_BORRELLI:
+	if giornata < 2:
 		return false
+	var p: float = prob_borrelli_chiamata()
+	if randf() >= p:
+		borrelli_chiamate += 1
+		return false
+	borrelli_venuto()
 	event_started.emit(pecche)
 	chiama_borrelli.emit()
 	return true
 
 
-## **Nun ce sta cchiù 'nu boss 'e calendario.** Resta la funzione perché
-## la piazza la chiama quando cala la notte, e adesso risponde sempre di
-## no: la notte porta il buio e le mance grosse, non Borrelli.
+## **'A porta A.** La chiede la piazza quando cala la notte.
 func boss_stasera() -> bool:
-	return false
+	if boss_spawned or not shift_active:
+		return false
+	if randf() >= prob_borrelli_sera():
+		return false
+	borrelli_venuto()
+	return true
 
 
 # ---------------------------------------------------------------------------
@@ -4569,6 +4621,8 @@ func stato_partita() -> Dictionary:
 		"boss_da_fa": boss_da_fa,
 		"boss_fatte": boss_fatte,
 		"boss_parte_juorne": boss_parte_juorne,
+		"borrelli_ultimo_juorno": borrelli_ultimo_juorno,
+		"borrelli_chiamate": borrelli_chiamate,
 		"sveglia_n_galera": sveglia_n_galera,
 		"signora_posto": signora_posto,
 		"signora_data": signora_data,
@@ -4645,6 +4699,8 @@ func applica_stato(d: Dictionary) -> void:
 		if v.size() == Lotto.ESTRATTI:
 			lotto_stasera[str(r)] = v
 	boss_parte_juorne = int(d.get("boss_parte_juorne", 0))
+	borrelli_ultimo_juorno = int(d.get("borrelli_ultimo_juorno", 0))
+	borrelli_chiamate = int(d.get("borrelli_chiamate", 0))
 	sveglia_n_galera = bool(d.get("sveglia_n_galera", false))
 	boss_da_fa = []
 	for z in d.get("boss_da_fa", []):
@@ -4852,13 +4908,8 @@ func violenza(peso: float = 1.0) -> void:
 
 	if _qualcuno_ti_vede():
 		crimine(PUNTI_PER_STELLA * peso)
-		# **'A seconda porta 'e Borrelli (0.53).** Uno in divisa ti ha visto
-		# menare: quasi sempre parte la pattuglia, una volta su cento parte
-		# la telefonata. Se esce quella, le stelle si prendono lo stesso —
-		# il boss non è uno sconto — ma il cartello lo dice l'altra frase.
-		if forse_chiamma_borrelli(
-				"T'hanno visto menà. E stavota hanno chiammato 'O DUTTORE."):
-			return
+		# (Fino alla 0.62 qui c'era 'a seconda porta 'e Borrelli: dalla 0.63
+		# la violenza vista chiama solo i carabinieri.)
 		event_started.emit("T'hanno visto. 'E carabinieri stanno venenno.")
 		return
 
