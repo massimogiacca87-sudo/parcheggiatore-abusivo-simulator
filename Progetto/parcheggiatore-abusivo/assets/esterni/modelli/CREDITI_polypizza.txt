@@ -1,0 +1,35 @@
+File | Titolo | Autore | Licenza | Fonte
+res://assets/esterni/modelli/plastic_chair/Chair_Rlyhe93NNe.glb | Chair | Quaternius | CC0 1.0 | https://poly.pizza/m/Rlyhe93NNe
+res://assets/esterni/modelli/plastic_chair/Chair_kLViSk9EhX.glb | Chair | Quaternius | CC0 1.0 | https://poly.pizza/m/kLViSk9EhX
+res://assets/esterni/modelli/plastic_chair/Office_Chair_UfKvrZBK6C.glb | Office Chair | Quaternius | CC0 1.0 | https://poly.pizza/m/UfKvrZBK6C
+res://assets/esterni/modelli/traffic_cone/Traffic_Cone_lAx8JytxGD.glb | Traffic Cone | Quaternius | CC0 1.0 | https://poly.pizza/m/lAx8JytxGD
+res://assets/esterni/modelli/traffic_cone/Traffic_Cone_aDIrUbMbW3.glb | Traffic Cone | Quaternius | CC0 1.0 | https://poly.pizza/m/aDIrUbMbW3
+res://assets/esterni/modelli/traffic_cone/Road_Cone_ZPhinXAGtY.glb | Road Cone | smallbigsquare | CC0 1.0 | https://poly.pizza/m/ZPhinXAGtY
+res://assets/esterni/modelli/crate/Cube_Crate_YAghI6GBls.glb | Cube Crate | Quaternius | CC0 1.0 | https://poly.pizza/m/YAghI6GBls
+res://assets/esterni/modelli/crate/Crate_3VGWnZPXmG.glb | Crate | Quaternius | CC0 1.0 | https://poly.pizza/m/3VGWnZPXmG
+res://assets/esterni/modelli/crate/Fruit_Crate_aXulVWHOeV.glb | Fruit Crate | BlenderVoyage | CC0 1.0 | https://poly.pizza/m/aXulVWHOeV
+res://assets/esterni/modelli/trash_can/Trashcan_Small_i7HDuYDLkx.glb | Trashcan Small | Quaternius | CC0 1.0 | https://poly.pizza/m/i7HDuYDLkx
+res://assets/esterni/modelli/trash_can/Trashcan_Large_eYNKnGlhon.glb | Trashcan Large | Quaternius | CC0 1.0 | https://poly.pizza/m/eYNKnGlhon
+res://assets/esterni/modelli/trash_can/Trashcan_vlVx279xut.glb | Trashcan | Quaternius | CC0 1.0 | https://poly.pizza/m/vlVx279xut
+res://assets/esterni/modelli/scooter/Cartoony_Purple_Motorcycle_j20srJUjpB.glb | Cartoony Purple Motorcycle | AliceCassie | CC0 1.0 | https://poly.pizza/m/j20srJUjpB
+res://assets/esterni/modelli/utility_car/Police_Car_BwwnUrWGmV.glb | Police Car | Quaternius | CC0 1.0 | https://poly.pizza/m/BwwnUrWGmV
+res://assets/esterni/modelli/utility_car/Sports_Car_1mkmFkAz5v.glb | Sports Car | Quaternius | CC0 1.0 | https://poly.pizza/m/1mkmFkAz5v
+res://assets/esterni/modelli/utility_car/Sports_Car_OyqKvX9xNh.glb | Sports Car | Quaternius | CC0 1.0 | https://poly.pizza/m/OyqKvX9xNh
+res://assets/esterni/modelli/utility_car/Car_unqqkULtRU.glb | Car | Quaternius | CC0 1.0 | https://poly.pizza/m/unqqkULtRU
+res://assets/esterni/modelli/utility_car/SUV_xsMtZhBkxL.glb | SUV | Quaternius | CC0 1.0 | https://poly.pizza/m/xsMtZhBkxL
+res://assets/esterni/modelli/utility_car/VIP_Susanne_s_car_KIfFi9Vh0O.glb | VIP Susanne's car | hat_my_guy | CC0 1.0 | https://poly.pizza/m/KIfFi9Vh0O
+res://assets/esterni/modelli/utility_car/Stationwagon_vTTTjDoxhV.glb | Stationwagon | Kay Lousberg | CC0 1.0 | https://poly.pizza/m/vTTTjDoxhV
+res://assets/esterni/modelli/scooter/low_poly_scooter_awXCP7LUcz6.glb | low poly scooter | Thomas Saint Pierre (s1pierro) | CC-BY 3.0 | https://poly.pizza/m/awXCP7LUcz6
+res://assets/esterni/modelli/scooter/Scooter_fPLXByG4Vx5.glb | Scooter | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/fPLXByG4Vx5
+res://assets/esterni/modelli/scooter/Vespa_blGLclvvdEM.glb | Vespa | Jasmine Roberts | CC-BY 3.0 | https://poly.pizza/m/blGLclvvdEM
+res://assets/esterni/modelli/npc_animati/Man_HMnuH5geEG.glb | Man | Quaternius | CC0 1.0 | https://poly.pizza/m/HMnuH5geEG
+res://assets/esterni/modelli/npc_animati/Animated_Human_c3Ibh9I3udk.glb | Animated Human | Quaternius | CC0 1.0 | https://poly.pizza/m/c3Ibh9I3udk
+res://assets/esterni/modelli/npc_animati/Character_Animated_DgOCW9ZCRJ.glb | Character Animated | Quaternius | CC0 1.0 | https://poly.pizza/m/DgOCW9ZCRJ
+res://assets/esterni/modelli/npc_animati/Animated_Woman_qJ2gsTUBHL.glb | Animated Woman | Quaternius | CC0 1.0 | https://poly.pizza/m/qJ2gsTUBHL
+res://assets/esterni/modelli/npc_animati/Animated_Woman_nIItLV9nxS.glb | Animated Woman | Quaternius | CC0 1.0 | https://poly.pizza/m/nIItLV9nxS
+res://assets/esterni/modelli/npc_animati/Business_Man_JFrLIKqvCH.glb | Business Man | Quaternius | CC0 1.0 | https://poly.pizza/m/JFrLIKqvCH
+res://assets/esterni/modelli/npc_animati/Man_in_Suit_mQnGoME1ez.glb | Man in Suit | Quaternius | CC0 1.0 | https://poly.pizza/m/mQnGoME1ez
+res://assets/esterni/modelli/npc_animati/Farmer_7pn3R6hPvE.glb | Farmer | Quaternius | CC0 1.0 | https://poly.pizza/m/7pn3R6hPvE
+res://assets/esterni/modelli/npc_animati/Casual_Character_kZ3DmIoGip.glb | Casual Character | Quaternius | CC0 1.0 | https://poly.pizza/m/kZ3DmIoGip
+res://assets/esterni/modelli/npc_animati/Woman_Casual_jpKRgGDxhk.glb | Woman Casual | Quaternius | CC0 1.0 | https://poly.pizza/m/jpKRgGDxhk
+res://assets/esterni/modelli/npc_animati/Worker_Yg2bQZO6Hj.glb | Worker | Quaternius | CC0 1.0 | https://poly.pizza/m/Yg2bQZO6Hj

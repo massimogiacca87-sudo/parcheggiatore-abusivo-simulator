@@ -1,0 +1,27 @@
+File | Titolo | Autore | Licenza | Fonte
+Nota: file = anteprima HQ ufficiale Freesound (OGG ~192 kbps). L'originale lossless richiede login Freesound.
+res://assets/esterni/audio/scooter/450702_scooters_pass.ogg | scooters pass | kyles | CC0 | https://freesound.org/people/kyles/sounds/450702/
+res://assets/esterni/audio/scooter/3185_PassingMoped01_wav.ogg | PassingMoped01.wav | Pingel | CC0 | https://freesound.org/people/Pingel/sounds/3185/
+res://assets/esterni/audio/scooter/509522_Scooter_drive.ogg | Scooter drive | nickpursehouse | CC0 | https://freesound.org/people/nickpursehouse/sounds/509522/
+res://assets/esterni/audio/clacson_traffico/182474_car_horn_wav.ogg | car horn.wav | keweldog | CC0 | https://freesound.org/people/keweldog/sounds/182474/
+res://assets/esterni/audio/clacson_traffico/706221_very_long_car_horn_in_NYC.ogg | very long car horn in NYC | aisselles | CC0 | https://freesound.org/people/aisselles/sounds/706221/
+res://assets/esterni/audio/clacson_traffico/853102_Tram_bell_and_car_horn.ogg | Tram bell and car horn | ana.conser | CC0 | https://freesound.org/people/ana.conser/sounds/853102/
+res://assets/esterni/audio/clacson_traffico/553150_Car_Horn_Honk_01_Single_Distant_EXT_Day.ogg | Car Horn Honk 01- Single, Distant - EXT Day Brooklyn Street corner ambience.wav | Brett+Butter | CC0 | https://freesound.org/people/Brett+Butter/sounds/553150/
+res://assets/esterni/audio/clacson_traffico/457425_boedie_alfa_romeo_MiTo_honking_car_horn.ogg | boedie_alfa_romeo_MiTo_honking_car_horn.wav | boedie | CC0 | https://freesound.org/people/boedie/sounds/457425/
+res://assets/esterni/audio/monete/567478_coindrop_sample_wav.ogg | coindrop-sample.wav | egill.ian1 | CC0 | https://freesound.org/people/egill.ian1/sounds/567478/
+res://assets/esterni/audio/monete/710831_Glass_of_coins.ogg | Glass of coins | tbyr | CC0 | https://freesound.org/people/tbyr/sounds/710831/
+res://assets/esterni/audio/monete/558991_coins_falling_022_wav.ogg | coins-falling-022.wav | Gerent | CC0 | https://freesound.org/people/Gerent/sounds/558991/
+res://assets/esterni/audio/monete/327517_Throwing_coins_in_hand_OWI_wav.ogg | Throwing coins in hand OWI.wav | DavidFrbr | CC0 | https://freesound.org/people/DavidFrbr/sounds/327517/
+res://assets/esterni/audio/monete/444257_Coins_wav.ogg | Coins.wav | pinchos | CC0 | https://freesound.org/people/pinchos/sounds/444257/
+res://assets/esterni/audio/chiavi/266441_keys_jingling_and_door_opening.ogg | keys jingling and door opening | contramundum | CC0 | https://freesound.org/people/contramundum/sounds/266441/
+res://assets/esterni/audio/chiavi/827500_jingling_keys.ogg | jingling keys | joliestarr | CC0 | https://freesound.org/people/joliestarr/sounds/827500/
+res://assets/esterni/audio/chiavi/618539_Jingling_of_Keys.ogg | Jingling of Keys | Jarebear1223 | CC0 | https://freesound.org/people/Jarebear1223/sounds/618539/
+res://assets/esterni/audio/folla_voci_arrabbiate/727591_Cartoon_Small_Angry_Male_Crowd.ogg | Cartoon Small Angry Male Crowd | waterup380 | CC0 | https://freesound.org/people/waterup380/sounds/727591/
+res://assets/esterni/audio/folla_voci_arrabbiate/130328_Angry_Crowd.ogg | Angry Crowd | donut-kiss | CC0 | https://freesound.org/people/donut-kiss/sounds/130328/
+res://assets/esterni/audio/folla_voci_arrabbiate/537989_Argument_wav.ogg | Argument.wav | Ambientsoundapp | CC0 | https://freesound.org/people/Ambientsoundapp/sounds/537989/
+res://assets/esterni/audio/folla_voci_arrabbiate/402907_20170714_071458_Vietnamese_group_of_wome.ogg | 20170714-071458-Vietnamese_group_of_women_speaking_all_at_the_same_time.mp3 | timsippala | CC0 | https://freesound.org/people/timsippala/sounds/402907/
+res://assets/esterni/audio/folla_voci_arrabbiate/221670_Ich_koennt_kotzen_wav.ogg | Ich_koennt_kotzen.wav | tontoepfer | CC0 | https://freesound.org/people/tontoepfer/sounds/221670/
+res://assets/esterni/audio/scooter/448131_Vespa.ogg | Vespa | derjuli | CC0 | https://freesound.org/people/derjuli/sounds/448131/
+res://assets/esterni/audio/scooter/448129_Vespa.ogg | Vespa | derjuli | CC0 | https://freesound.org/people/derjuli/sounds/448129/
+res://assets/esterni/audio/scooter/828204_Small_Motorbike_Passing_By.ogg | Small Motorbike Passing By | IENBA | CC0 | https://freesound.org/people/IENBA/sounds/828204/
+res://assets/esterni/audio/scooter/484486_Motorbike_Passing_By.ogg | Motorbike Passing By | JPBILLINGSLEYJR | CC0 | https://freesound.org/people/JPBILLINGSLEYJR/sounds/484486/

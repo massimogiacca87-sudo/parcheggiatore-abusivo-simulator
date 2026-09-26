@@ -2,6 +2,14 @@
 
 Stato al **24 settembre 2026**, versione **v0.61 · 'O juoco, rifinito**.
 
+> **Aggiornamento 26/09/2026 — asset esterni pronti da implementare.**
+> Nel progetto ci sono ora 3 plugin attivi (`res://addons/`: ProtonScatter, Dialogic, LimboAI, versioni per 4.3)
+> e ~440 MB di asset CC0/open in `res://assets/esterni/` (modelli .glb, NPC animati, texture PBR, HDRI,
+> decal, shader, audio, UI Kenney), già importati e collaudati ma **non ancora usati dal gioco**.
+> Prima di toccarli leggere `res://assets/esterni/ASSET-ESTERNI.md` (cosa c'è, come si monta, 4 trappole:
+> export escluso, versione Godot, LimboAI sul web, pozzanghere solo su PC). Elenco file per file:
+> `res://assets/esterni/ELENCO-FILE-ESTERNI.txt`. Collaudo: `res://tools/test_asset_esterni/`.
+
 Questo documento è scritto per **chi apre la chat nuova** (cioè per me, senza
 memoria di questa). Si legge dall'alto: la sezione 1 dice cosa fare nei
 primi dieci minuti, il resto è il manuale.

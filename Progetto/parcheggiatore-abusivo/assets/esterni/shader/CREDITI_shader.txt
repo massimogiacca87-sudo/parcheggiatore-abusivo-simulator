@@ -1,0 +1,8 @@
+File | Autore | Licenza | Fonte | Note
+res://assets/esterni/shader/pozzanghere/rain_puddles_ripples_ssr.gdshader | shadecore_dev | CC0 | https://godotshaders.com/shader/rain-puddles-with-ripples-and-reflection/ | post-process spatial, va su mesh a schermo intero figlia della Camera3D
+res://assets/esterni/shader/pozzanghere/fullscreen_mesh.gd | shadecore_dev (adattato) | CC0 | stessa pagina | riscritto per Godot 4.3: l'originale usa @export_tool_button (solo 4.4+)
+res://assets/esterni/shader/vhs_grunge/vhs_scanline_glitch.gdshader | hailyn | CC0 | https://godotshaders.com/shader/vhs-scanline-glitch/ | canvas_item su ColorRect a schermo intero
+res://assets/esterni/shader/vhs_grunge/vhs_tape_effect.gdshader | blblblblb | CC0 | https://godotshaders.com/shader/vhs-tape-effect/ | canvas_item su ColorRect a schermo intero
+res://assets/esterni/shader/vhs_grunge/chromatic_aberration_vignette.gdshader | Ructoon | CC0 | https://godotshaders.com/shader/chromatic-aberration-vignette/ | canvas_item su ColorRect a schermo intero
+res://assets/esterni/shader/vhs_grunge/film_grain.gdshader | mujtaba-io | CC0 | https://godotshaders.com/shader/film-grain-shader/ | canvas_item su ColorRect a schermo intero
+res://assets/esterni/shader/lente_sporca/dirty_lens.gdshader | scritto per questo progetto | CC0 | - | GodotShaders non ha uno shader "dirty lens": questo è originale

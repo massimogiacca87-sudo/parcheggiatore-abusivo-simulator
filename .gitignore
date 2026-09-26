@@ -14,7 +14,5 @@ Build/
 # file temporanei di Claude (patch in arrivo)
 _claude_tmp/
 
-# asset esterni CC0/open scaricati in assets/: i .glb qui vanno versionati (sono piccoli)
-!/assets/models/
-!assets/models/**/*.glb
-!assets/materials/decals/graffiti/*.glb
+# asset esterni CC0/open (res://assets/esterni): i .glb qui vanno versionati (sono piccoli)
+!Progetto/parcheggiatore-abusivo/assets/esterni/**/*.glb
