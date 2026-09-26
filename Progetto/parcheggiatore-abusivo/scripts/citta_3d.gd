@@ -407,11 +407,19 @@ func _ready() -> void:
 	# posto suo.
 	Ostacoli.censisci(self)
 	get_tree().create_timer(1.5).timeout.connect(_ricensisci)
+	# Le macchie d'olio nei posti auto (0.62): un secondo dopo, quando le
+	# piazze hanno messo tutti i posti.
+	get_tree().create_timer(1.0).timeout.connect(_macchie_dint_ê_posti)
 
 
 func _ricensisci() -> void:
 	if is_inside_tree():
 		Ostacoli.censisci(self)
+
+
+func _macchie_dint_ê_posti() -> void:
+	if is_inside_tree():
+		RobbaEsterna.macchie_posti(self)
 
 
 # ---------------------------------------------------------------------------
@@ -2724,17 +2732,58 @@ func _build_vase() -> void:
 ##
 ## Vanno appesi al **muro giusto**: `faccia` è la normale che esce dalla
 ## facciata, quindi lo split sta un pelo fuori dal muro e guarda in fuori.
+##
+## **'O condizionatore ca era 'nu palazzo** (0.62). Fino alla 0.61 qui si
+## appendevano i modelli `condizionatore` e `condizionatore2`, ricavati da
+## `tools/build_arredo_urbano.py` da un pacchetto di pezzi di città: lo
+## script aveva preso il nodo giusto (`Split_Ac`, `Window_AC`) **col palazzo
+## in miniatura di cui faceva parte** — muri di mattoni, finestre, piante e
+## cartelloni, 182 e 235 superfici. In città si vedevano come casette con i
+## manifesti della pizza appese ai muri (le ha trovate la foto delle
+## colature), e ogni superficie era una chiamata di disegno in più per ogni
+## quadretto: migliaia. Adesso lo split si costruisce qui: la scatola
+## bianca, la griglia della ventola, le due staffe. Quattro pezzi, gli
+## stessi colori per tutta la città, quattro gruppi.
+const SPLIT_GRANDE := Vector3(0.80, 0.56, 0.30)   # largo, alto, profondo
+const SPLIT_PICCOLO := Vector3(0.62, 0.46, 0.26)
+
+
 func _condizionatore(punto: Vector3, faccia: Vector3,
 		rng: RandomNumberGenerator) -> void:
 	if rng.randf() > 0.34:
 		return
-	var quale: String = "condizionatore"
-	if rng.randf() >= 0.6:
-		quale = "condizionatore2"
-	# forward(θ) = (−sinθ, 0, −cosθ)
-	var giro: float = atan2(-faccia.x, -faccia.z)
-	_pezzo_modello(quale, punto + faccia * 0.18, "split",
-		giro + rng.randf_range(-0.08, 0.08))
+	var grande: bool = rng.randf() < 0.6
+	# Il terzo numero del caso resta pescato come prima (era lo storto dello
+	# split), così la sequenza della città non si sposta di una virgola.
+	var _storto: float = rng.randf_range(-0.08, 0.08)
+	# **'O split appiso a ll'aria** (0.62). Dove dietro non c'è muro
+	# (l'ultima finestra di una facciata corta, a un metro dallo spigolo)
+	# non si mette.
+	if not dint_ô_palazzo(punto - faccia * 0.12, 0.0):
+		return
+	var dim: Vector3 = SPLIT_GRANDE if grande else SPLIT_PICCOLO
+	var lungo := Vector3(faccia.z, 0.0, -faccia.x)
+	var c: Vector3 = punto + faccia * (0.08 + dim.z * 0.5) + Vector3(0, dim.y * 0.5, 0)
+	_pezzo(c, _spessa(faccia, dim.x, dim.y, dim.z),
+		Tex.flat(Color(0.85, 0.85, 0.82), 0.55), "split_corpo")
+	# La griglia della ventola, sul davanti e spostata di lato.
+	var g: float = dim.y * 0.78
+	_pezzo(c + faccia * (dim.z * 0.5 + 0.006) + lungo * (dim.x * 0.18),
+		_spessa(faccia, g, g, 0.012), Tex.flat(Color(0.20, 0.21, 0.22), 0.7),
+		"split_grata")
+	# Le due staffe di ferro, dal muro a sotto la scatola.
+	for k in [-1.0, 1.0]:
+		_pezzo(punto + faccia * (0.08 + dim.z * 0.5) + lungo * (dim.x * 0.36 * k)
+			+ Vector3(0, -0.02, 0), _spessa(faccia, 0.04, 0.04, dim.z + 0.16),
+			Tex.flat(Color(0.16, 0.16, 0.17), 0.6, 0.4), "split_staffa")
+	# (0.62) Dove sta lo split, per la colatura d'acqua sotto
+	# (`RobbaEsterna`). La quota è quella del muro, senza la collina: la
+	# aggiunge `_batched`, come a tutto l'arredo.
+	_split_posti.append([punto, faccia])
+
+
+## Gli split appesi: `[punto sul muro, normale verso fuori]`.
+var _split_posti: Array = []
 
 
 # ---------------------------------------------------------------------------
@@ -6757,6 +6806,9 @@ const QUADRETTI := {
 	"bottega_": [55.0, null],
 	"vaso_": [55.0, null],
 	"giara_": [55.0, null],
+	# 'E decalcomanie (0.62): tombini, macchie, colature, graffiti. Piatte,
+	# senza ombra e oltre i sessanta metri non si vedono più.
+	"decal_": [60.0, null],
 }
 const LATO_QUADRETTO: float = 32.0
 
@@ -6802,6 +6854,10 @@ func _gruppo_mm(nome: String, mesh: Mesh, trasf: Array, mat: Material,
 	nodo.name = nome
 	nodo.multimesh = mm
 	nodo.position = centro
+	# Una decalcomania è un foglio a due centimetri dalla superficie: se
+	# facesse ombra, la farebbe sulla superficie stessa (0.62).
+	if nome.begins_with("Gruppo_decal_"):
+		nodo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	if da > 0.0:
 		nodo.visibility_range_begin = da
 		nodo.visibility_range_begin_margin = 4.0
@@ -6919,6 +6975,7 @@ func _flush_batch() -> void:
 ## `robba_panda.gd`, che li divide con le bancarelle del giorno di mercato.
 const RobbaPanda := preload("res://scripts/robba_panda.gd")
 const RobbaPsx := preload("res://scripts/robba_psx.gd")
+const RobbaEsterna := preload("res://scripts/robba_esterna.gd")
 
 
 ## Un pezzo di Pandazole nel suo gruppo. `vista` > 0 spegne il gruppo oltre
@@ -7075,6 +7132,10 @@ func _build_arredo_novo() -> void:
 	# **'A robba 'e cchiù** (0.60): il secondo giro del pacchetto PSX. Si
 	# mette per ultima, col suo seme, dove c'è posto (vedi `robba_psx.gd`).
 	RobbaPsx.metti(self)
+	# **'A robba 'e fore** (0.62): gli asset esterni che il gioco non aveva
+	# già — decalcomanie, motorini, sedie, coni… Per ultima, col suo seme
+	# (vedi `robba_esterna.gd`).
+	RobbaEsterna.metti(self)
 	_build_personagge_nove()
 
 

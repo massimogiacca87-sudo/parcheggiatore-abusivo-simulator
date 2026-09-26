@@ -64,8 +64,12 @@ PEZZI = [
     # --- 'E condizionature. Sono la cosa più napoletana di tutto il
     # pacchetto: una facciata senza split appesi storti non è una
     # facciata italiana degli anni Duemila.
-    ("Split_Ac",               "condizionatore", 0.85, 1200),
-    ("Window_AC",              "condizionatore2", 0.60, 1000),
+    # (0.62) TOLTI: "Split_Ac" e "Window_AC" nel pacchetto sono appesi a
+    # un palazzo in miniatura, e l'esportazione si portava dietro tutto il
+    # palazzo (182 e 235 superfici). Lo split adesso lo costruisce
+    # `citta_3d._condizionatore` con quattro scatole.
+    # ("Split_Ac",               "condizionatore", 0.85, 1200),
+    # ("Window_AC",              "condizionatore2", 0.60, 1000),
 ]
 
 

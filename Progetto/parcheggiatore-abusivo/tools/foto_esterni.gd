@@ -32,6 +32,34 @@ const FILE := {
 		"npc_animati/Man_HMnuH5geEG", "npc_animati/Man_in_Suit_mQnGoME1ez",
 		"npc_animati/Woman_Casual_jpKRgGDxhk", "npc_animati/Character_Animated_DgOCW9ZCRJ",
 		"npc_animati/Animated_Human_c3Ibh9I3udk"],
+	# Quelli che il gioco ha già (con la @) accanto a quelli nuovi: molti
+	# pezzi della biblioteca sono gli stessi pacchetti Quaternius che il capo
+	# aveva dato nella 0.59, e un doppione non si mette.
+	"confronto_motorini": ["@motorino", "@motorino_fermo", "@scooter",
+		"scooter/Vespa_blGLclvvdEM", "scooter/Scooter_fPLXByG4Vx5",
+		"scooter/low_poly_scooter_awXCP7LUcz6",
+		"scooter/Cartoony_Purple_Motorcycle_j20srJUjpB"],
+	"confronto_auto": ["@car_economica", "utility_car/Car_unqqkULtRU",
+		"@car_lusso", "utility_car/SUV_xsMtZhBkxL", "@car_sportiva2",
+		"utility_car/Sports_Car_1mkmFkAz5v", "@car_coupe2",
+		"utility_car/Sports_Car_OyqKvX9xNh", "utility_car/Police_Car_BwwnUrWGmV",
+		"utility_car/Stationwagon_vTTTjDoxhV", "utility_car/VIP_Susanne_s_car_KIfFi9Vh0O"],
+	"confronto_arredo": ["@cono", "@cono2", "@cono_3", "traffic_cone/Traffic_Cone_lAx8JytxGD",
+		"traffic_cone/Traffic_Cone_aDIrUbMbW3", "traffic_cone/Road_Cone_ZPhinXAGtY",
+		"@sedia", "@sedia_bar", "plastic_chair/Chair_kLViSk9EhX", "@cestino",
+		"@bidone", "trash_can/Trashcan_vlVx279xut", "@cassette",
+		"crate/Fruit_Crate_aXulVWHOeV"],
+}
+
+## Misura a cui si porta un modello nella foto (la lunghezza, o l'altezza
+## per quelli con la `^`): alcuni file sono in centimetri e riempiono lo
+## schermo.
+const MISURA := {
+	"scooter/Vespa_blGLclvvdEM": 1.8, "scooter/Scooter_fPLXByG4Vx5": 1.75,
+	"scooter/low_poly_scooter_awXCP7LUcz6": 1.75,
+	"scooter/Cartoony_Purple_Motorcycle_j20srJUjpB": 1.85,
+	"@motorino": 1.85, "@motorino_fermo": 1.85, "@scooter": 1.85,
+	"utility_car/Stationwagon_vTTTjDoxhV": 4.5,
 }
 
 var _t := 0.0
@@ -51,6 +79,11 @@ func _process(d: float) -> void:
 	if not _pulito:
 		_pulito = true
 		get_tree().paused = false
+		GameManager.giornata = 3
+		GameManager.start_shift()
+		GameManager.tipo_giornata = "normale"
+		GameManager.intro_active = false
+		GameManager.shift_time_left = GameManager.shift_duration * 0.84
 		_cam = Camera3D.new()
 		add_child(_cam)
 		_cam.current = true
@@ -62,6 +95,10 @@ func _process(d: float) -> void:
 	var i := _n / 2
 	if i >= _gruppi.size():
 		get_tree().quit()
+		return
+	var solo: String = OS.get_environment("SOLO")
+	if solo != "" and not solo.split(",").has(str(_gruppi[i])):
+		_n += 2
 		return
 	if _n % 2 == 0:
 		_banco(str(_gruppi[i]))
@@ -76,17 +113,27 @@ func _banco(gruppo: String) -> void:
 	_palco = Node3D.new()
 	get_tree().root.add_child(_palco)
 	var lista: Array = FILE[gruppo]
-	var passo := 1.3 if gruppo == "arredo" else (2.2 if gruppo == "motorini" \
-		else (5.0 if gruppo == "auto" else 1.4))
+	var passo := 1.3 if gruppo.ends_with("arredo") else \
+		(2.2 if gruppo.ends_with("motorini") else \
+		(5.0 if gruppo.ends_with("auto") else 1.4))
 	print("=== %s ===" % gruppo)
 	for i in lista.size():
-		var path: String = D + str(lista[i]) + ".glb"
-		var res = load(path)
-		if res == null:
-			print("  NUN SE CARICA: ", path)
+		var voce: String = str(lista[i])
+		var n: Node3D = null
+		if voce.begins_with("@"):
+			n = Models.spawn(voce.substr(1))
+		else:
+			var res = load(D + voce + ".glb")
+			if res != null:
+				n = (res as PackedScene).instantiate()
+		if n == null:
+			print("  NUN SE CARICA: ", voce)
 			continue
-		var n: Node3D = (res as PackedScene).instantiate()
 		_palco.add_child(n)
+		if MISURA.has(voce):
+			var b0 := Models._aabb_of(n)
+			if b0.size.z > 0.001:
+				n.scale = Vector3.ONE * (float(MISURA[voce]) / b0.size.z)
 		var x: float = 600.0 + (float(i) - float(lista.size() - 1) * 0.5) * passo
 		n.global_position = Vector3(x, 40.0, 600.0)
 		var box := Models._aabb_of(n)
@@ -118,7 +165,7 @@ func _banco(gruppo: String) -> void:
 	amb.environment = env
 	_palco.add_child(amb)
 	var largo: float = float(lista.size() + 1) * passo
-	var alto: float = 1.2 if gruppo != "auto" else 1.6
+	var alto: float = 1.6 if gruppo.ends_with("auto") else 1.2
 	_cam.fov = 50.0
 	var dist: float = largo * 0.95 + 2.0
 	_cam.look_at_from_position(Vector3(600.0, 40.0 + alto + dist * 0.25, 600.0 + dist),

@@ -110,10 +110,22 @@ def _olio(im: Image.Image) -> Image.Image:
 
 
 def _sporca(im: Image.Image) -> Image.Image:
+    """Mezza tinta di muschio in meno, e i bordi che sfumano: il ritaglio
+    della colonna centrale taglia la colatura a metà, e un rettangolo con
+    lo spigolo netto su un muro si vede da lontano (prima foto della 0.62).
+    L'alfa si spegne verso i lati (a campana) e negli ultimi due quinti in
+    basso, dove l'acqua si asciuga."""
     a = np.asarray(im).astype(np.float32)
     lum = (a[..., 0] * 0.3 + a[..., 1] * 0.59 + a[..., 2] * 0.11)
     for k in range(3):
         a[..., k] = a[..., k] * 0.45 + lum * 0.55 * (0.92 if k == 2 else 1.0)
+    h, w = lum.shape
+    u = np.linspace(-1.0, 1.0, w)[None, :]
+    v = np.linspace(0.0, 1.0, h)[:, None]
+    lati = np.clip(1.0 - u ** 2, 0.0, 1.0) ** 1.5
+    sotto = np.clip((1.0 - v) / 0.4, 0.0, 1.0)
+    sopra = np.clip(v / 0.04, 0.0, 1.0)
+    a[..., 3] *= lati * sotto * sopra * 1.25
     return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA")
 
 

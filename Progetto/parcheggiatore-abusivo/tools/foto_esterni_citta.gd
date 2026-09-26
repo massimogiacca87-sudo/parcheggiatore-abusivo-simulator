@@ -22,9 +22,15 @@ const SCATTI := [
 	["asfalto_marina", Vector3(30.0, 1.6, 93.2), Vector3(44.0, 0.0, 96.5)],
 	["asfalto_alto", Vector3(118.0, 9.0, 58.0), Vector3(128.0, 0.0, 64.0)],
 	["muffa", "cerca", "_cerca_muffa"],
+	["facciate_marina", Vector3(40.0, 1.7, 98.4), Vector3(47.0, 6.5, 92.0)],
+	["facciate_spacca", Vector3(60.0, 1.7, 77.6), Vector3(67.0, 5.5, 74.0)],
 	["tombino", "cerca", "_cerca_tombino"],
 	["olio", "cerca", "_cerca_olio"],
 	["colatura", "cerca", "_cerca_colatura"],
+	["umido", "cerca", "_cerca_umido"],
+	["colatura_vicino", "cerca", "_cerca_colatura_vicino"],
+	["split", "cerca", "_cerca_split"],
+	["split_mm", "cerca", "_cerca_split_mm"],
 	["graffito", "cerca", "_cerca_graffito"],
 	["gomme", "cerca", "_cerca_gomme"],
 	["motorini", "cerca", "_cerca_motorini"],
@@ -210,7 +216,114 @@ func _cerca_olio() -> Array:
 
 
 func _cerca_colatura() -> Array:
-	return _guarda_gruppo("Gruppo_decal_colatura_split", 4.0, 1.7, 1.2, Vector3(30, 0, 70))
+	return _dal_basso("Gruppo_decal_colatura_split", Vector3(30, 0, 70))
+
+
+func _cerca_colatura_vicino() -> Array:
+	var tutte: Array = _istanze("Gruppo_decal_colatura_split")
+	for t in tutte:
+		var fuori: Vector3 = (t as Transform3D).basis.z.normalized()
+		var o: Vector3 = (t as Transform3D).origin
+		if not Citta.dint_ô_palazzo(o - fuori * 0.12, 0.0):
+			continue
+		var lato := Vector3(fuori.z, 0, -fuori.x)
+		if not Citta.dint_ô_palazzo(o - fuori * 0.12 + lato * 2.0, 0.0) \
+				or not Citta.dint_ô_palazzo(o - fuori * 0.12 - lato * 2.0, 0.0):
+			continue
+		if o.x < 5.0 or o.z < 5.0:
+			continue
+		var libero := true
+		for k in range(1, 7):
+			if Citta.dint_ô_palazzo(Vector3(o.x, 0, o.z) + fuori * float(k) * 0.5, 0.0):
+				libero = false
+		if not libero:
+			continue
+		print("  colatura a %s fuori %s" % [str(o), str(fuori)])
+		return [o + fuori * 7.0 + Vector3(0, -1.5, 0), o + Vector3(0, 0.6, 0)]
+	return []
+
+
+## Uno split preso dalla lista della città, guardato di fronte da tre metri
+## e mezzo alla stessa altezza: si vedono lui e la colatura sotto.
+func _cerca_split() -> Array:
+	var n := 0
+	for v in _citta._split_posti:
+		var pp: Vector3 = v[0]
+		var ff: Vector3 = v[1]
+		var lato := Vector3(ff.z, 0, -ff.x)
+		if pp.x < 20.0 or pp.z < 20.0 or pp.y > 9.0:
+			continue
+		var libero := true
+		for k in range(1, 9):
+			if Citta.dint_ô_palazzo(Vector3(pp.x, 0, pp.z) + ff * float(k) * 0.5, 0.0):
+				libero = false
+		if not libero or not Citta.dint_ô_palazzo(pp - ff * 0.12 + lato * 1.5, 0.0) \
+				or not Citta.dint_ô_palazzo(pp - ff * 0.12 - lato * 1.5, 0.0):
+			continue
+		n += 1
+		if n < 3:
+			continue
+		print("  split a %s fuori %s" % [str(pp), str(ff)])
+		return [pp + ff * 3.5 + Vector3(0, -0.4, 0), pp + Vector3(0, -0.7, 0)]
+	return []
+
+
+func _cerca_split_mm() -> Array:
+	var nomi := {}
+	for c in _citta.get_children():
+		if str(c.name).begins_with("Gruppo_split"):
+			var nm: String = str(c.name)
+			nomi[nm.substr(0, nm.find("_q"))] = true
+	print("  gruppi split: ", nomi.keys())
+	var tutte: Array = _istanze("Gruppo_split_0_q")
+	print("  istanze split: ", tutte.size())
+	for t in tutte:
+		var o: Vector3 = (t as Transform3D).origin
+		if o.x < 20.0 or o.z < 20.0:
+			continue
+		var f: Vector3 = -(t as Transform3D).basis.z.normalized()
+		var libero := true
+		for k in range(1, 9):
+			if Citta.dint_ô_palazzo(Vector3(o.x, 0, o.z) + f * float(k) * 0.5, 0.0):
+				libero = false
+		if not libero:
+			f = -f
+			libero = true
+			for k in range(1, 9):
+				if Citta.dint_ô_palazzo(Vector3(o.x, 0, o.z) + f * float(k) * 0.5, 0.0):
+					libero = false
+		if not libero:
+			continue
+		print("  split mm a %s" % str(o))
+		return [o + f * 3.5 + Vector3(0, 0.2, 0), o + Vector3(0, -0.3, 0)]
+	return []
+
+
+func _cerca_umido() -> Array:
+	return _dal_basso("Gruppo_decal_colatura_muro", Vector3(20, 0, 110))
+
+
+## Una cosa appesa al muro, vista dalla strada: l'occhio sta a un metro e
+## settanta da terra, dall'altra parte della strada, e guarda in su.
+func _dal_basso(prefisso: String, vicino: Vector3) -> Array:
+	var tutte: Array = _istanze(prefisso)
+	if tutte.is_empty():
+		return []
+	tutte.sort_custom(func(a, b): return (a as Transform3D).origin.distance_to(vicino) \
+		< (b as Transform3D).origin.distance_to(vicino))
+	for t in tutte:
+		var p: Vector3 = (t as Transform3D).origin
+		var fuori: Vector3 = (t as Transform3D).basis.z.normalized()
+		var terra := Vector3(p.x, 0.0, p.z) + fuori * 0.3
+		var lontano := 1.0
+		while lontano < 12.0 and not Citta.dint_ô_palazzo(terra + fuori * (lontano + 0.6), 0.0):
+			lontano += 0.5
+		if lontano < 6.0:
+			continue
+		var occhio: Vector3 = terra + fuori * (lontano - 0.5)
+		occhio.y = 1.7 + (p.y - Vector3(p.x, 0, p.z).y) * 0.0
+		return [occhio, p]
+	return []
 
 
 func _cerca_graffito() -> Array:
