@@ -6,10 +6,17 @@ extends CharacterBody3D
 ## e ti RIPRENDE — col telefonino in mano — e ogni volta che ti raggiunge il
 ## sospetto dei vigili schizza.
 ##
-## Come si vince: NON menandolo. Bisogna scappare e fumarsi una sigaretta
-## finché non si sfoga (la "furia" scende), e quando finalmente si ferma
-## bisogna parlargli e trovare la risposta giusta. Le altre tre lo fanno
+## Come si vince: NON menandolo — e dalla 0.63 non si può proprio: ti sta
+## riprendendo col telefonino, e pugni, mazze e pistole non vanno a segno
+## (lo fanno solo arrabbiare di più, e il video gira). Bisogna **fare finta
+## di niente**: una sigaretta, un caffè, e stargli lontano, finché non si
+## sfoga (la "furia" scende). Quando finalmente si ferma, gli si parla e
+## gli si spiega che è per le criature. Le altre risposte lo fanno
 ## ripartire più incazzato di prima.
+##
+## Quando arriva lo decide il GameManager (`boss_stasera` e
+## `forse_chiamma_borrelli`): la sera, o quando il vigile chiama i
+## carabinieri.
 ##
 ## Se in assets/models/ esiste "borrelli" viene usato quel modello al posto
 ## di questo, che è comunque una caricatura, non un ritratto.
@@ -38,6 +45,10 @@ const FURIA_MAX: float = 100.0
 const FURIA_TALK_THRESHOLD: float = 34.0 # sotto questa soglia si ferma e ascolta
 const FURIA_DECAY: float = 2.8           # al secondo, solo scappando
 const FURIA_DECAY_SMOKING: float = 11.0  # al secondo, mentre ti fumi 'na sigaretta
+## **Fa' finta 'e niente, ma luntano** (0.63). Sigaretta o caffè ti fanno
+## sembrare uno in pausa, ma se gli stai addosso col telefonino in faccia
+## la scena resta la stessa: vicino, la furia scende a meno della metà.
+const FURIA_DECAY_CALMO_VICINO: float = 4.5
 ## Scappare da solo non basta: senza fumare la furia si ferma qui sopra, e
 ## la soglia del dialogo resta irraggiungibile. Prima bastava aspettare 24
 ## secondi e lui si calmava da solo — così l'incontro si risolveva senza che
@@ -141,7 +152,8 @@ func setup(entry: Vector3, leave: Vector3) -> void:
 	_say(SAY_ARRIVE)
 	SoundManager.play("fischio_vigile", -3.0, 0.85)
 	GameManager.screen_shake.emit(0.5)
-	GameManager.event_started.emit("È ARRIVATO BORRELLI! SCAPPA E FATTE 'NA SIGARETTA!")
+	GameManager.event_started.emit(
+		"È ARRIVATO BORRELLI! Fa' finta 'e niente: sigaretta, cafè, e statte luntano.")
 	GameManager.boss_state_changed.emit(furia, true)
 	# Da adesso il cronometro del turno è fermo: si finisce quando finisce lui.
 	GameManager.start_boss_phase()
@@ -451,14 +463,13 @@ func _get_player() -> Node3D:
 ## tranquillo a fumare: uno che si fuma 'na sigaretta non sta lavorando.
 func _update_furia(delta: float) -> void:
 	var p := _get_player()
-	var smoking: bool = p != null and p.get("is_smoking") == true
 	var far_enough: bool = p == null \
 		or global_position.distance_to(p.global_position) > FURIA_SAFE_DISTANCE
 
 	var rate := 0.0
 	var floor_value := 0.0
-	if smoking:
-		rate = FURIA_DECAY_SMOKING # la sigaretta lo disarma comunque
+	if fa_finta_e_niente():
+		rate = FURIA_DECAY_SMOKING if far_enough else FURIA_DECAY_CALMO_VICINO
 	elif far_enough:
 		rate = FURIA_DECAY
 		floor_value = FURIA_FLOOR_NO_SMOKE # ma da solo non scende mai abbastanza
@@ -476,6 +487,16 @@ func _update_furia(delta: float) -> void:
 		_say(SAY_CALM)
 		SoundManager.play("pop", -6.0, 0.7)
 		GameManager.event_started.emit("Borrelli s'è calmato: vai e PARLAGLI (E)")
+
+
+## **'A sigaretta o 'o cafè** (0.63): le due cose che fa uno del quartiere
+## in pausa. Il caffè vale per tutto il quarto di minuto della sua spinta
+## (`GameManager.caffe_boost`), da tasca o al banco.
+func fa_finta_e_niente() -> bool:
+	var p := _get_player()
+	if p != null and p.get("is_smoking") == true:
+		return true
+	return GameManager.caffe_boost > 0.0
 
 
 ## Sta dentro casa: Borrelli si ferma dov'e' e la furia scende come se ti
@@ -540,6 +561,11 @@ func _step_toward(target: Vector3, speed: float, delta: float) -> void:
 	t.y = global_position.y
 	var before := global_position
 	global_position = Passo.verso(self, t, speed * delta)
+	# **'A collina** (0.63): adesso nasce vicino a te, anche al Vomero, e
+	# senza questo camminava dentro al terrapieno.
+	var y_giusta: float = Collina.alzata(global_position.x, global_position.z)
+	if not GameManager.dentro_casa:
+		global_position.y = move_toward(global_position.y, y_giusta, 6.0 * delta)
 	_face_toward(t)
 	_animate_walk(global_position.distance_to(before))
 
@@ -579,7 +605,7 @@ func get_interact_prompt(_from_position: Vector3) -> String:
 	if state == State.WAITING_TALK:
 		return "[E] parla cu Borrelli"
 	if state == State.CHASING or state == State.ARRIVING:
-		return "È troppo incazzato per ragionare — scappa e fumati 'na sigaretta"
+		return "È troppo incazzato pe' ragiona' — sigaretta, cafè, e statte luntano"
 	return ""
 
 
@@ -643,21 +669,29 @@ func answer(index: int) -> void:
 		_answered = false
 
 
-## Menarlo è la cosa peggiore: non lo ferma, lo raddoppia.
+## **Nun se pò tuccà** (0.63). Il capo: *"Per battere Borrelli non
+## funzionano le armi, perché ti riprende col telefono e non puoi
+## picchiarlo."* Prima il colpo arrivava (si vedeva la reazione) e gli
+## aumentava solo la furia. Adesso non arriva proprio: si scansa col
+## telefonino alzato, e ogni tentativo finisce nel video — furia su,
+## sospetto su, e nessun colpo a segno. Vale per pugni, mazze e pistole:
+## passano tutti di qua.
+const SAY_SCANSA := ["STO RIPRENNENNO TUTTO!", "NUN ME TUCCÀ! È TUTTO 'N DIRETTA!",
+	"AGGRESSIONE! AVITE VISTO TUTTI!", "BRAVO, FALLO N'ATA VOTA. 'A GENTE VEDE."]
+const SAY_TENTATIVO := "Nun 'o puo' tuccà: te sta riprennenno."
+
+
 func receive_punch(_danno: int = 1) -> void:
-	# **'A reazione, no 'o blocco.** Il colpo si vede addosso (clip
-	# `Hit_Chest`/`Hit_Head` sopra alla locomozione) ma non toglie il
-	# controllo: vedi `Animator.reagisci_colpo`.
-	if _anim != null and _anim.has_method("reagisci_colpo"):
-		_anim.reagisci_colpo(randf() < 0.4)
-	GameManager.register_punch()
+	SoundManager.vuoto()
 	GameManager.report_risky_action(25.0)
-	SoundManager.pugno(0.0)
-	GameManager.screen_shake.emit(0.7)
-	_say(SAY_PUNCHED)
+	GameManager.screen_shake.emit(0.3)
+	_say(SAY_SCANSA[randi() % SAY_SCANSA.size()])
+	GameManager.avvisa_strada(SAY_TENTATIVO)
 	furia = minf(FURIA_MAX, furia + FURIA_ON_PUNCH)
 	GameManager.boss_state_changed.emit(furia, true)
 	if state == State.WAITING_TALK or state == State.TALKING:
+		if GameManager.dialogo_con == self:
+			GameManager.dialogo_con = null
 		GameManager.boss_dialogue_closed.emit()
 		state = State.CHASING
 

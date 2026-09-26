@@ -28,7 +28,7 @@ const STEPS := [
 	["4. E po' 'e ccose 'e fianco", "C", "'E stemme se svitano ('E). 'E signore se\nborzeggiano (accuóvate cu 'o C e clicca). E ce\nstanno 'o pallone, 'o zaino (I) e seje manifeste\nannascunnute 'a fotografà."],
 	["5. Vide 'e nun murì", "X", "Chiunque se stenne 'e cazzotte. Si 'e HP toie\nfenisceno, vaje 'o spitale — e quanno mine a\nquaccheduno, 'ncoppa vide 'e HP suoje."],
 	["6. 'E stelle", "—", "Mine â gente pe' niente? 'Ncoppa a destra\ns'appicciano 'e stelle e veneno 'e carabinieri.\nVanno chiano: curre, annascuónnete, e se ne\nvanno. Si t'acchiappano, mena p''e te sciògliere."],
-	["7. Se fatica sulo 'n piazza", "M", "'E machine arrivano SULO dint'â piazza toia. Cu M\ns'arape 'a chiantina e p''e strade ce stanno 'e\ncartielle. E 'a notte arriva Borrelli."],
+	["7. Se fatica sulo 'n piazza", "M", "'E machine arrivano SULO dint'â piazza toia. Cu M\ns'arape 'a chiantina e p''e strade ce stanno 'e\ncartielle. E quacche sera arriva Borrelli: nun 'o\ntuccà, fa' finta 'e niente (sigaretta e cafè)."],
 	["8. Nun tiene niente", "—", "Nè sorde, nè sigarette, nè gilet: tutto s''adda\ncumprà. 'E ssigarette 'o tabaccaio, 'e ffierre 'o\nferraro — sta in fondo a 'nu vico ciec' 'e ll'est."],
 	["9. 'E ppiazze se pigliano", "E", "S'accatta (€1000 + €50 'o juorno) o s''a piglie a\nmazzate: cu 'e mmane spuoglie nun ce prove manco.\nE ogne piazza ca tiene, 'o prossimo è cchiù tuosto."],
 	["10. Parla cu tuttuquante", "E", "Cu 'a gente se parla (E), e pure cu 'e ccose:\nfuntanelle, banche d''o mercato, panchine — e\n'nnanz'â Maronna te faje 'o segno d''a croce."],

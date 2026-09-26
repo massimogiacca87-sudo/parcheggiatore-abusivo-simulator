@@ -1370,7 +1370,9 @@ func _throw_punch() -> void:
 			and global_position.distance_to(current_target.global_position) \
 				<= portata:
 		current_target.receive_punch(danno)
-		GameManager.colpo_a_segno.emit(danno)
+		# Borrelli non si tocca (0.63): il colpo non va a segno.
+		if not current_target.is_in_group("borrelli"):
+			GameManager.colpo_a_segno.emit(danno)
 		if danno > 1:
 			SoundManager.pugno(-1.0)
 			GameManager.add_heat(GameManager.arma_calore() * 0.35)
@@ -1415,7 +1417,8 @@ func _spara(danno: int, portata: float) -> void:
 	ArmaFp.scia(get_parent(), da_bocca, fine, preso)
 	if preso:
 		c.receive_punch(danno)
-		GameManager.colpo_a_segno.emit(danno)
+		if not (c as Node).is_in_group("borrelli"):
+			GameManager.colpo_a_segno.emit(danno)
 
 
 ## Mentre si dirige un'auto, il player resta fermo sul posto (WASD passa al

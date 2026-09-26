@@ -2727,7 +2727,36 @@ func _check_boss() -> void:
 	GameManager.boss_spawned = true
 	var boss = BorrelliScene.new()
 	add_child(boss)
-	boss.setup(_glob(entry_point), _glob(exit_point))
+	boss.setup(_nasce_borrelli(), _glob(exit_point))
+
+
+## **Addò compare** (0.63). Fino alla 0.62 nasceva sempre all'ingresso
+## della piazza di casa: se lo chiamava il vigile del mercato, o se la
+## notte ti trovava al Vomero, se ne stava un minuto buono a camminare per
+## mezza città prima di vederti — e l'annuncio a schermo arrivava molto
+## prima di lui. Adesso nasce a venti-trenta metri da te, in un punto che
+## sta in strada e da cui si arriva a piedi. Se sei a casa, aspetta
+## all'ingresso della piazza come prima.
+const CammVia := preload("res://scripts/cammino.gd")
+
+
+func _nasce_borrelli() -> Vector3:
+	var pl := get_tree().get_first_node_in_group("player") as Node3D
+	if pl == null or GameManager.dentro_casa:
+		return _glob(entry_point)
+	var c: Vector3 = pl.global_position
+	var giro0: float = randf() * TAU
+	for r in [24.0, 20.0, 30.0, 16.0]:
+		for k in range(12):
+			var a: float = giro0 + float(k) * TAU / 12.0
+			var q := Vector3(c.x + cos(a) * r, 0.0, c.z + sin(a) * r)
+			if q.x < 1.0 or q.x > 189.0 or q.z < 1.0 or q.z > 171.0:
+				continue
+			if not CammVia.libera(q) or not CammVia.raggiungibile(q):
+				continue
+			q.y = Collina.alzata(q.x, q.z)
+			return q
+	return _glob(entry_point)
 
 
 ## È calata la notte: da adesso il conto alla rovescia per Borrelli.
