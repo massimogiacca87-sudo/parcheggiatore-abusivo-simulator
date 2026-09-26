@@ -739,6 +739,10 @@ func _smonta(delta: float) -> bool:
 	if _chasing or _beat_left > 0:
 		# Uno non molla l'inseguimento perché è finito il turno.
 		return false
+	# Il turno del vigile è dentro alla giornata: prima che cominci (la
+	# volata d'apertura, il caricamento) non si smonta niente (0.63).
+	if not GameManager.shift_active:
+		return false
 	if GameManager.ora_d_o_juorno() < ORA_SMONTA:
 		return false
 	stato = Stato.SMONTA

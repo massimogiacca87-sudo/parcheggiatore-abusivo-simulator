@@ -23,6 +23,17 @@ func _ready() -> void:
 	# nuova ripartirebbe al rallentatore o congelata.
 	Engine.time_scale = 1.0
 	get_tree().paused = false
+	# **L'orologio parte a mezzogiorno, no a miezanotte passata** (0.63).
+	# Fino a `start_shift()` il cronometro della giornata valeva zero, cioè
+	# «giornata finita»: per tutta la volata d'apertura (il mondo gira, il
+	# turno non ancora) `ora_d_o_juorno()` diceva le quattro del mattino.
+	# I vigili guardavano l'ora, vedevano che erano passate le venti e
+	# smontavano tutti prima che il giocatore toccasse terra: nel gioco
+	# vero non se ne vedeva più nessuno (nelle prove, che saltano la
+	# volata, c'erano). Adesso la giornata nuova comincia a mezzogiorno
+	# già mentre si carica.
+	if not GameManager.shift_active:
+		GameManager.shift_time_left = GameManager.shift_duration
 
 	if OS.get_environment("DEBUG_ZONE") != "":
 		GameManager.selected_zone = OS.get_environment("DEBUG_ZONE")
