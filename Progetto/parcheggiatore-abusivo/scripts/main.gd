@@ -8,6 +8,7 @@ const CittaScript := preload("res://scripts/citta_3d.gd")
 const PlayerScript := preload("res://scripts/player_fps.gd")
 const HudScript := preload("res://scripts/hud.gd")
 const FiltriScript := preload("res://scripts/filtri_schermo.gd")
+const PozzangheraScript := preload("res://scripts/pozzanghere.gd")
 const IntroScript := preload("res://scripts/intro_screen.gd")
 const CaricamentoScript := preload("res://scripts/caricamento.gd")
 const VolataScript := preload("res://scripts/volata.gd")
@@ -119,6 +120,10 @@ func _ready() -> void:
 	var filtri := FiltriScript.new()
 	filtri.name = "FiltriSchermo"
 	add_child(filtri)
+	# 'E pozzanghere quanno chiove (0.62): solo in Forward+ (l'exe), appese
+	# alla telecamera del giocatore. Nella build web non si costruiscono.
+	if PozzangheraScript.si_puo() and player.get("camera") != null:
+		player.camera.add_child(PozzangheraScript.new())
 
 	# **'O rummore d''a citta'.** Voci vere registrate per strada, sotto a
 	# tutto. Non e' musica e non e' un effetto: e' il fondo su cui sta il

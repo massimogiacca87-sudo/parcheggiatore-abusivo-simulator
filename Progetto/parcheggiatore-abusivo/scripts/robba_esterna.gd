@@ -160,7 +160,7 @@ static func _strade(c: Node3D, rng: RandomNumberGenerator) -> void:
 	var m_rattoppo := _mat("rattoppo", true, 0.95)
 	# La foto del rattoppo è cemento chiaro: sull'asfalto scuro veniva un
 	# quadrato bianco. Il rattoppo vero è asfalto più nuovo, cioè più scuro.
-	m_rattoppo.albedo_color = Color(0.42, 0.41, 0.40)
+	m_rattoppo.albedo_color = Color(0.52, 0.51, 0.50, 0.85)
 	var m_olio := _mat("macchia_olio", true, 0.35)
 	var m_gomme := _mat("gomme", false, 0.7)
 	var tombini := 0

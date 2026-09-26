@@ -21,6 +21,7 @@ const SCATTI := [
 	["asfalto_decumano", Vector3(96.0, 1.7, 61.5), Vector3(112.0, 0.0, 64.0)],
 	["asfalto_marina", Vector3(30.0, 1.6, 93.2), Vector3(44.0, 0.0, 96.5)],
 	["asfalto_alto", Vector3(118.0, 9.0, 58.0), Vector3(128.0, 0.0, 64.0)],
+	["pioggia_piazza", Vector3(30.0, 1.7, 30.0), Vector3(40.0, 0.0, 20.0)],
 	["muffa", "cerca", "_cerca_muffa"],
 	["facciate_marina", Vector3(40.0, 1.7, 98.4), Vector3(47.0, 6.5, 92.0)],
 	["facciate_spacca", Vector3(60.0, 1.7, 77.6), Vector3(67.0, 5.5, 74.0)],
@@ -70,7 +71,8 @@ func _process(d: float) -> void:
 		get_tree().paused = false
 		GameManager.giornata = 3
 		GameManager.start_shift()
-		GameManager.tipo_giornata = "normale"
+		GameManager.tipo_giornata = "pioggia" if OS.get_environment("PIOGGIA") == "1" \
+			else "normale"
 		GameManager.intro_active = false
 		var quanto: float = 0.04 if OS.get_environment("NOTTE") == "1" else 0.84
 		GameManager.shift_time_left = GameManager.shift_duration * quanto
