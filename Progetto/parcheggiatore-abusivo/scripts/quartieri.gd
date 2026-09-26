@@ -40,7 +40,9 @@ const QUARTIERI := {
 		"nome": "'A Sanità",
 		"rect": [0.0, 95.0, 55.0, 172.0],
 		# Tufo giallo a vista, alto e strettissimo, mezzo sbriciolato.
-		"muri": ["muro_tufo", "muro_scrostato", "muro_terracotta"],
+		# (0.62) Più l'intonaco con la muffa, che dei muri della Sanità è
+		# quello che si ricorda.
+		"muri": ["muro_tufo", "muro_scrostato", "muro_terracotta", "muro_muffa"],
 		"tinte": [Color(1, 1, 1), Color(0.94, 0.92, 0.88)],
 		"h": [13.5, 18.0], "campata": [5.0, 8.0],
 		"zoccolo": "piperno", "zoccolo_tinta": Color(0.8, 0.78, 0.76),

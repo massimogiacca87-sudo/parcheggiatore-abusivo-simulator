@@ -63,6 +63,9 @@ const METRI := {
 	"muro_liberty": Vector2(2.6, 2.6),
 	"muro_liberty_verde": Vector2(2.6, 2.6),
 	"muro_zona_nuova": Vector2(1.5, 1.5),    # rivestimento a piastrelle 20 cm
+	# L'intonaco con la muffa (0.62): la foto di Poly Haven copre due metri
+	# e mezzo; a tre le chiazze d'umido hanno la misura di quelle vere.
+	"muro_muffa": Vector2(3.0, 3.0),
 	# **'A serranda pure essa.** Era mappata sulla UV con un 1.4 fisso: su
 	# una vetrina larga sei metri le costole venivano larghe venticinque
 	# centimetri, cioè una saracinesca da capannone industriale. Sono otto
@@ -108,10 +111,46 @@ const VARIAZIONE := {
 	"muro_rosa": 0.22, "muro_crema": 0.20, "muro_travertino": 0.16,
 	"muro_posillipo": 0.16, "muro_tufo": 0.24, "muro_umbertino": 0.14,
 	"muro_liberty": 0.12, "muro_liberty_verde": 0.12, "muro_zona_nuova": 0.14,
+	"muro_muffa": 0.18,
 	"piperno": 0.14, "basolato": 0.12, "marciapiede": 0.13,
 	"asfalto": 0.14, "maioliche": 0.07, "coppi": 0.10, "coppi_x": 0.10,
 	"serranda": 0.09,
 	"cotto": 0.12, "manifesti": 0.10, "graffiti": 0.10,
+}
+
+## **'E materiale overe** (0.62, asset esterni — vedi ASSET-ESTERNI.md).
+##
+## Due superfici hanno la fotografia completa di Poly Haven: colore,
+## normale e ruvidezza misurati, invece del rilievo ricavato dalla
+## luminanza. Le copie da gioco (1024 px) le fa `tools/prepara_esterni.py`
+## dagli originali 2K in `assets/esterni/materiali/`.
+##
+## * `asfalto` — asphalt_02: asfalto consumato con le crepe. Sostituisce la
+##   foto vecchia (384 px, a chiazze nere) su tutte le strade larghe, le
+##   piazze e il lungomare, perché tutti passano da `mondo("asfalto")`.
+## * `muro_muffa` — concrete_wall_003: intonaco bianco-giallo mangiato
+##   dall'umido. Entra fra i muri della Sanità, che è il quartiere dei
+##   bassi e dell'acqua che sale dai muri.
+##
+## La misura resta quella di `METRI` (i metri veri che copre una copia).
+const PBR := {
+	"asfalto": {
+		"albedo": "res://assets/textures/pbr/asfalto_albedo.jpg",
+		"normale": "res://assets/textures/pbr/asfalto_normale.jpg",
+		"ruvidezza": "res://assets/textures/pbr/asfalto_ruvidezza.jpg",
+		"forza": 1.0,
+		# La tinta da suolo: `TERRA` scurisce di due terzi, ed era fatta per
+		# la foto vecchia, che aveva chiazze chiare dappertutto. Questa è
+		# grigia uniforme e con `TERRA` veniva catrame fresco; l'asfalto di
+		# Napoli è consumato e sbiadito (albedo vero intorno a 0,12).
+		"terra": Color(0.90, 0.87, 0.82),
+	},
+	"muro_muffa": {
+		"albedo": "res://assets/textures/pbr/muffa_albedo.jpg",
+		"normale": "res://assets/textures/pbr/muffa_normale.jpg",
+		"ruvidezza": "res://assets/textures/pbr/muffa_ruvidezza.jpg",
+		"forza": 1.2,
+	},
 }
 
 static var _cache: Dictionary = {}
@@ -185,6 +224,11 @@ static func mondo(tex_name: String, tint: Color = Color.WHITE,
 	if _cache.has(key):
 		return _cache[key]
 	var path := DIR % nome
+	var pbr: Dictionary = PBR.get(nome, {})
+	if not pbr.is_empty() and ResourceLoader.exists(str(pbr["albedo"])):
+		path = str(pbr["albedo"])
+	else:
+		pbr = {}
 	if not ResourceLoader.exists(path):
 		var plain := StandardMaterial3D.new()
 		plain.albedo_color = Color(0.6, 0.55, 0.5) * tint
@@ -204,6 +248,11 @@ static func mondo(tex_name: String, tint: Color = Color.WHITE,
 	mat.set_shader_parameter("roughness_base", roughness)
 	mat.set_shader_parameter("bump_strength", float(BUMP.get(nome, 1.4)))
 	mat.set_shader_parameter("variazione", float(VARIAZIONE.get(nome, 0.16)))
+	if not pbr.is_empty():
+		mat.set_shader_parameter("mappe_vere", true)
+		mat.set_shader_parameter("normal_tex", load(str(pbr["normale"])))
+		mat.set_shader_parameter("rough_tex", load(str(pbr["ruvidezza"])))
+		mat.set_shader_parameter("normale_forza", float(pbr["forza"]))
 	_cache[key] = mat
 	# **E si è 'nu selciato, trase dint'ô registro.** Il basolato dei
 	# vicoli non passa da `ground()` ma da qui: senza questa riga, con la
@@ -335,7 +384,10 @@ static func ground(tex_name: String, size_m: Vector2, meters_per_tile: float) ->
 	# normale può ancora dirlo — ma parte dalla misura vera, non da zero.
 	var _s := size_m
 	var f: float = meters_per_tile / maxf(0.05, metri_di(tex_name).x)
-	var m: Material = mondo(tex_name, TERRA, 0.95, clampf(f, 0.5, 2.0))
+	var tinta: Color = TERRA
+	if PBR.has(tex_name) and (PBR[tex_name] as Dictionary).has("terra"):
+		tinta = PBR[tex_name]["terra"]
+	var m: Material = mondo(tex_name, tinta, 0.95, clampf(f, 0.5, 2.0))
 	_segna_terra(m)
 	return m
 

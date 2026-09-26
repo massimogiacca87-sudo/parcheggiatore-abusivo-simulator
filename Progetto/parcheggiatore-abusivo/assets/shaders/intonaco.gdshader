@@ -57,6 +57,16 @@ uniform float specular_amount : hint_range(0.0, 1.0) = 0.16;
 // spento (serve per le cose mappate a UV, dove la foto si vede una volta).
 uniform float variazione : hint_range(0.0, 0.5) = 0.0;
 
+// **'E mappe overe** (0.62, asset esterni). I materiali Poly Haven arrivano
+// con la normale e la ruvidezza fotografate insieme al colore: per quelli
+// il rilievo non si ricava dalla luminanza, si legge. `mappe_vere` accende
+// le due texture; il resto (mappatura sul mondo, macchie, bagnato) resta
+// identico, così l'asfalto nuovo si bagna come si bagnava il vecchio.
+uniform bool mappe_vere = false;
+uniform sampler2D normal_tex : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D rough_tex : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform float normale_forza : hint_range(0.0, 3.0) = 1.0;
+
 const vec3 LUMA = vec3(0.2126, 0.7152, 0.0722);
 
 // **'A ripetizione se vede, e chesto è 'o problema d''e texture appaiate.**
@@ -152,6 +162,33 @@ void fragment() {
 
 	vec3 n = normalize(vec3((l - lx) * 4.0, (l - ly) * 4.0, 1.0));
 	NORMAL_MAP = n * 0.5 + 0.5;
+	if (mappe_vere) {
+		// **'A normale fotografata vò 'a terna giusta.** Con la foto
+		// appoggiata al mondo la UV non è quella della mesh, e nemmeno la
+		// tangente lo è: una BoxMesh ha le tangenti della sua faccia, che
+		// sul marciapiede girano in un verso e sul muro in un altro. Qui si
+		// dice a Godot dove vanno "+u" e "−v" nel mondo, e la normale della
+		// fotografia cade dove deve (convenzione OpenGL, verde = su).
+		if (mappa_mondo) {
+			vec3 wn2 = normalize((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
+			vec3 an2 = abs(wn2);
+			vec3 t_w;
+			vec3 b_w;
+			if (an2.y > an2.x && an2.y > an2.z) {
+				t_w = vec3(1.0, 0.0, 0.0);
+				b_w = vec3(0.0, 0.0, -1.0);
+			} else if (an2.x > an2.z) {
+				t_w = vec3(0.0, 0.0, 1.0);
+				b_w = vec3(0.0, 1.0, 0.0);
+			} else {
+				t_w = vec3(1.0, 0.0, 0.0);
+				b_w = vec3(0.0, 1.0, 0.0);
+			}
+			TANGENT = normalize((VIEW_MATRIX * vec4(t_w, 0.0)).xyz);
+			BINORMAL = normalize((VIEW_MATRIX * vec4(b_w, 0.0)).xyz);
+		}
+		NORMAL_MAP = texture(normal_tex, uv).rgb;
+	}
 	// Il rilievo si spegne con la distanza: a due livelli di mipmap la
 	// superficie e' gia' liscia. E' quello che farebbe da sola una normal
 	// map vera coi suoi mipmap.
@@ -162,6 +199,14 @@ void fragment() {
 	NORMAL_MAP_DEPTH = bump_strength * fade;
 
 	ROUGHNESS = clamp(roughness_base + (0.5 - l) * rough_variation, 0.05, 1.0);
+	if (mappe_vere) {
+		// La normale vera ha i suoi mipmap: non serve spegnerla da lontano.
+		NORMAL_MAP_DEPTH = normale_forza;
+		// La ruvidezza fotografata, scalata con `roughness_base`: da
+		// asciutto (0,95) resta com'è, col bagnato scende insieme a lei.
+		ROUGHNESS = clamp(texture(rough_tex, uv).r * roughness_base / 0.95,
+			0.04, 1.0);
+	}
 	SPECULAR = specular_amount;
 	AO = mix(1.0, clamp(l * 1.3 + 0.3, 0.0, 1.0), ao_strength);
 	AO_LIGHT_AFFECT = 0.7;
