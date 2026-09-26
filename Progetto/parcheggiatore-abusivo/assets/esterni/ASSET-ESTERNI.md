@@ -1,7 +1,37 @@
 # ASSET ESTERNI — cosa c'è, dove sta, a cosa serve
 
-Preparati il 25/09/2026 per essere **implementati nella prossima chat**. Nessuno di questi file è
-ancora usato dal gioco: sono nel progetto, importati e collaudati, pronti da agganciare.
+Preparati il 25/09/2026 da una sessione a parte; **agganciati al gioco il 26/09/2026** (v0.62,
+seconda metà). La tabella qui sotto dice cosa è entrato; il resto del documento è la guida
+originale alla biblioteca, com'era.
+
+## Stato alla v0.62 — cosa usa il gioco
+
+| Cosa | File della biblioteca | Dove nel gioco |
+|---|---|---|
+| Asfalto delle strade larghe | `materiali/asfalto/asphalt_02` | `assets/textures/pbr/asfalto_*.jpg` (derivate da `tools/prepara_esterni.py`), `Tex.PBR` in `scripts/textures.gd` |
+| Muro con la muffa (Sanità) | `materiali/intonaco/concrete_wall_003` | `assets/textures/pbr/muffa_*.jpg`, shader `intonaco.gdshader` (`mappe_vere`) |
+| Tombini, rattoppi, gomme, olio, colature, umido | decals `ManholeCover001/005`, `AsphaltDamage001`, `ChewingGum001`, `Leaking003/006/008` | `assets/textures/decal/*.png`, `scripts/robba_esterna.gd` |
+| Graffiti a tag (**CC BY 4.0**) | `decals/graffiti/graffiti_00.png` | `assets/textures/decal/graffito_tag.png` |
+| Vespa, due scooter (**CC BY 3.0**) | `modelli/scooter/Vespa_*`, `Scooter_*`, `low_poly_scooter_*` | `Models.ESTERNI` (`vespa`, `scooter_bianco`, `scooter_blu`): al cordolo e il motorino che passa |
+| Sedia di Vienna, sedia d'ufficio | `plastic_chair/Chair_kLViSk9EhX`, `Office_Chair_*` | fuori dai bassi / buttate |
+| Coni, cassa, cassetta della frutta, bidone | `traffic_cone/*` (tre), `crate/Crate_3V*`, `crate/Fruit_Crate_*`, `trash_can/Trashcan_vlVx*` | cantieri, cassonetti, tavolino delle sedie, marciapiedi |
+| Sei persone animate | `npc_animati/Business_Man`, `Casual_Character`, `Worker`, `Farmer`, `Animated_Woman` ×2 | `Human.QUAT` in `scripts/human_builder.gd`, mosse del pupo tradotte in `assets/models/quat_ual.res` |
+| Dodici suoni | `audio/chiavi`, `clacson_traffico`, `monete`, `folla_voci_arrabbiate`, `scooter` | `audio/*.ogg` (tagliati e normalizzati da `prepara_esterni.py`), `SoundManager` |
+| Filtri dello schermo e la botta | `shader/vhs_grunge/*`, `shader/lente_sporca` | `assets/shaders/filtri/`, `scripts/filtri_schermo.gd` |
+| Pozzanghere (solo Forward+) | `shader/pozzanghere` | `assets/shaders/pozzanghere.gdshader`, `scripts/pozzanghere.gd` |
+| Borsello che si riempie / svuota | Kenney `board_game_icons/pouch_add`, `pouch_remove` | `assets/ui/icone/borsa_entra.png`, `borsa_esce.png` |
+
+**Non usati, e perché** (racconto completo in `DOcumentazione\NOVITA-v0.62.md`): i tre plugin
+(la città è costruita a codice, il gioco ha già i suoi dialoghi in napoletano e i suoi stati
+degli NPC, e LimboAI romperebbe la build web); le auto (doppioni del Car Pack), i quattro
+personaggi doppioni degli omini e dell'umano di Quaternius già in gioco, la moto viola, la
+sedia di plastica e i cestini piccoli e grandi; basolato, cemento, intonaci e HDRI (i quartieri
+hanno le loro texture e il cielo cambia con l'ora); il resto delle icone e del pacchetto UI
+(il tema della 0.62 c'era già). Quello che non si usa resta **fuori dall'esportazione**
+(`exclude_filter` di `export_presets.cfg`, in tutti e due i preset).
+
+Una trappola da sapere: le demo di ProtonScatter contengono un `.blend`, e Godot senza
+finestra resta fermo a importarlo. Nel `project.godot` c'è `import/blender/enabled=false`.
 
 - Elenco completo file per file (con peso): `res://assets/esterni/ELENCO-FILE-ESTERNI.txt`
 - Collaudo automatico: `res://tools/test_asset_esterni/test_asset_esterni.tscn` (carica tutto, compila gli shader, stampa un rapporto)
