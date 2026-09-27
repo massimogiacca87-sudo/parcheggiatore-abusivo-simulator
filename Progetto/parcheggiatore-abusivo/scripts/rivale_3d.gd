@@ -202,6 +202,9 @@ func _build_visual() -> void:
 	var parts := Human.build(c, Color(0.16, 0.16, 0.2), "rivale", 1.79, {
 		"belly": randf_range(0.25, 0.85),
 		"moustache": randf() < 0.55,
+		# (0.66) 'O rivale te guarda storto, sempe.
+		"palpebre": "arraggiate", "sopracciglia": "arraggiate",
+		"bocca": "storta",
 	})
 	_visual.add_child(parts["root"])
 	_anim = parts.get("anim", null)

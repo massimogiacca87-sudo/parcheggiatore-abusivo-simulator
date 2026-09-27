@@ -96,6 +96,9 @@ MATERIALI = [
 	("faccia", (0.87, 0.69, 0.55), 0.72),
 	# L'iride (con la pupilla dipinta): il colore lo mette il gioco.
 	("iride", (0.22, 0.14, 0.08), 0.30),
+	# Sopracciglia e baffi: di solito il colore dei capelli, ma non
+	# sempre (le signore col fazzoletto hanno i "capelli" a fiori).
+	("peli", (0.15, 0.10, 0.07), 0.95),
 	("gonna", (0.24, 0.26, 0.32), 0.92),
 	# Questi il gioco non li tinge: restano del colore del file.
 	("suola", (0.52, 0.48, 0.44), 0.80),
@@ -205,13 +208,18 @@ def avanti(z, corp):
 # **Questo è il contratto con chi fa le texture: non si cambia senza
 # cambiare anche loro.**
 #
+# **Le coordinate si danno come si guarda l'immagine** (u a destra, v in
+# giù, (0,0) l'angolo in alto a sinistra: è come le legge Godot). Blender
+# tiene l'origine in basso e l'esportatore glTF ribalta v: `_uv()` ci
+# pensa lui, chi disegna le texture non ci deve pensare.
+#
 # * `faccia` — proiezione piatta da davanti. Una finestra di FACCIA_L
 #   metri centrata sul centro della testa: u = 0,5 + x/L (x positivo è la
 #   **sinistra del pupo**, cioè la destra di chi lo guarda), v = 0,5 −
-#   (z − TESTA_C.z)/L. Le facce che non guardano avanti (normale·(−Y) <
-#   0,15) vanno tutte nell'angolo neutro (0,015, 0,015), che nelle texture
-#   è sempre bianco (o nero, per la barba): così la bocca non si stampa
-#   anche sulla nuca.
+#   (z − TESTA_C.z)/L (la fronte in alto, il mento in basso). Le facce che
+#   non guardano avanti (normale·(−Y) < 0,15) vanno tutte nell'angolo
+#   neutro (0,015, 0,015), che nelle texture è sempre bianco (o nero, per
+#   la barba): così la bocca non si stampa anche sulla nuca.
 # * `camicia`, `pantaloni`, `gonna` — la trama della stoffa, che si ripete:
 #   proiezione a scatola, un'unità di UV = TRAMA_M metri.
 # * `capelli` — le ciocche: coordinate sferiche attorno al centro della
@@ -228,6 +236,11 @@ OCCHIO_Z_SU = 0.012        # …e quanto sopra al centro della testa
 IRIDE_R = 0.0125
 
 
+def _uv(u, v):
+	"""Da coordinate d'immagine (v in giù) a quelle di Blender (v in su)."""
+	return (u, 1.0 - v)
+
+
 def uv_per_materiale(bm):
 	uv = bm.loops.layers.uv.verify()
 	per_nome = {i: n for i, (n, _, _) in enumerate(MATERIALI)}
@@ -239,9 +252,9 @@ def uv_per_materiale(bm):
 			for l in f.loops:
 				p = l.vert.co
 				if davanti < 0.15:
-					l[uv].uv = (0.015, 0.015)
+					l[uv].uv = _uv(0.015, 0.015)
 				else:
-					l[uv].uv = (0.5 + p.x / FACCIA_L,
+					l[uv].uv = _uv(0.5 + p.x / FACCIA_L,
 						0.5 - (p.z - c.z) / FACCIA_L)
 		elif nome in ("camicia", "pantaloni", "gonna"):
 			n = f.normal
@@ -254,20 +267,20 @@ def uv_per_materiale(bm):
 					a, b = p.x, p.z
 				else:
 					a, b = p.x, p.y
-				l[uv].uv = (a / TRAMA_M, -b / TRAMA_M)
+				l[uv].uv = _uv(a / TRAMA_M, -b / TRAMA_M)
 		elif nome == "capelli":
 			for l in f.loops:
 				d = l.vert.co - c
 				r = max(0.05, d.length)
 				giro = math.atan2(d.x, -d.y)
 				polo = math.acos(max(-1.0, min(1.0, d.z / r)))
-				l[uv].uv = (giro * 0.12 / TRAMA_M, polo * 0.12 / TRAMA_M)
+				l[uv].uv = _uv(giro * 0.12 / TRAMA_M, polo * 0.12 / TRAMA_M)
 		elif nome == "iride":
 			for l in f.loops:
 				p = l.vert.co
 				ox = OCCHIO_X if p.x > 0.0 else -OCCHIO_X
 				oz = c.z + OCCHIO_Z_SU
-				l[uv].uv = (0.5 + (p.x - ox) / (2.0 * IRIDE_R),
+				l[uv].uv = _uv(0.5 + (p.x - ox) / (2.0 * IRIDE_R),
 					0.5 - (p.z - oz) / (2.0 * IRIDE_R))
 		else:
 			for l in f.loops:

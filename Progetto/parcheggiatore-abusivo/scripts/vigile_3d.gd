@@ -304,7 +304,11 @@ func _build_visual() -> void:
 	# Pelato: sotto al casco i capelli non si vedono, e una calotta di
 	# capelli dentro a un casco esce dai bordi.
 	var parts := Human.build(uniform, Color(0.1, 0.15, 0.32), "vigile", 1.85,
-		{"moustache": true, "bald": true, "corpo": "normale"})
+		{"moustache": true, "bald": true, "corpo": "normale",
+		# (0.66) 'O vigile: scucciato, e nun te crede.
+		"palpebre": "stanche", "sopracciglia": "scettiche", "naso": "grosso",
+		"bocca": "dritta", "barba": "", "rughe": "stanco",
+		"colletto": true, "cintura": true, "catenina": false})
 	_visual_root.add_child(parts["root"])
 	_legs = parts["legs"]
 	_arms = parts["arms"]

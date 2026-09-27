@@ -112,6 +112,10 @@ func _build_visual() -> void:
 		"corpo": "femmina",
 		"belly": randf_range(0.5, 0.9),
 		"bald": false, "moustache": false,
+		# (0.66) 'A messa in piega, 'o rossetto, 'a gonna.
+		"capelli": "signora", "sopracciglia": "sottili", "naso": "piccolo",
+		"bocca": "rossetto", "rughe": "vecchia", "gonna": true,
+		"peli": Color(0.30, 0.26, 0.24),
 	})
 	_visual_root.add_child(parts["root"])
 	_legs = parts["legs"]

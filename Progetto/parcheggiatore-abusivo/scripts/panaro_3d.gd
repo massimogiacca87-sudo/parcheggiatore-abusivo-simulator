@@ -71,7 +71,11 @@ func _ready() -> void:
 	add_child(_balcone)
 	# Donna Filumena, affacciata (il balcone lo mette la città).
 	var parts := Human.build(Color(0.34, 0.2, 0.36), Color(0.2, 0.18, 0.2), "",
-		1.55, {"corpo": "femmina", "hair": Color(0.82, 0.82, 0.8), "belly": 0.5})
+		1.55, {"corpo": "femmina", "hair": Color(0.82, 0.82, 0.8), "belly": 0.5,
+		# (0.66) Donna Filumena: 'o tuppo, 'a gonna nera, e 'nu sorriso.
+		"capelli": "tuppo", "palpebre": "stanche", "sopracciglia": "sottili",
+		"naso": "piccolo", "bocca": "sorriso", "rughe": "vecchia",
+		"gonna": true, "catenina": false, "colletto": false, "cintura": false})
 	_nonna = parts["root"]
 	_nonna.position = Vector3(0.35, PAVIMENTO, 0.45)
 	_nonna.rotation.y = PI

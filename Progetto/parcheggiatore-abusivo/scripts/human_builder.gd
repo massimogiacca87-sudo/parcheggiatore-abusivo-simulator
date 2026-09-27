@@ -136,7 +136,7 @@ static func build(shirt_color: Color, pants_color: Color, model_name: String = "
 		opts["bald"] = randf() < 0.18 and not femmina
 	if not opts.has("moustache"):
 		opts["moustache"] = randf() < 0.32 and not femmina
-	_scegli_faccia(opts, femmina)
+	_scegli_faccia(opts, femmina, height < 1.45)
 
 	if _scena == null:
 		if not ResourceLoader.exists(PUPO):
@@ -844,13 +844,29 @@ static func _quale_corpo(opts: Dictionary) -> String:
 ## si pesca, con le probabilità di una strada di Napoli: tanti occhi
 ## scuri, tanti capelli corti o ingellati, un po' di barba sfatta, e i
 ## capelli bianchi che portano le rughe.
-static func _scegli_faccia(opts: Dictionary, femmina: bool) -> void:
+static func _scegli_faccia(opts: Dictionary, femmina: bool,
+		bambino: bool = false) -> void:
 	if _dado_facce == null:
 		_dado_facce = RandomNumberGenerator.new()
 		_dado_facce.randomize()
 	var d := _dado_facce
 	var capelli_col := Color(opts.get("hair", Color(0.16, 0.11, 0.08)))
 	var bianco: bool = capelli_col.s < 0.25 and capelli_col.v > 0.40
+	# **'E piccerille** (sotto a un metro e quarantacinque): niente barba,
+	# niente rughe, niente baffi, occhi aperti, e i capelli da ragazzino.
+	if bambino:
+		bianco = false
+		if not opts.has("capelli"):
+			opts["capelli"] = "lunghi" if femmina else _pesca(d,
+				["corti", "ricci", "sfumati"], [40, 30, 30])
+		for k in ["barba", "rughe"]:
+			if not opts.has(k):
+				opts[k] = ""
+		if not opts.has("palpebre"):
+			opts["palpebre"] = "sveglie"
+		if not opts.has("bocca"):
+			opts["bocca"] = _pesca(d, ["sorriso", "dritta", "cazzimma"], [50, 30, 20])
+		opts["moustache"] = false
 	if not opts.has("capelli"):
 		if femmina:
 			opts["capelli"] = _pesca(d, ["tuppo", "signora"], [50, 50]) if bianco \
@@ -868,7 +884,7 @@ static func _scegli_faccia(opts: Dictionary, femmina: bool) -> void:
 			[45, 15, 20, 20])
 	if not opts.has("naso"):
 		opts["naso"] = _pesca(d, ["piccolo", "grosso", "aquilino"],
-			[75, 10, 15] if femmina else [35, 35, 30])
+			[75, 10, 15] if femmina or bambino else [35, 35, 30])
 	if not opts.has("bocca"):
 		opts["bocca"] = _pesca(d, ["dritta", "sorriso", "rossetto", "preoccupata"],
 			[35, 25, 30, 10]) if femmina else _pesca(d, ["dritta", "cazzimma",
@@ -883,6 +899,20 @@ static func _scegli_faccia(opts: Dictionary, femmina: bool) -> void:
 			opts["rughe"] = _pesca(d, ["", "stanco", "arraggiato"], [70, 22, 8])
 	if not opts.has("occhi"):
 		opts["occhi"] = OCCHI[d.randi() % OCCHI.size()]
+	# **'E peli nun so' sempe 'e capille** (0.66): sopracciglia, baffi e
+	# barba di solito hanno il colore dei capelli. Chi porta il fazzoletto
+	# ha i "capelli" del colore del fazzoletto: per lei i peli restano
+	# scuri (o bianchi, se lo dice).
+	if not opts.has("peli"):
+		opts["peli"] = capelli_col
+	# **'A rrobba 'e tutt''e juorne**: la cintura, il colletto, la
+	# catenina d'oro col cornetto. Chi non dice niente ne pesca qualcuna.
+	if not opts.has("cintura"):
+		opts["cintura"] = d.randf() < (0.25 if femmina else 0.55)
+	if not opts.has("colletto"):
+		opts["colletto"] = d.randf() < (0.15 if femmina else 0.30)
+	if not opts.has("catenina"):
+		opts["catenina"] = d.randf() < (0.10 if femmina else 0.18)
 
 
 static func _pesca(d: RandomNumberGenerator, cosa: Array, pesi: Array) -> String:
@@ -986,6 +1016,7 @@ static func _vesti(modello: Node3D, camicia: Color, pantaloni: Color,
 		"gonna": pantaloni,
 		"scarpe": Color(opts.get("scarpe", Color(0.10, 0.09, 0.09))),
 		"capelli": capelli,
+		"peli": Color(opts.get("peli", capelli)),
 		"iride": Color(opts.get("occhi", OCCHI[0])),
 		"banda": Color(opts.get("banda_colore", Color(0.64, 0.09, 0.11))),
 	}
@@ -996,7 +1027,7 @@ static func _vesti(modello: Node3D, camicia: Color, pantaloni: Color,
 	# cancellano (`_scegli_pezzi`), e i tratti hanno il loro materiale.
 	var ruvido := {
 		"pelle": 0.72, "faccia": 0.72, "camicia": 0.92, "pantaloni": 0.92,
-		"gonna": 0.92, "scarpe": 0.55, "capelli": 0.95, "banda": 0.88,
+		"gonna": 0.92, "scarpe": 0.55, "capelli": 0.95, "peli": 0.95, "banda": 0.88,
 		"iride": 0.30,
 	}
 	# La faccia si fa una volta per persona e si usa su tutte le superfici
@@ -1020,7 +1051,8 @@ static func _vesti(modello: Node3D, camicia: Color, pantaloni: Color,
 				continue
 			if chiave == "faccia":
 				if faccia == null:
-					faccia = _materiale_faccia(pelle, capelli, opts)
+					faccia = _materiale_faccia(pelle,
+						Color(opts.get("peli", capelli)), opts)
 				m.set_surface_override_material(i, faccia)
 				continue
 			var mat := StandardMaterial3D.new()
@@ -1068,7 +1100,7 @@ static var _shader_faccia: Shader = null
 ## la barba e le rughe scelte, disegnate dallo shader `pupo_faccia`. Senza
 ## shader (o su un pupo vecchio, che non ha la superficie `faccia`) si
 ## torna alla pelle liscia.
-static func _materiale_faccia(pelle: Color, capelli: Color,
+static func _materiale_faccia(pelle: Color, peli: Color,
 		opts: Dictionary) -> Material:
 	if _shader_faccia == null and ResourceLoader.exists(SHADER_FACCIA):
 		_shader_faccia = load(SHADER_FACCIA)
@@ -1080,7 +1112,7 @@ static func _materiale_faccia(pelle: Color, capelli: Color,
 	var mat := ShaderMaterial.new()
 	mat.shader = _shader_faccia
 	mat.set_shader_parameter("pelle", pelle)
-	mat.set_shader_parameter("peli", capelli)
+	mat.set_shader_parameter("peli", peli)
 	var bocca: Texture2D = _tex_pupo("bocca_%s.png" % str(opts.get("bocca", "dritta")))
 	var barba: String = str(opts.get("barba", ""))
 	var rughe: String = str(opts.get("rughe", ""))

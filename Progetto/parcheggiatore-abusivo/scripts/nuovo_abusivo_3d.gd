@@ -127,7 +127,12 @@ func _build_visual() -> void:
 	add_child(_visual)
 	var parts := Human.build(Color(0.92, 0.55, 0.18), Color(0.16, 0.2, 0.34),
 		"", 1.68, {"belly": 0.0, "moustache": false, "bald": false,
-			"hair": Color(0.08, 0.06, 0.05)})
+			"hair": Color(0.08, 0.06, 0.05),
+			# (0.66) Gennarino: nuovo del mestiere, e si vede in faccia.
+			"capelli": "corti", "palpebre": "sveglie",
+			"sopracciglia": "preoccupate", "naso": "piccolo", "bocca": "sorriso",
+			"barba": "", "rughe": "", "cintura": false, "colletto": false,
+			"catenina": false})
 	_visual.add_child(parts["root"])
 	_anim = parts.get("anim", null)
 	# Il berretto rosso: da lontano è la cosa che lo distingue da un

@@ -171,6 +171,10 @@ func _build_visual() -> void:
 			"corpo": "panzone", "belly": 1.0,
 			"skin": Color(0.80, 0.62, 0.47), "hair": Color(0.10, 0.08, 0.07),
 			"bald": true, "moustache": true,
+			# (0.66) 'A faccia d''o Rre: sfotte a tutti, e 'o sape.
+			"palpebre": "furbe", "sopracciglia": "scettiche", "naso": "grosso",
+			"bocca": "cazzimma", "barba": "", "rughe": "",
+			"colletto": true, "cintura": true, "catenina": false,
 		})
 	_visual.add_child(parts["root"])
 	_anim = parts.get("anim", null)

@@ -89,6 +89,11 @@ func _build_visual() -> void:
 		"", 1.54, {
 			"corpo": "femmina", "hair": Color(0.86, 0.86, 0.84),
 			"belly": 0.55,
+			# (0.66) Chella d''o lotto: 'e nummere 'e sape essa.
+			"capelli": "tuppo", "palpebre": "furbe", "sopracciglia": "sottili",
+			"naso": "aquilino", "bocca": "cazzimma", "rughe": "vecchia",
+			"gonna": true, "catenina": true, "colletto": false,
+			"cintura": false,
 		})
 	_visual_root.add_child(parts["root"])
 	_scialle()

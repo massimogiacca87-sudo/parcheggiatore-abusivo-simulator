@@ -184,6 +184,11 @@ func _build_visual() -> void:
 			"belly": 0.35,
 			"bald": false,
 			"moustache": false,
+			# (0.66) Sempre indignato, sempre col telefonino in mano.
+			"capelli": "gellati", "palpebre": "sveglie",
+			"sopracciglia": "arraggiate", "naso": "aquilino",
+			"bocca": "storta", "barba": "", "rughe": "arraggiato",
+			"colletto": true, "cintura": true, "catenina": false,
 		})
 	_visual_root.add_child(parts["root"])
 	_legs = parts["legs"]

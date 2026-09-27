@@ -123,6 +123,10 @@ func _build_visual() -> void:
 		"", 1.63, {
 			"belly": 0.72, "bald": true, "moustache": true,
 			"hair": Color(0.88, 0.88, 0.86),
+			# (0.66) Il maestro: ha visto tutto, e ci ride sopra.
+			"palpebre": "stanche", "sopracciglia": "dritte", "naso": "grosso",
+			"bocca": "sorriso", "barba": "", "rughe": "vecchio",
+			"colletto": true, "cintura": true, "catenina": false,
 		})
 	_visual_root.add_child(parts["root"])
 	if not parts["bones"].is_empty() and parts["head"] != null:

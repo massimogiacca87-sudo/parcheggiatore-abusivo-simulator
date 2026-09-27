@@ -265,6 +265,8 @@ func _build_body_model() -> void:
 		# La testa non si costruisce proprio: la camera sta esattamente lì
 		# dentro, e prima si vedeva il proprio cranio in mezzo allo schermo.
 		"senza_testa": true,
+		# (0.66) Guardandosi in giù si vede la cintura, e basta.
+		"cintura": true, "colletto": false, "catenina": false,
 	})
 	_body_root.add_child(parts["root"])
 	_body_legs = parts["legs"]

@@ -105,7 +105,12 @@ func _build_visual() -> void:
 		"carabiniere", 1.86, {"moustache": true, "bald": true,
 		# 'A banda rossa sulla coscia, che adesso è geometria pesata sulle
 		# ossa della gamba e non due bastoni appesi al torace.
-		"banda": true, "corpo": "normale"})
+		"banda": true, "corpo": "normale",
+		# (0.66) 'O carabiniere: arraggiato, colletto della divisa.
+		"palpebre": "arraggiate", "sopracciglia": "arraggiate",
+		"naso": "grosso", "bocca": "storta", "barba": "",
+		"rughe": "arraggiato", "colletto": true, "cintura": true,
+		"catenina": false})
 	_visual.add_child(parts["root"])
 	_legs = parts["legs"]
 	_anim = parts.get("anim", null)

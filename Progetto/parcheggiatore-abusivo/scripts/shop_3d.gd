@@ -127,7 +127,12 @@ func _build_visual() -> void:
 
 	# 'O Zio in persona, dietro il banco
 	var zio_parts := Human.build(Color(0.22, 0.22, 0.26), Color(0.16, 0.16, 0.2),
-		"zio", 1.78, {"moustache": true, "belly": 0.9, "bald": true})
+		"zio", 1.78, {"moustache": true, "belly": 0.9, "bald": true,
+		# (0.66) 'O Zio: occhiali scuri, catenina d'oro col cornetto,
+		# e 'o sorrisetto 'e chi sape 'o prezzo vero.
+		"palpebre": "furbe", "sopracciglia": "scettiche", "naso": "aquilino",
+		"bocca": "cazzimma", "barba": "sfatta", "rughe": "",
+		"colletto": true, "cintura": true, "catenina": true})
 	var zio_root: Node3D = zio_parts["root"]
 	zio_root.position = Vector3(-0.75, 0, 0)
 	zio_root.rotation.y = -PI / 2.0 # guarda verso il cliente (+X locale)

@@ -69,6 +69,8 @@ const MESTIERE := [
 		"camicia": [Color(0.92, 0.86, 0.34), Color(0.36, 0.76, 0.72),
 			Color(0.92, 0.52, 0.32)],
 		"pantalone": Color(0.78, 0.74, 0.62), "cosa": "machinetta",
+		"faccia": {"palpebre": "sveglie", "bocca": "sorriso",
+			"occhi": Color(0.30, 0.44, 0.58), "catenina": false},
 		"dice": ["Ooooh! Beautiful!", "Excuse me… pizza? PIZZA?",
 			"Is this Spaccanapoli? Ja?"],
 	},
@@ -76,6 +78,8 @@ const MESTIERE := [
 		"id": "operaio", "peso": 13.0, "veloce": 1.18, "ferma": 0.6,
 		"camicia": [Color(0.20, 0.34, 0.58), Color(0.26, 0.40, 0.62)],
 		"pantalone": Color(0.18, 0.28, 0.46), "cosa": "cassetta",
+		"faccia": {"barba": "sfatta", "palpebre": "stanche", "colletto": false,
+			"cintura": true},
 		"dice": ["Mo' arrivo, mo' arrivo!", "Chillo 'o tubo s'è rutto n'ata vota.",
 			"E dalle 'na mano, no?"],
 	},
@@ -85,6 +89,7 @@ const MESTIERE := [
 		"id": "pizzaiuolo", "peso": 8.0, "veloce": 1.1, "ferma": 0.7,
 		"camicia": [Color(0.94, 0.93, 0.90)],
 		"pantalone": Color(0.90, 0.90, 0.88), "cosa": "teglia",
+		"faccia": {"bocca": "sorriso", "colletto": false, "catenina": false},
 		"dice": ["'O furno sta acceso!", "Doje margherite, subito!",
 			"Chi 'e vò cavere?"],
 	},
@@ -92,6 +97,8 @@ const MESTIERE := [
 		"id": "prevete", "peso": 5.0, "veloce": 0.86, "ferma": 1.5,
 		"camicia": [Color(0.10, 0.10, 0.12)],
 		"pantalone": Color(0.09, 0.09, 0.11), "cosa": "",
+		"faccia": {"colletto": true, "catenina": false, "barba": "",
+			"bocca": "sorriso", "palpebre": "stanche"},
 		"dice": ["Pace e bene.", "Dominus vobiscum.",
 			"E figlio mio, pregate 'nu poco."],
 	},
@@ -100,6 +107,7 @@ const MESTIERE := [
 		"camicia": [Color(0.24, 0.26, 0.32), Color(0.70, 0.24, 0.28),
 			Color(0.30, 0.52, 0.40)],
 		"pantalone": Color(0.24, 0.30, 0.44), "cosa": "zaino",
+		"faccia": {"rughe": "", "colletto": false},
 		"dice": ["Aggio 'a dà ll'esame, nun me parlà.", "Ma quanno maje!",
 			"Frà, t'aggio scritto e nun m'hê risposto."],
 	},
@@ -109,12 +117,17 @@ const MESTIERE := [
 		"id": "guappo", "peso": 8.0, "veloce": 0.80, "ferma": 1.8,
 		"camicia": [Color(0.10, 0.11, 0.13), Color(0.16, 0.14, 0.18)],
 		"pantalone": Color(0.12, 0.12, 0.14), "cosa": "",
+		# 'O guappo: ingellato, catenina col cornetto, colletto aperto.
+		"faccia": {"capelli": "gellati", "palpebre": "furbe",
+			"sopracciglia": "scettiche", "bocca": "cazzimma",
+			"colletto": true, "catenina": true, "cintura": true},
 		"dice": ["Uè.", "…", "E tu che guarde?", "Overo? Overo overo?"],
 	},
 	{
 		"id": "marenaro", "peso": 7.0, "veloce": 0.96, "ferma": 1.1,
 		"camicia": [Color(0.30, 0.44, 0.56), Color(0.86, 0.86, 0.82)],
 		"pantalone": Color(0.26, 0.28, 0.32), "cosa": "cascetta",
+		"faccia": {"barba": "sfatta", "rughe": "stanco", "catenina": true},
 		"dice": ["Alice frische! Alice!", "'O mare stammatina steva bello.",
 			"Doje chile? Te ne metto tre."],
 	},
@@ -123,6 +136,7 @@ const MESTIERE := [
 		"camicia": [Color(0.62, 0.34, 0.48), Color(0.44, 0.30, 0.52),
 			Color(0.72, 0.56, 0.34)],
 		"pantalone": Color(0.30, 0.26, 0.30), "cosa": "busta",
+		"faccia": {"capelli": "signora", "bocca": "rossetto", "gonna": true},
 		"dice": ["Mia figlia s'è laureata, sai?", "Uh, Maronna mia.",
 			"'Sti guagliune 'e mo'…"],
 	},
@@ -315,6 +329,18 @@ func _costruisci() -> void:
 		"hair": Color(0.76, 0.75, 0.72) if anziano \
 			else Color(0.14, 0.11, 0.08),
 	}
+	# **'A faccia d''o mestiere** (0.66): il guappo nasce ingellato, il
+	# marenaro con la barba sfatta, la signora col rossetto. Il resto della
+	# faccia lo pesca `HumanBuilder`. A una donna su due, la gonna.
+	var faccia: Dictionary = mestiere.get("faccia", {})
+	for k in faccia:
+		if k == "capelli" and bool(opts["bald"]):
+			continue
+		if k == "barba" and femmina:
+			continue
+		opts[k] = faccia[k]
+	if femmina and not opts.has("gonna"):
+		opts["gonna"] = randf() < 0.5
 	var cuorpo: String = _che_cuorpo(femmina)
 	if cuorpo != "":
 		opts["modello"] = cuorpo
