@@ -87,6 +87,22 @@ const OCCHI := [
 	Color(0.30, 0.40, 0.50),
 ]
 const TEX_PUPO := "res://assets/textures/pupo/"
+## I file degli strati, **scritti per intero** (BIBBIA, regola 8):
+## `prova_asset` cerca i nomi nel testo, e un nome costruito con `%s` per
+## lei è una texture che il gioco non usa.
+const TEX_BOCCHE := {
+	"dritta": "bocca_dritta.png", "cazzimma": "bocca_cazzimma.png",
+	"sorriso": "bocca_sorriso.png", "storta": "bocca_storta.png",
+	"preoccupata": "bocca_preoccupata.png", "rossetto": "bocca_rossetto.png",
+}
+const TEX_BARBE := {
+	"sfatta": "barba_sfatta.png", "pizzetto": "barba_pizzetto.png",
+	"barba": "barba_barba.png", "basette": "barba_basette.png",
+}
+const TEX_RUGHE := {
+	"stanco": "rughe_stanco.png", "vecchio": "rughe_vecchio.png",
+	"vecchia": "rughe_vecchia.png", "arraggiato": "rughe_arraggiato.png",
+}
 const SHADER_FACCIA := "res://assets/shaders/pupo_faccia.gdshader"
 
 ## Il caso delle facce ha il suo dado: il gioco non semina il caso globale,
@@ -1116,17 +1132,14 @@ static func _materiale_faccia(pelle: Color, peli: Color,
 	mat.shader = _shader_faccia
 	mat.set_shader_parameter("pelle", pelle)
 	mat.set_shader_parameter("peli", peli)
-	var bocca: Texture2D = _tex_pupo("bocca_%s.png" % str(opts.get("bocca", "dritta")))
-	var barba: String = str(opts.get("barba", ""))
-	var rughe: String = str(opts.get("rughe", ""))
+	var bocca: Texture2D = _tex_pupo(str(TEX_BOCCHE.get(str(opts.get("bocca", "dritta")),
+		TEX_BOCCHE["dritta"])))
+	var barba: Texture2D = _tex_pupo(str(TEX_BARBE.get(str(opts.get("barba", "")), "")))
+	var rughe: Texture2D = _tex_pupo(str(TEX_RUGHE.get(str(opts.get("rughe", "")), "")))
 	if bocca != null:
 		mat.set_shader_parameter("tex_bocca", bocca)
-	if barba != "":
-		var t: Texture2D = _tex_pupo("barba_%s.png" % barba)
-		if t != null:
-			mat.set_shader_parameter("tex_barba", t)
-	if rughe != "":
-		var t2: Texture2D = _tex_pupo("rughe_%s.png" % rughe)
-		if t2 != null:
-			mat.set_shader_parameter("tex_rughe", t2)
+	if barba != null:
+		mat.set_shader_parameter("tex_barba", barba)
+	if rughe != null:
+		mat.set_shader_parameter("tex_rughe", rughe)
 	return mat
