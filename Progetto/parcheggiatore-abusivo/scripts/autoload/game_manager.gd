@@ -1617,7 +1617,7 @@ func cassa_in_giro() -> int:
 ## La piazza passa a te. `comprata` distingue i due modi, e serve solo a
 ## dire la frase giusta: il risultato è lo stesso.
 func acquisisci_zona(id: String, nome: String, comprata: bool,
-		affitto: int = 0) -> void:
+		affitto: int = 0, senza_boss: bool = false) -> void:
 	if zone_mie.has(id):
 		return
 	zone_mie.append(id)
@@ -1625,7 +1625,15 @@ func acquisisci_zona(id: String, nome: String, comprata: bool,
 		affitti[id] = affitto
 	# **E stasera vene chi 'a teneva primma** (0.55). Comprata o presa a
 	# mazzate non cambia: chi la proteggeva non ha firmato niente.
-	arma_boss_capitolo(id)
+	#
+	# (0.64) Tranne la piazza **'n omaggio d''o Rre**: quella l'ha sistemata
+	# lui con chi la teneva, e il boss di capitolo di quella piazza non viene
+	# più (si segna come fatto). Un premio che la sera stessa ti manda
+	# addosso Tonino 'e Notte non è un premio.
+	if senza_boss:
+		boss_capitolo_fernuto(id)
+	else:
+		arma_boss_capitolo(id)
 	zona_acquisita.emit(id, nome, comprata)
 	save_game()
 
@@ -6287,7 +6295,7 @@ func re_esito(posteggiate: int, dove: String) -> Dictionary:
 				libera = id
 				break
 		if libera != "":
-			acquisisci_zona(libera, str(NOMI_PIAZZE.get(libera, libera)), true, 0)
+			acquisisci_zona(libera, str(NOMI_PIAZZE.get(libera, libera)), true, 0, true)
 			r["premio"] = "piazza"
 			r["zona"] = libera
 		else:

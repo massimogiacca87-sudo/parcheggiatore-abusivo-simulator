@@ -62,6 +62,10 @@ func _ready() -> void:
 		male("nisciuna piazza 'n omaggio: %s" % str(GameManager.zone_mie))
 	if GameManager.re_prossimo_juorno != -1:
 		male("battuto, e torna 'o juorno %d" % GameManager.re_prossimo_juorno)
+	# 'A piazza 'n omaggio nun porta 'o boss 'e capitolo: l'ha sistemata 'o Rre.
+	for zid in GameManager.zone_mie:
+		if not primma_zone.has(zid) and GameManager.boss_da_fa.has(zid):
+			male("'a piazza 'n omaggio (%s) porta 'o boss 'e capitolo stasera" % zid)
 	print("  zone mo': %s" % str(GameManager.zone_mie))
 
 	print("=== 2. TRE MACHINE: 'NU GUAGLIONE ===")
