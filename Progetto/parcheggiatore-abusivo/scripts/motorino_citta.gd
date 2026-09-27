@@ -30,6 +30,9 @@ var _attesa: float = 0.0
 var _suonato: bool = false
 var _colpito: bool = false
 var _motore: AudioStreamPlayer3D = null
+## Ogni quanto ci ricordiamo di controllare la manopola effetti mentre il
+## motore gira (0.63): non serve ogni frame, l'orecchio non è così fino.
+var _agg_volume_t: float = 0.0
 
 
 func _ready() -> void:
@@ -97,6 +100,16 @@ func _process(delta: float) -> void:
 				_motore.pitch_scale = randf_range(0.92, 1.12) * _velocita / 11.0
 				_motore.play(randf_range(0.0, 2.0))
 		return
+
+	# **'A manopola cagna, 'o mutore s'adda sentì'** (0.63): se il giocatore
+	# muove lo slider effetti mentre il motorino passa, il volume del motore
+	# non deve restare congelato a quando è partito. Controllo ogni quarto
+	# di secondo, non ogni frame — tanto basta e avanza.
+	_agg_volume_t += delta
+	if _agg_volume_t >= 0.25:
+		_agg_volume_t = 0.0
+		if is_instance_valid(_motore) and _motore.playing:
+			_motore.volume_db = SoundManager.volume_3d(-3.0)
 
 	var tratta: Vector3 = arrivo - partenza
 	var lung: float = tratta.length()
