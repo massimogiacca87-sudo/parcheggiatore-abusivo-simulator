@@ -381,6 +381,8 @@ func _ready() -> void:
 	_build_vicinato()
 	_build_signora()
 	GameManager.boss_capitolo_arriva.connect(_arriva_o_boss)
+	GameManager.zona_acquisita.connect(_zona_cagnata_padrone)
+	GameManager.zona_persa.connect(_zona_persa)
 	_build_cartelli()
 	_build_fumo()
 	_build_arredo_novo()
@@ -2833,7 +2835,7 @@ func _build_zone() -> void:
 		# ritagliate dentro alla maglia degli isolati, e sono gli isolati a
 		# fare da quinta su tutti e quattro i lati.
 		_pavimenta(r[0], r[1], r[2], r[3], str(z["id"]))
-		_posti_auto(r[0], r[1], r[2], r[3])
+		_posti_auto(r[0], r[1], r[2], r[3], str(z["id"]))
 		_cartello_zona(z)
 		var riv := RivaleScript.new()
 		riv.name = "Rivale_" + str(z["id"])
@@ -3239,14 +3241,137 @@ func _pavimenta(x0: float, z0: float, x1: float, z1: float, id: String) -> void:
 ## Adesso ogni piazza ha i suoi posti veri, su tutte e due le fascie
 ## laterali: dai sei ai sedici a piazza, che per tre auto alla volta sono
 ## abbondanti e lasciano margine quando una resta ferma a lungo.
-func _posti_auto(x0: float, z0: float, x1: float, z1: float) -> void:
-	var z: float = z0 + 6.0
-	while z < z1 - 6.0:
+##
+## **'O mercato teneva quatto posti** (0.64). Le due file finivano sei metri
+## prima del bordo: nelle piazze piccole (ventuno metri di fondo) voleva
+## dire due posti per fila. Col passo del mercato (un'auto ogni venti
+## secondi, e ognuna sta ferma mezzo minuto) sei clienti su tredici
+## restavano senza posto e se ne andavano — `prova_conquista` l'ha contato.
+## Adesso le file arrivano a quattro metri e mezzo dal bordo, e dove fra le
+## due file resta spazio c'è **una fila di fondo**, le macchine l'una
+## accanto all'altra col muso verso il bordo, come nei parcheggi a spina.
+## I posti che a città finita risultano murati (una bancarella, un banco)
+## li spegne `posteggio_3d` alla prima misura.
+const FONDO_PASSO: float = 2.9
+
+
+## **'O vico d''a cornetteria è stritto** (0.64). Il fabbricato sta a nord,
+## il banco dell'armiere chiude il sud, e l'unico modo di arrivare alla coda
+## è di lato, passando in mezzo alla fila dei posti di ponente: il posto di
+## mezzo di quella fila resta vuoto, e diventa la corsia d'ingresso. Senza,
+## con una macchina posteggiata lì, chi arrivava si incastrava e se ne
+## andava (`prova_conquista`, `sonda_varchi`).
+const POSTI_SALTATI := {"cornetteria": [Vector2(138.5, 112.2)]}
+
+
+func _posti_auto(x0: float, z0: float, x1: float, z1: float, id: String = "") -> void:
+	var n: int = int(floor((z1 - 4.4 - (z0 + 6.0)) / 5.2)) + 1
+	var saltati: Array = POSTI_SALTATI.get(id, [])
+	for i in range(maxi(0, n)):
+		var z: float = z0 + 6.0 + float(i) * 5.2
 		for lato in [x0 + 4.5, x1 - 4.5]:
-			var spot = PostoScript.new()
-			spot.position = Vector3(lato, 0.13, z)
-			add_child(spot)
-		z += 5.2
+			var salta := false
+			for q in saltati:
+				if Vector2(lato, z).distance_to(q) < 0.6:
+					salta = true
+			if not salta:
+				_posto_auto(Vector3(lato, 0.13, z), id)
+	# La fila di fondo, sul lato opposto a quello da cui si entra (le piazze
+	# con l'ingresso a sud la tengono a nord). Fra le due file dei fianchi,
+	# con tre metri di rispetto per parte.
+	var zona: Dictionary = zona_per_id(id)
+	var sud: bool = not bool(zona.get("ingresso_sud", false))
+	var zf: float = (z1 - 3.4) if sud else (z0 + 3.4)
+	var da: float = x0 + 4.5 + 1.1 + 2.0 + 1.1
+	var a: float = x1 - 4.5 - 1.1 - 2.0 - 1.1
+	var quanti: int = int(floor((a - da) / FONDO_PASSO)) + 1
+	if quanti >= 3 and id != "stadio":
+		var avanzo: float = (a - da) - float(quanti - 1) * FONDO_PASSO
+		for k in range(quanti):
+			_posto_auto(Vector3(da + avanzo * 0.5 + float(k) * FONDO_PASSO, 0.13, zf), id)
+
+
+## Un posto vero, segnato con la zona e il numero (servono alle strisce blu,
+## 0.64) e nel catasto delle auto in sosta: una macchina d'arredo parcheggiata
+## sopra a un posto è un posto che non si può usare (allo stadio ce n'erano
+## sei per fianco, di traverso sulle strisce).
+func _posto_auto(p: Vector3, id: String) -> void:
+	var spot = PostoScript.new()
+	spot.position = p
+	spot.zona_id = id
+	spot.indice = _posti_zone_n.get(id, 0)
+	_posti_zone_n[id] = int(spot.indice) + 1
+	add_child(spot)
+	_posti_zone.append(Vector2(p.x, p.z))
+
+
+var _posti_zone: Array = []
+var _posti_zone_n: Dictionary = {}
+
+
+## Vero se un'auto d'arredo in `p`, girata di `gradi`, starebbe addosso a
+## un posto vero (con quaranta centimetri d'aria).
+func _sopra_a_posto(p: Vector3, gradi: float) -> bool:
+	var traverso: bool = absf(sin(deg_to_rad(gradi))) > 0.7
+	var hx: float = (2.2 if traverso else 1.0) + 1.1 + 0.4
+	var hz: float = (1.0 if traverso else 2.2) + 2.2 + 0.4
+	for q in _posti_zone:
+		if absf((q as Vector2).x - p.x) < hx and absf((q as Vector2).y - p.z) < hz:
+			return true
+	return false
+
+
+## I cartelli all'ingresso delle zone, per id: si riscrivono quando la zona
+## cambia padrone (0.64).
+var _cartielle_zona: Dictionary = {}
+
+
+## **'O cartiello diceva sempe 'o padrone 'e primma** (0.64). Il testo era
+## la costante `padrone` della tabella: comprato il mercato, all'ingresso
+## c'era ancora scritto «Rafele 'o Sicco», oggi e tutte le giornate dopo.
+func _testo_cartiello(z: Dictionary) -> String:
+	var id := str(z.get("id", ""))
+	if GameManager.zona_mia(id):
+		return str(z["nome"]) + "\n'A zona toia"
+	return str(z["nome"]) + "\n" + str(z["padrone"])
+
+
+## Quello che c'è scritto adesso sul cartello di una zona (per le prove).
+func cartiello_d_a_zona(id: String) -> String:
+	var t = _cartielle_zona.get(id, null)
+	if t == null or not is_instance_valid(t):
+		return ""
+	return str((t as Label3D).text)
+
+
+## **Accattata stanno dint'â piazza, e 'o lavoro nun s'appicciava** (0.64).
+##
+## Il servizio si accendeva solo quando si **entrava** in una zona tua
+## (`_process` guarda il cambio di zona). Ma una piazza la compri o la
+## prendi stando **dentro**, accanto al rivale: la zona non cambia, e fino a
+## quando non uscivi e rientravi restavi «fuori servizio» in casa tua —
+## arrivava una macchina sola, i clienti non si spazientivano, la freccia
+## non c'era. Il capo l'ha vista così: la piazza comprata non lavorava.
+## Adesso quando una zona cambia padrone si rifà il conto sul posto.
+func _zona_cagnata_padrone(id: String, _nome: String = "", _comprata: bool = false) -> void:
+	var z := zona_per_id(id)
+	var t = _cartielle_zona.get(id, null)
+	if t != null and is_instance_valid(t) and not z.is_empty():
+		(t as Label3D).text = _testo_cartiello(z)
+	# I rivali che restano diventano più duri (vedi `rivale_3d.configura`):
+	# il conto si faceva solo all'avvio, quindi il secondo e il terzo si
+	# stendevano con la stessa fatica del primo.
+	for r in get_tree().get_nodes_in_group("rivali"):
+		if r.has_method("ricalcola_forza"):
+			r.ricalcola_forza()
+	if _zona_corrente == id:
+		zona_cambiata.emit(id, str(z.get("nome", "")),
+			"tu" if GameManager.zona_mia(id) else str(z.get("padrone", "")))
+		_aggiorna_servizio(z)
+
+
+func _zona_persa(id: String) -> void:
+	_zona_cagnata_padrone(id)
 
 
 ## Il cartello all'ingresso della zona: dice dove sei e di chi è.
@@ -3265,7 +3390,8 @@ func _cartello_zona(z: Dictionary) -> void:
 	add_child(palo)
 
 	var targa := Label3D.new()
-	targa.text = str(z["nome"]) + "\n" + str(z["padrone"])
+	targa.text = _testo_cartiello(z)
+	_cartielle_zona[str(z["id"])] = targa
 	targa.position = pos + Vector3(0, 1.6, 0)
 	targa.font_size = 46
 	targa.pixel_size = 0.0032
@@ -3513,6 +3639,12 @@ func _auto_in_sosta() -> void:
 	var puliti: Array = []
 	for p in punti:
 		if _occupato_da_attivita(p[0], 4.2):
+			continue
+		# **Né ncopp'ê strisce** (0.64): allo stadio la fila dei fianchi stava
+		# di traverso sopra ai posti veri, e in partita quei posti non si
+		# potevano usare (la prova li metteva a posto a mano, e non se ne
+		# accorgeva).
+		if _sopra_a_posto(p[0], float(p[1])):
 			continue
 		# E soprattutto: mai davanti al varco di una zona. Un'auto ferma li'
 		# non e' arredo, e' un tappo — e il cliente che non riesce a entrare

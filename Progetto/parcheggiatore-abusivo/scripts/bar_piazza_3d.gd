@@ -209,9 +209,16 @@ func _costruisci() -> void:
 	# E il posto dove ci si appoggia tu: stare fermi al bar abbassa il
 	# sospetto, ed è la cosa più napoletana che questo gioco possa fare.
 	var pu = PostoUtile.new()
+	pu.tipo = "appoggio"
 	pu.riposo = 8.0
 	pu.position = Vector3(1.6, 0, -1.2)
 	add_child(pu)
+	# **Nun è 'nu muro** (0.64): la scatola serve a guardarlo, non a
+	# fermare chi passa. Nella piazza di casa stava un metro e mezzo dentro
+	# al posto auto accanto al bar, e chi ci posteggiava sbatteva contro
+	# l'aria (`prova_conquista`, «posto murato»). Il mirino lo trova lo
+	# stesso: sta nel gruppo delle attività.
+	pu.collision_layer = 0
 	var f := CollisionShape3D.new()
 	var b := BoxShape3D.new()
 	b.size = Vector3(1.6, 2.0, 1.6)

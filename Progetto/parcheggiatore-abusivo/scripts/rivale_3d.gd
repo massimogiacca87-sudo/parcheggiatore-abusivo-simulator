@@ -155,6 +155,24 @@ func configura(id: String, nome_suo: String, dal: Vector3, al: Vector3,
 		_targhetta.text = nome
 
 
+## **'O secondo rivale nun era cchiù tuosto d''o primmo** (0.64): la forza
+## si contava una volta sola, a città costruita, quando le piazze tue erano
+## ancora una. La città la richiama quando una zona cambia padrone. Chi sta
+## già facendo a botte (o è a terra) si tiene i punti che ha: non si
+## ricarica in mezzo a una lite.
+func ricalcola_forza() -> void:
+	var nuovo: int = MAX_HP + 15 * maxi(0, GameManager.zone_mie.size() - 1)
+	if stato == Stato.STESO or stato == Stato.MENA:
+		hp_max = maxi(hp_max, nuovo)
+		return
+	var era_pieno: bool = hp >= hp_max
+	hp_max = nuovo
+	if era_pieno:
+		hp = hp_max
+	else:
+		hp = mini(hp, hp_max)
+
+
 func _calcola_giro() -> void:
 	if zona_max == Vector3.ZERO:
 		return

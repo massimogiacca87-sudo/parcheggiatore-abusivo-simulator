@@ -493,6 +493,12 @@ func _update_client_pointer() -> void:
 	for car in get_tree().get_nodes_in_group("cars"):
 		if car.state != 1: # WAITING
 			continue
+		# **Sulo 'e clienti 'e sta piazza** (0.64). Con quattro piazze tue la
+		# freccia puntava il cliente più vicino di tutta la città: al
+		# mercato, a volte, quello che aspettava a casa.
+		if GameManager.zona_corrente != "" \
+				and str(car.get("zona_id")) != GameManager.zona_corrente:
+			continue
 		var d: float = _player_ref.global_position.distance_to(car.global_position)
 		if d < best_dist:
 			best_dist = d

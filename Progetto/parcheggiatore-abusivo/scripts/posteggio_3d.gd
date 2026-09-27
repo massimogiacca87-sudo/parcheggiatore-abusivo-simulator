@@ -125,7 +125,25 @@ func _ready() -> void:
 	# passo — ogni interrogazione tornerebbe "libero" e i varchi si
 	# sceglierebbero a caso. Si misura al primo giro utile del timer, che per
 	# definizione arriva a partita avviata.
-	pass
+	GameManager.servizio_cambiato.connect(_su_servizio)
+
+
+## **Trasi 'n piazza e 'a machina arriva** (0.64). Il capo: *«entrando in
+## piazza cominciano ad arrivare auto da parcheggiare, esattamente come
+## nella tua»*. Il rubinetto aveva il suo giro fisso (venti-trenta secondi,
+## e alla cornetteria di giorno più di un minuto): entrando in una piazza
+## vuota si stava lì a guardare l'asfalto, e sembrava rotta. Adesso, se
+## entri in questa piazza e non c'è niente da servire, il primo cliente
+## arriva fra due e quattro secondi; poi si va col passo della piazza.
+func _su_servizio(attivo: bool, _nome: String) -> void:
+	if not attivo or GameManager.zona_corrente != zona_id:
+		return
+	if not GameManager.zona_mia(zona_id) or not GameManager.shift_active:
+		return
+	if _da_servire() > 0 or _timer == null:
+		return
+	if _timer.time_left > 4.0:
+		_timer.start(randf_range(2.0, 4.0))
 
 
 var _misurato: bool = false
@@ -170,35 +188,84 @@ func _scegli_varchi() -> void:
 	# **nessuna** macchina arrivava mai in coda (la prova della 0.61 le ha
 	# contate: quattro nate, zero servite, in quattro minuti). Adesso si
 	# provano cinque punti per lato, a quattro e a otto metri dal bordo.
+	# **Nun se trase d''a parte d''a fila 'e fondo** (0.64). Il mercato ha
+	# una fila di posti lungo il bordo sud, e il varco che «raggiunge più
+	# code» era proprio lì: chi entrava doveva passare in mezzo alle
+	# macchine appena posteggiate, si incastrava e se ne andava
+	# (`prova_conquista`: tre clienti persi in cento secondi). Un lato con
+	# dei posti a meno di quattro metri dal bordo non è un ingresso.
+	var chiuso := {"ovest": false, "est": false, "nord": false, "sud": false}
+	for s in get_tree().get_nodes_in_group("parking_spots"):
+		if str(s.get("zona_id")) != zona_id:
+			continue
+		var q: Vector3 = (s as Node3D).global_position
+		if q.z > z1 - 4.0:
+			chiuso["sud"] = true
+		if q.z < z0 + 4.0:
+			chiuso["nord"] = true
+		if q.x < x0 + 3.0:
+			chiuso["ovest"] = true
+		if q.x > x1 - 3.0:
+			chiuso["est"] = true
 	var varchi: Array = []
 	for fuori in [4.0, 8.0]:
 		for t in [0.5, 0.3, 0.7, 0.15, 0.85]:
-			varchi.append(Vector3(x0 - fuori, 0, lerpf(z0, z1, t)))
-			varchi.append(Vector3(x1 + fuori, 0, lerpf(z0, z1, t)))
-			varchi.append(Vector3(lerpf(x0, x1, t), 0, z0 - fuori))
-			varchi.append(Vector3(lerpf(x0, x1, t), 0, z1 + fuori))
+			if not chiuso["ovest"]:
+				varchi.append(Vector3(x0 - fuori, 0, lerpf(z0, z1, t)))
+			if not chiuso["est"]:
+				varchi.append(Vector3(x1 + fuori, 0, lerpf(z0, z1, t)))
+			if not chiuso["nord"]:
+				varchi.append(Vector3(lerpf(x0, x1, t), 0, z0 - fuori))
+			if not chiuso["sud"]:
+				varchi.append(Vector3(lerpf(x0, x1, t), 0, z1 + fuori))
 	var liberi: Array = []
 	for v in varchi:
 		if _libero(v):
 			liberi.append(v)
 
 	var posti: Array = []
+	# (0.64) Quattro file invece di tre, e fino a tre metri e mezzo dal
+	# bordo: alla cornetteria l'unico posto buono per aspettare è la
+	# striscia di fondo, fra le due file di posti e dietro al banco
+	# dell'armiere.
 	for ix in range(5):
-		for iz in range(3):
+		for iz in range(4):
 			var p := Vector3(
 				lerpf(x0 + 6.0, x1 - 6.0, (float(ix) + 0.5) / 5.0), 0.0,
-				lerpf(z0 + 5.0, z1 - 5.0, (float(iz) + 0.5) / 3.0))
-			if _libero(p):
+				lerpf(z0 + 5.0, z1 - 2.8, (float(iz) + 0.5) / 4.0))
+			# (0.64) Chi aspetta non aspetta ncopp'ê strisce: con la fila di
+			# fondo, una macchina in coda davanti ai posti li tappava tutti.
+			if _libero(p) and not _ncopp_a_nu_posto(p):
 				posti.append(p)
 
 	# Per ogni varco, i posti che si raggiungono in linea retta.
+	# **E senza passà ncopp'ê strisce** (0.64). Allo stadio si entrava da
+	# ovest e la strada per la coda attraversava la fila dei posti del
+	# fianco: con due macchine posteggiate era un muro, e i clienti nuovi
+	# si incastravano e se ne andavano (`prova_conquista`, quattro su dieci).
+	# Se nessun varco ci riesce, si torna alla regola di prima.
+	var sp_zona: Array = []
+	for s in get_tree().get_nodes_in_group("parking_spots"):
+		if str(s.get("zona_id")) == zona_id:
+			sp_zona.append((s as Node3D).global_position)
 	var da_varco: Array = []
+	var qualcuno := false
 	for v2 in liberi:
 		var r: Array = []
 		for p3 in posti:
-			if _via_libera(v2, p3):
+			if _via_libera(v2, p3) and not _passa_pe_nu_posto(v2, p3, sp_zona):
 				r.append(p3)
+		if not r.is_empty():
+			qualcuno = true
 		da_varco.append(r)
+	if not qualcuno:
+		da_varco.clear()
+		for v2 in liberi:
+			var r2: Array = []
+			for p3 in posti:
+				if _via_libera(v2, p3):
+					r2.append(p3)
+			da_varco.append(r2)
 	var meglio_i: int = -1
 	for i in range(liberi.size()):
 		if meglio_i < 0 or (da_varco[i] as Array).size() > (da_varco[meglio_i] as Array).size():
@@ -222,10 +289,30 @@ func _scegli_varchi() -> void:
 			if n > conta_u:
 				conta_u = n
 				_uscita = liberi[j]
+	# **Nisciun varco libbero** (0.64): alla cornetteria, stretta fra vicoli
+	# da quattro metri, la sagoma di prova non ci sta mai e l'ingresso resta
+	# quello di ripiego (quattro metri fuori dal lato di ponente). Prima la
+	# coda diventava il centro della piazza, un punto solo per tre macchine
+	# una sopra all'altra: chi arrivava sbatteva contro chi aspettava e se
+	# ne andava. Adesso anche col ripiego la coda si sceglie fra i punti
+	# buoni che dall'ingresso si raggiungono senza passare sulle strisce.
+	if meglio_punti.is_empty():
+		for p5 in posti:
+			if not _passa_pe_nu_posto(_entrata, p5, sp_zona):
+				meglio_punti.append(p5)
 	meglio_punti.sort_custom(func(a, b):
 		return a.distance_to(_entrata) < b.distance_to(_entrata))
 	_coda.clear()
 	for p2 in meglio_punti:
+		# Due che aspettano non stanno uno dentro all'altro: di fianco o in
+		# fila, con la sagoma d'aria.
+		var addosso := false
+		for q2 in _coda:
+			if absf((q2 as Vector3).x - p2.x) < 2.7 and absf((q2 as Vector3).z - p2.z) < 5.0:
+				addosso = true
+				break
+		if addosso:
+			continue
 		_coda.append(p2)
 		if _coda.size() >= 4:
 			break
@@ -233,6 +320,68 @@ func _scegli_varchi() -> void:
 		_coda.append(Vector3(cx, 0.0, cz))
 	print_verbose("Posteggio %s: entrata %s uscita %s coda %s" % [zona_id,
 		str(_entrata), str(_uscita), str(_coda)])
+
+
+## **'E posti murati** (0.64). La città disegna i posti prima di mettere
+## bancarelle, banchi e auto d'arredo; il catasto le tiene lontane, ma una
+## cosa costruita dopo e senza chiedere può sempre finirci sopra. Alla prima
+## misura, a mondo avviato, si guarda ogni posto di questa piazza con la
+## sagoma di una macchina un po' stretta: se ci sta un muro (strato 1, cioè
+## roba ferma — non le auto e non la gente), il posto si spegne. Meglio un
+## posto in meno che una macchina mandata a sbattere per mezzo minuto.
+func _spegni_posti_murati() -> int:
+	var mondo := get_world_3d()
+	if mondo == null:
+		return 0
+	var spenti := 0
+	for s in get_tree().get_nodes_in_group("parking_spots"):
+		if str(s.get("zona_id")) != zona_id:
+			continue
+		var p: Vector3 = (s as Node3D).global_position
+		var q := PhysicsShapeQueryParameters3D.new()
+		var box := BoxShape3D.new()
+		box.size = Vector3(1.9, 1.0, 4.0)
+		q.shape = box
+		q.transform = Transform3D(Basis(), Vector3(p.x, p.y + 0.75, p.z))
+		q.collision_mask = 1
+		var murato := false
+		for h in mondo.direct_space_state.intersect_shape(q, 4):
+			var c = h.get("collider")
+			if c is CharacterBody3D:
+				continue
+			murato = true
+			break
+		if murato and s.has_method("spegni"):
+			s.spegni()
+			spenti += 1
+	if spenti > 0:
+		print_verbose("Posteggio %s: %d posti murati spenti" % [zona_id, spenti])
+	return spenti
+
+
+## Vero se la strada dritta da `a` a `b` passa sopra a uno dei posti `sp`
+## (con la mezza larghezza di una macchina d'aria).
+func _passa_pe_nu_posto(a: Vector3, b: Vector3, sp: Array) -> bool:
+	var passi: int = maxi(2, int(ceil(a.distance_to(b) / 0.8)))
+	for i in range(passi + 1):
+		var p: Vector3 = a.lerp(b, float(i) / float(passi))
+		for q in sp:
+			if absf((q as Vector3).x - p.x) < 1.1 + 1.3 \
+					and absf((q as Vector3).z - p.z) < 2.2 + 1.3:
+				return true
+	return false
+
+
+## Vero se una macchina ferma in `p` (col muso lungo z, come chi aspetta)
+## starebbe sopra a un posto di questa piazza o davanti alla sua bocca.
+func _ncopp_a_nu_posto(p: Vector3) -> bool:
+	for s in get_tree().get_nodes_in_group("parking_spots"):
+		if str(s.get("zona_id")) != zona_id:
+			continue
+		var q: Vector3 = (s as Node3D).global_position
+		if absf(q.x - p.x) < 1.1 + 1.2 + 0.8 and absf(q.z - p.z) < 2.2 + 2.4 + 1.2:
+			return true
+	return false
 
 
 func _via_libera(a: Vector3, b: Vector3) -> bool:
@@ -256,6 +405,7 @@ func _on_timeout() -> void:
 	_timer.start()
 	if GameManager.shift_active and not _misurato:
 		_misurato = true
+		_spegni_posti_murati()
 		_scegli_varchi()
 	if GameManager.giornata_scaduta:
 		return
@@ -331,15 +481,62 @@ func _dentro(p: Vector3) -> bool:
 		and p.z >= float(rect[1]) - 6.0 and p.z <= float(rect[3]) + 6.0
 
 
-func _spawn() -> void:
+func _spawn() -> Node:
 	if _coda.is_empty():
-		return
+		return null
+	# **Ogni posto 'e coda a uno sulo** (0.64). Il giro a turno mandava la
+	# quarta macchina sul punto della prima, che stava ancora lì: sbatteva,
+	# si fermava e se ne andava. Adesso si sceglie un punto che nessuno sta
+	# già occupando; se sono tutti presi, si aspetta il giro dopo.
+	# E la strada dall'ingresso non deve passare addosso a chi aspetta: si
+	# riempiono prima i punti più lontani (vedi `zone_vicolo_3d._punto_coda_libero`).
+	var ordine: Array = _coda.duplicate()
+	ordine.sort_custom(func(a, b): return a.distance_to(_entrata) > b.distance_to(_entrata))
+	var ferme: Array = []
+	for c in get_tree().get_nodes_in_group("cars"):
+		if is_instance_valid(c) and str(c.get("zona_id")) == zona_id and int(c.get("state")) == 1:
+			ferme.append((c as Node3D).global_position)
+	var posto := Vector3.INF
+	for cand in ordine:
+		if _punto_preso(cand):
+			continue
+		var tappato := false
+		for f in ferme:
+			if _vicino_a_segmento(f, _entrata, cand) < 2.7:
+				tappato = true
+				break
+		if not tappato:
+			posto = cand
+			break
+	if posto == Vector3.INF:
+		return null
 	var car = CarScene.new()
 	car.zona_id = zona_id
 	add_child(car)
-	var posto: Vector3 = _coda[_cursore % _coda.size()]
-	_cursore += 1
 	car.setup(_entrata, posto, _uscita, [], [])
+	return car
+
+
+static func _vicino_a_segmento(p: Vector3, a: Vector3, b: Vector3) -> float:
+	var ab := Vector2(b.x - a.x, b.z - a.z)
+	var ap := Vector2(p.x - a.x, p.z - a.z)
+	var l2: float = ab.length_squared()
+	var t: float = 0.0 if l2 < 0.0001 else clampf(ap.dot(ab) / l2, 0.0, 1.0)
+	return (ap - ab * t).length()
+
+
+## Vero se una macchina di questa piazza sta andando lì o ci sta aspettando.
+func _punto_preso(p: Vector3) -> bool:
+	for c in get_tree().get_nodes_in_group("cars"):
+		if not is_instance_valid(c) or str(c.get("zona_id")) != zona_id:
+			continue
+		if int(c.get("state")) > 1:
+			continue
+		var w = c.get("waiting_point")
+		if w is Vector3 and Vector2((w as Vector3).x, (w as Vector3).z).distance_to(
+				Vector2(p.x, p.z)) < 1.0:
+			return true
+	return false
 
 
 # ---------------------------------------------------------------------------

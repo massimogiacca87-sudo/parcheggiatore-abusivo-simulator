@@ -13,6 +13,13 @@ const LINE_W := 0.09
 
 var is_free: bool = true
 var occupying_car: Node = null
+## Di che piazza è, e che numero ha dentro alla piazza (0.64): le strisce
+## blu si ricordano posto per posto quali hai già ripittato.
+var zona_id: String = ""
+var indice: int = -1
+## Spento a città finita perché murato (una bancarella, un banco): non si
+## disegna e non si assegna (0.64, vedi `posteggio_3d._spegni_posti_murati`).
+var spento: bool = false
 
 var _line_material: StandardMaterial3D
 var _fill: MeshInstance3D
@@ -96,6 +103,16 @@ func _process(delta: float) -> void:
 		_beacon_time += delta
 		_beacon.position.y = 2.4 + sin(_beacon_time * 3.0) * 0.18
 		_beacon.rotation.y += delta * 2.2
+
+
+## Il posto sta sotto a qualcosa (0.64): non si disegna e non si dà a
+## nessuno. Esce dal gruppo, così chi cerca un posto libero non lo vede.
+func spegni() -> void:
+	spento = true
+	is_free = false
+	occupying_car = null
+	visible = false
+	remove_from_group("parking_spots")
 
 
 func reserve(car: Node) -> void:

@@ -65,6 +65,16 @@ const DATI := {
 			"Chisto te sceta pure 'e muorte."],
 		"evento": "Cafe' ar banco: mo' se cammina buono.",
 	},
+	# **'O banco d''o bar, pe' s'appoggià** (0.64). Il posto accanto al
+	# banco non aveva un tipo, e ricadeva sull'edicola: guardando di fianco
+	# al bancone usciva «'A Maronna — fatte 'o segno d''a croce».
+	"appoggio": {
+		"prompt": "'O banco — [E] appoggiate nu mumento",
+		"costo": 0, "hp": 4.0, "calore": -10.0,
+		"dice": ["Nu mumento 'e pace.", "Ccà nisciuno te dice niente.",
+			"'O barista te fa 'nu cenno.", "Se sta buono, appuggiate."],
+		"evento": "Appuggiato ô banco: pare ca staje 'e passaggio.",
+	},
 	"panchina": {
 		"prompt": "'A panchina — [E] assèttate nu momento",
 		"costo": 0, "hp": 11.0, "calore": -9.0,

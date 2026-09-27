@@ -129,6 +129,7 @@ func _ready() -> void:
 	exit_point = entry_point
 	player_start = Vector3(width * 0.5, 0.0, length * 0.42)
 	GameManager.chiama_borrelli.connect(_borrelli_subito)
+	GameManager.servizio_cambiato.connect(_su_servizio)
 
 	if not dentro_citta:
 		_build_lighting()
@@ -2484,11 +2485,15 @@ func _build_parking_spots() -> void:
 	for i in range(spots_right):
 		var spot = ParkingSpotScene.new()
 		spot.position = Vector3(width - 5.0, 0.13, start_z + i * spacing)
+		spot.zona_id = "piazza"
+		spot.indice = parking_spots.size()
 		add_child(spot)
 		parking_spots.append(spot)
 	for i in range(spots_left):
 		var spot = ParkingSpotScene.new()
 		spot.position = Vector3(5.0, 0.13, start_z + 2.6 + i * spacing)
+		spot.zona_id = "piazza"
+		spot.indice = parking_spots.size()
 		add_child(spot)
 		parking_spots.append(spot)
 
@@ -3032,17 +3037,91 @@ func _on_spawn_timeout() -> void:
 		_spawn_car()
 
 
-func _spawn_car() -> void:
+## **Trasi e 'a machina arriva** (0.64): la stessa regola delle piazze
+## conquistate (`posteggio_3d._su_servizio`). Se torni in piazza e non c'è
+## nessuno da servire, il primo cliente arriva fra due e quattro secondi.
+func _su_servizio(attivo: bool, _nome: String) -> void:
+	if not attivo or GameManager.zona_corrente != "piazza":
+		return
+	if not GameManager.shift_active or GameManager.giornata_scaduta:
+		return
+	if _spawn_timer == null or _auto_da_servire() > 0:
+		return
+	if _spawn_timer.time_left > 4.0:
+		_spawn_timer.start(randf_range(2.0, 4.0))
+
+
+func _spawn_car() -> Node:
 	var car = CarScene.new()
 	# Questa e' la piazza dove sta il salotto: i clienti che arrivano qui
 	# vedono le piante, sentono la radio e di notte trovano le luminarie.
 	# Quelli delle altre piazze no — li' non c'e' niente da vedere.
 	car.piazza_curata = true
+	var queue_point: Vector3 = _punto_coda_libero()
+	if queue_point == Vector3.INF:
+		# Nessun punto buono: la coda è piena, o chi aspetta fuori tappa
+		# la strada a chi dovrebbe andare dentro. Si riprova al giro dopo.
+		car.free()
+		return null
 	add_child(car)
-	var queue_point: Vector3 = queue_points[_queue_cursor % queue_points.size()]
-	_queue_cursor += 1
-	car.setup(_glob(entry_point), _glob(queue_point), _glob(exit_point),
+	car.setup(_glob(entry_point), queue_point, _glob(exit_point),
 		percorso_ingresso(), percorso_uscita())
+	return car
+
+
+## **'A coda nun se tappa** (0.64). I tre punti d'attesa stavano due sulla
+## stessa riga dell'ingresso, a quattro metri e mezzo l'uno dall'altro:
+## una macchina ferma su quello di fuori chiudeva la strada a quella che
+## doveva andare su quello di dentro, che si incastrava e dopo sette secondi
+## se ne andava (con la sfida del Rre, a macchine veloci, se ne perdevano
+## cinque al minuto). Adesso si sceglie un punto che nessuno sta già
+## occupando e la cui strada dall'ingresso non passa addosso a chi aspetta;
+## prima quelli di dentro, così quelli di fuori si riempiono per ultimi.
+## `Vector3.INF` se non ce n'è.
+func _punto_coda_libero() -> Vector3:
+	var porta: Array = percorso_ingresso()
+	var da: Vector3 = porta[porta.size() - 1] if not porta.is_empty() else _glob(entry_point)
+	var punti: Array = []
+	for q in queue_points:
+		punti.append(_glob(q))
+	punti.sort_custom(func(a, b): return a.distance_to(da) > b.distance_to(da))
+	var ferme: Array = []
+	var mete: Array = []
+	for c in get_tree().get_nodes_in_group("cars"):
+		if not is_instance_valid(c) or str(c.get("zona_id")) != "piazza":
+			continue
+		var st: int = int(c.get("state"))
+		if st > 1:
+			continue
+		var w = c.get("waiting_point")
+		if w is Vector3:
+			mete.append(w)
+		if st == 1:
+			ferme.append((c as Node3D).global_position)
+	for p in punti:
+		var preso := false
+		for m in mete:
+			if Vector2((m as Vector3).x, (m as Vector3).z).distance_to(Vector2(p.x, p.z)) < 1.0:
+				preso = true
+				break
+		if preso:
+			continue
+		var tappato := false
+		for f in ferme:
+			if _distanza_segmento(f, da, p) < 2.7:
+				tappato = true
+				break
+		if not tappato:
+			return p
+	return Vector3.INF
+
+
+static func _distanza_segmento(p: Vector3, a: Vector3, b: Vector3) -> float:
+	var ab := Vector2(b.x - a.x, b.z - a.z)
+	var ap := Vector2(p.x - a.x, p.z - a.z)
+	var l2: float = ab.length_squared()
+	var t: float = 0.0 if l2 < 0.0001 else clampf(ap.dot(ab) / l2, 0.0, 1.0)
+	return (ap - ab * t).length()
 
 
 ## Vero se stiamo girando su Forward+ (Vulkan). In GL Compatibility — cioè

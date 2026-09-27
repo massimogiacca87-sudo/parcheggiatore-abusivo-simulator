@@ -218,7 +218,12 @@ const CARATTERE := {
 		# un vicolo morto: un'auto ogni quattro. Dopo mezzanotte è il
 		# posto dove finisce tutto il quartiere.
 		"nome": "sulo 'a notte",
-		"auto": 0.34, "mancia": 1.3, "vigili": 1, "notte": 4.6,
+		# **0.64: 0,34 → 0,45 di giorno, 4,6 → 3,5 di notte.** Il capo ha
+		# chiesto che una piazza presa lavori «come la tua»: con un'auto
+		# ogni minuto e mezzo, chi ci entrava di giorno pensava che fosse
+		# rotta. La notte resta uguale (0,45 × 3,5 ≈ 0,34 × 4,6), il giorno
+		# resta il più morto delle quattro.
+		"auto": 0.45, "mancia": 1.3, "vigili": 1, "notte": 3.5,
 		"che": "'E juorno nun ce sta n'anema. 'A notte è n'ata cosa.",
 	},
 }
@@ -659,6 +664,9 @@ var dipendenti: Dictionary = {}
 
 signal arma_cambiata(id: String)
 signal zona_acquisita(id: String, nome: String, comprata: bool)
+## La piazza torna a chi la teneva (0.64): il boss di capitolo se la riprende,
+## o l'affitto non pagato. La città aggiorna il cartello e il servizio.
+signal zona_persa(id: String)
 
 # Statistiche del turno corrente, usate per il riepilogo finale
 var clients_served: int = 0
@@ -1047,6 +1055,7 @@ func end_shift() -> Dictionary:
 			for id in perse:
 				zone_mie.erase(id)
 				affitti.erase(id)
+				zona_persa.emit(id)
 			money = 0
 			money_changed.emit(money)
 
@@ -3146,6 +3155,7 @@ func perde_zona(id: String) -> void:
 	if dipendenti.has(id):
 		dipendenti.erase(id)
 		dipendenti_cambiati.emit()
+	zona_persa.emit(id)
 	save_game()
 
 
