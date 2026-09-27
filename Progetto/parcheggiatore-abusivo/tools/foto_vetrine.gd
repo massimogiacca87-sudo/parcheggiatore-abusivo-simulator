@@ -66,6 +66,17 @@ func _ready() -> void:
 			indietro -= 0.5
 			di_lato = minf(di_lato, indietro * 0.3)
 		var occhio: Vector3 = punto + fuori * indietro + lato * di_lato + Vector3(0, y + 1.7 - punto.y, 0)
+		# La città non conosce i palazzi della piazza di casa (li fa
+		# `zone_vicolo_3d`): per quelli chiede al motore fisico. Un raggio
+		# dal punto, all'altezza degli occhi, verso dove starebbe l'occhio;
+		# se sbatte, l'occhio si ferma quaranta centimetri prima.
+		var da := Vector3(punto.x, y + 1.7, punto.z)
+		var spazio := get_viewport().world_3d.direct_space_state
+		var raggio := PhysicsRayQueryParameters3D.create(da, occhio)
+		var botta := spazio.intersect_ray(raggio)
+		if not botta.is_empty():
+			var fin: float = maxf(((botta["position"] as Vector3) - da).length() - 0.4, 1.2)
+			occhio = da + (occhio - da).normalized() * fin
 		_cam.look_at_from_position(occhio, dove + Vector3(0, y + 1.2, 0), Vector3.UP)
 		_cam.current = true
 		for _k in range(4):
