@@ -2265,6 +2265,12 @@ func arrubba(pl: Node3D) -> bool:
 	_release_spot()
 	if _bubble:
 		_bubble.say("!!!", 1.2)
+	# **'O zip d''o furto** (proposta di `sound_designer`, sì del capo).
+	# `steal` era caricato da sempre e mai suonato: 'na strisciata veloce
+	# verso l'acuto, giusta per il momento in cui la macchina diventa tua.
+	# Sta qui e non nel pannello dello scasso perché è il salire a bordo
+	# che conta, e la serratura ha già il suo "door" quando cede.
+	SoundManager.play("steal", -8.0)
 	# **'O player nun cammina cchiù: guida.** Spegnergli il `_physics_process`
 	# gli toglie in un colpo solo il movimento, la gravità, il raggio
 	# dell'interazione e i pugni — che sono esattamente le cose che uno
