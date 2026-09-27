@@ -96,18 +96,40 @@ func _build_visual() -> void:
 			"cintura": false,
 		})
 	_visual_root.add_child(parts["root"])
-	_scialle()
+	_scialle(parts.get("bones", {}).get("chest", null))
 
 
-## 'O scialle ncopp'ê spalle: due falde scure che la staccano dai passanti.
-func _scialle() -> void:
+## 'O scialle ncopp'ê spalle: una mantellina scura che la stacca dai
+## passanti.
+##
+## **(0.66) Nun è cchiù 'na cascia.** Fino alla 0.65 lo scialle era un
+## parallelepipedo nero di mezzo metro fermo a un metro e sedici da terra,
+## appeso alla radice e non al corpo: col pupo nuovo le copriva il mento, e
+## anche prima da vicino era una scatola. Adesso è una campana aperta
+## appesa all'osso del petto (dove +Y sale lungo la schiena e +Z è il
+## davanti): cade dal collo sulle spalle e si muove con lei.
+func _scialle(petto: Node3D) -> void:
+	if petto == null:
+		return
+	var cm := CylinderMesh.new()
+	cm.top_radius = 0.105
+	cm.bottom_radius = 0.255
+	cm.height = 0.26
+	cm.radial_segments = 14
+	cm.rings = 2
+	cm.cap_top = false
+	cm.cap_bottom = false
 	var m := MeshInstance3D.new()
-	var bm := BoxMesh.new()
-	bm.size = Vector3(0.46, 0.52, 0.30)
-	m.mesh = bm
-	m.position = Vector3(0.0, 1.16, 0.0)
-	m.material_override = Tex.flat(Color(0.09, 0.08, 0.11), 0.95)
-	_visual_root.add_child(m)
+	m.mesh = cm
+	# Più stretta davanti e dietro che ai lati, come un busto.
+	m.scale = Vector3(1.0, 1.0, 0.78)
+	m.position = Vector3(0.0, 0.085, -0.005)
+	# Una copia: `Tex.flat` tiene i materiali in comune, e la faccia di
+	# dentro serve solo qui (la campana è aperta).
+	var mat: StandardMaterial3D = Tex.flat(Color(0.07, 0.06, 0.09), 0.95).duplicate()
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.material_override = mat
+	petto.add_child(m)
 
 
 func _process(delta: float) -> void:

@@ -137,22 +137,36 @@ func _build_visual() -> void:
 	_anim = parts.get("anim", null)
 	# Il berretto rosso: da lontano è la cosa che lo distingue da un
 	# passante qualunque.
-	var berretto := MeshInstance3D.new()
-	var cm := CylinderMesh.new()
-	cm.top_radius = 0.10
-	cm.bottom_radius = 0.115
-	cm.height = 0.08
-	berretto.mesh = cm
-	berretto.material_override = Tex.flat(Color(0.82, 0.1, 0.08), 0.8)
-	berretto.position = Vector3(0, 1.66, 0.0)
-	_visual.add_child(berretto)
-	var visiera := MeshInstance3D.new()
-	var vm := BoxMesh.new()
-	vm.size = Vector3(0.16, 0.015, 0.1)
-	visiera.mesh = vm
-	visiera.material_override = Tex.flat(Color(0.7, 0.08, 0.06), 0.8)
-	visiera.position = Vector3(0, 1.635, -0.13)
-	_visual.add_child(visiera)
+	#
+	# **(0.66) Appiso â capa.** Stava a un metro e sessantasei da terra,
+	# fermo in mezzo al corpo: col cranio nuovo finiva tutto dentro alla
+	# testa (non si vedeva più), e non aveva mai seguito la testa quando
+	# Gennarino cammina. Adesso sta sull'osso della testa, dove **su è +Y e
+	# davanti è +Z**, con le misure del cranio del pupo (cima a 22 cm
+	# sopra l'osso, fronte a 13 cm davanti): calotta e visiera.
+	var testa: Node3D = parts.get("head", null)
+	if testa != null:
+		var rosso := Tex.flat(Color(0.82, 0.1, 0.08), 0.8)
+		var berretto := MeshInstance3D.new()
+		var cm := SphereMesh.new()
+		cm.radius = 0.132
+		cm.height = 0.264
+		cm.is_hemisphere = true
+		cm.radial_segments = 14
+		cm.rings = 5
+		berretto.mesh = cm
+		berretto.material_override = rosso
+		berretto.position = Vector3(0, 0.148, 0.006)
+		berretto.scale = Vector3(1.0, 0.68, 1.07)
+		testa.add_child(berretto)
+		var visiera := MeshInstance3D.new()
+		var vm := BoxMesh.new()
+		vm.size = Vector3(0.17, 0.014, 0.09)
+		visiera.mesh = vm
+		visiera.material_override = Tex.flat(Color(0.7, 0.08, 0.06), 0.8)
+		visiera.position = Vector3(0, 0.152, 0.165)
+		visiera.rotation.x = deg_to_rad(12.0)
+		testa.add_child(visiera)
 	# Il cartone.
 	var cartone := MeshInstance3D.new()
 	var bm := BoxMesh.new()

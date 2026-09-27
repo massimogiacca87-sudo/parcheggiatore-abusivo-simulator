@@ -92,8 +92,10 @@ func _ready() -> void:
 		n.global_position = Vector3(x, 0.0, 0.0)
 		# Guardano la macchina (che sta a −Z): il davanti di una persona è −Z.
 		n.rotation.y = 0.0
-		# Fermi: niente cervello, l'animazione sì.
+		# Fermi: niente cervello, l'animazione sì. Il Re e Gennarino
+		# nascono nascosti (compaiono al loro momento): qui si accendono.
 		n.set_physics_process(false)
+		n.visible = true
 		_chi.append([str(s[0]), n])
 		x += 1.3
 	print("  ", _chi.size(), " cristiane d''a storia")
@@ -133,12 +135,19 @@ func _scatta_tutto() -> void:
 	for c in _chi:
 		var n: Node3D = c[1]
 		n.set_physics_process(false)
+		n.set_process(false)
+		n.visible = true
+		for f in n.get_children():
+			if f is Node3D:
+				(f as Node3D).visible = true
 	var x0: float = -float(SCRIPTS.size() - 1) * 0.5 * 1.3
 	await _foto(Vector3(0, 1.6, -9.5), Vector3(0, 1.0, 0), "storia_fila", 52.0)
 	for i in range(_chi.size()):
 		var nome: String = _chi[i][0]
 		var n: Node3D = _chi[i][1]
 		n.global_position = Vector3(x0 + 1.3 * i, 0.0, 0.0)
+		# Chi sta dietro a un banco è girato apposta: qui guarda la macchina.
+		n.global_rotation.y = 0.0
 		var cima: float = 1.55
 		await _foto(n.global_position + Vector3(0.35, cima + 0.05, -1.25),
 			n.global_position + Vector3(0.0, cima, 0.0), "storia_" + nome, 40.0)
