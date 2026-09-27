@@ -1381,6 +1381,38 @@ const MERCE := ["scatoletta", "scatoletta2", "scatoletta_arrugginita",
 ## Quanto è alta 'a cascia ca fa 'a bancarella (`cascia_legno`: 0,72 × 0,40).
 const CASCIA_NCOPPA: float = 0.40
 
+## **'A bottega aperta 'n piazza è 'na meta** (0.64).
+##
+## Le vetrine dove gli autisti vanno a fare la spesa (`citta_3d._una_vetrina`,
+## gruppo `negozi`) si cercano sulle facciate degli isolati della città. La
+## piazza di casa però ha i palazzi suoi, costruiti qui, che la città non
+## conosce: le facciate che la guardano davvero non esistono per lei, e
+## quelle che trova dietro danno sui vicoli da quattro metri (il punto dove
+## ci si ferma cade in carreggiata, e vengono scartate tutte). Per questo
+## **il negozio più vicino alla tua piazza stava a 37 metri** (lo diceva la
+## roadmap dalla 0.59): ogni cliente attraversava un isolato per comprare
+## il pane. Le serrande aperte con la merce fuori sono botteghe vere: adesso
+## sono anche mete, col punto dove fermarsi sul marciapiede davanti alle
+## casse. I nomi sono quelli delle botteghe di quartiere.
+const BOTTEGHE := ["ALIMENTARI", "FERRAMENTA", "MERCERIA", "CASALINGHI",
+	"FRUTTA E VERDURA", "TABACCHI E GIORNALI"]
+var _botteghe_n: int = 0
+
+
+func _bottega_meta(pos: Vector3, inward: float) -> void:
+	var m := Node3D.new()
+	m.name = "Bottega_%d" % _botteghe_n
+	m.position = pos + Vector3(inward * 1.8, 0.0, 0.0)
+	# Girato verso la piazza (+Z locale fuori dalla serranda), come le
+	# vetrine della città: chi lo fotografa sa da che parte stare.
+	m.rotation.y = inward * PI * 0.5
+	add_child(m)
+	m.add_to_group("negozi")
+	m.set_meta("nome", BOTTEGHE[_botteghe_n % BOTTEGHE.size()])
+	m.set_meta("punto", m.global_position)
+	_botteghe_n += 1
+
+
 func _merce_fore_ô_negozio(pos: Vector3, w: float, inward: float) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 4517 + int(pos.z * 100.0) + int(pos.x * 7.0)
@@ -1389,6 +1421,7 @@ func _merce_fore_ô_negozio(pos: Vector3, w: float, inward: float) -> void:
 	# bancarella davanti, il vicolo sembrerebbe una fiera.
 	if rng.randf() > 0.34:
 		return
+	_bottega_meta(pos, inward)
 	var y0: float = pos.y + 0.12       # 'o marciapiede
 	var zc: Array = [-w * 0.22, w * 0.22]
 	for k in range(2):

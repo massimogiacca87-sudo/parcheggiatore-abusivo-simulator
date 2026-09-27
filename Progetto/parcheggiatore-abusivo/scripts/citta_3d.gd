@@ -4073,11 +4073,18 @@ func _una_vetrina(pos: Vector3, ang: float, i: int) -> void:
 	# che di giorno riflette il cielo e di sera lascia vedere la luce
 	# dentro. Il vetro è un piano e non una scatola: una scatola
 	# trasparente mostra pure le sue facce di dietro, e si vedono.
+	# **'O fondo sta annanze ô muro** (0.64). Stava ventidue centimetri
+	# *dentro* al muro, e i portoni, le serrande e i manifesti del piano
+	# terra (che sporgono fino a venti centimetri) gli stavano davanti: nelle
+	# foto di tutte le vetrine (`tools/foto_vetrine.gd`) mezza bottega aveva
+	# un portone verde o un muro di manifesti **dentro** al vetro. Adesso il
+	# fondo copre il piano terra, i ripiani gli stanno davanti e il vetro
+	# davanti a loro, dentro alla cornice.
 	var vetro := MeshInstance3D.new()
 	var vm := BoxMesh.new()
 	vm.size = Vector3(4.2, 2.4, 0.08)
 	vetro.mesh = vm
-	vetro.position = Vector3(0, 1.4, -0.42)
+	vetro.position = Vector3(0, 1.4, 0.03)
 	var mv := Tex.flat(Color(dati[2]) * 0.22, 0.72, 0.0, 0.35).duplicate()
 	vetro.material_override = mv
 	root.add_child(vetro)
@@ -4091,9 +4098,9 @@ func _una_vetrina(pos: Vector3, ang: float, i: int) -> void:
 		var y_r: float = 0.62 + float(r) * 0.72
 		var ripiano := MeshInstance3D.new()
 		var rpm := BoxMesh.new()
-		rpm.size = Vector3(3.7, 0.06, 0.42)
+		rpm.size = Vector3(3.7, 0.06, 0.26)
 		ripiano.mesh = rpm
-		ripiano.position = Vector3(0, y_r, -0.18)
+		ripiano.position = Vector3(0, y_r, 0.2)
 		ripiano.material_override = legno
 		root.add_child(ripiano)
 		for k in range(4):
@@ -4101,11 +4108,11 @@ func _una_vetrina(pos: Vector3, ang: float, i: int) -> void:
 			var sbm := BoxMesh.new()
 			var alt: float = rngv.randf_range(0.16, 0.38)
 			sbm.size = Vector3(rngv.randf_range(0.22, 0.6), alt,
-				rngv.randf_range(0.16, 0.3))
+				rngv.randf_range(0.12, 0.2))
 			scatola.mesh = sbm
 			scatola.position = Vector3(-1.5 + float(k) * 1.0
 				+ rngv.randf_range(-0.14, 0.14), y_r + alt * 0.5 + 0.03,
-				-0.18 + rngv.randf_range(-0.05, 0.05))
+				0.2 + rngv.randf_range(-0.03, 0.03))
 			scatola.rotation.y = rngv.randf_range(-0.25, 0.25)
 			# **'E scatole nun ponno essere tutte d''o stesso culore.**
 			# Al primo giro le tingevo mescolando i due colori
@@ -4131,7 +4138,7 @@ func _una_vetrina(pos: Vector3, ang: float, i: int) -> void:
 	var qm := QuadMesh.new()
 	qm.size = Vector2(4.2, 2.4)
 	lastra.mesh = qm
-	lastra.position = Vector3(0, 1.4, 0.1)
+	lastra.position = Vector3(0, 1.4, 0.38)
 	var mq := StandardMaterial3D.new()
 	mq.albedo_color = Color(0.62, 0.70, 0.76, 0.26)
 	mq.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -4145,9 +4152,9 @@ func _una_vetrina(pos: Vector3, ang: float, i: int) -> void:
 	for d in [-2.3, 2.3]:
 		var mont := MeshInstance3D.new()
 		var mm := BoxMesh.new()
-		mm.size = Vector3(0.35, 2.9, 0.4)
+		mm.size = Vector3(0.35, 2.9, 0.44)
 		mont.mesh = mm
-		mont.position = Vector3(d, 1.45, 0.14)
+		mont.position = Vector3(d, 1.45, 0.2)
 		mont.material_override = Tex.flat(Color(dati[1]).darkened(0.35), 0.9)
 		root.add_child(mont)
 
