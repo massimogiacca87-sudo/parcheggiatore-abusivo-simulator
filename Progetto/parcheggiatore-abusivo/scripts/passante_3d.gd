@@ -358,65 +358,30 @@ func _costruisci() -> void:
 	_cosa_porta(parts.get("bones", {}))
 
 
-## **'E cuorpe nuove p''e passanti** (0.59).
-##
-## Fino alla 0.58 tutti i passanti erano **lo stesso pupo** con la camicia
-## di un altro colore: da vicino si vedeva che era la stessa faccia, lo
-## stesso naso, lo stesso taglio di capelli, trenta volte. Il capo ha
-## portato due pacchetti di persone animate — otto uomini in quattro
-## vestiti (maglietta e pantaloncini, maniche lunghe, camicia, giacca e
-## cravatta) e l'umano di Quaternius — e adesso sei uomini su dieci ne
-## prendono uno. Il vestito lo sceglie il mestiere, come il colore: il
-## guappo porta la giacca, il prete pure (nera), il pizzaiolo la camicia,
-## il turista i pantaloncini, l'operaio le maniche lunghe o la maglietta
-## dell'umano. Le donne restano del pupo: i due pacchetti sono di soli
-## uomini.
-##
-## **E dalla 0.62 'e cuorpe 'e fore** (vedi `HumanBuilder.QUAT`): il signore
-## in giacca per il guappo e lo studente, il ragazzo in maglietta per il
-## quartiere e il turista, l'operaio col casco per l'operaio, il contadino
-## col cappello per chi vende al mercato. E due donne, finalmente: una
-## donna su tre non è più il pupo.
-const CUORPE_MESTIERE := {
-	"quartiere": ["casual", "maniche", "camicia", "umano", "quat_maglietta"],
-	"turista": ["casual", "umano", "quat_maglietta"],
-	"operaio": ["maniche", "umano", "quat_operaio", "quat_operaio"],
-	"pizzaiuolo": ["camicia"],
-	"prevete": ["giacca"],
-	"studente": ["casual", "maniche", "umano", "quat_giacca"],
-	"guappo": ["giacca", "camicia", "quat_giacca"],
-	"marenaro": ["casual", "maniche", "quat_cafone"],
-}
-
-
 ## **(0.66) 'O pupo nuovo va 'nnanze.** Dalla 0.59 sei uomini su dieci
 ## prendevano un corpo dei pacchetti, perché il pupo era uno solo e trenta
 ## pupi uguali si vedevano. Il pupo della 0.66 ha otto capigliature, quattro
 ## palpebre, cinque sopracciglia, tre nasi, sei bocche, quattro barbe,
 ## quattro rughe, colletto, cintura, catenina e gonna: la varietà ce l'ha
 ## lui, e in più ha lo stile del gioco (occhi a palla, faccia dipinta),
-## mentre i corpi dei pacchetti accanto a lui sembrano di un altro gioco.
-## Quindi il pupo diventa la regola e i pacchetti l'eccezione.
-const QUOTA_PUPO_UOMINI := 0.80
-const QUOTA_PUPO_DONNE := 0.88
+## mentre i corpi dei pacchetti accanto a lui sembrano di un altro gioco
+## (l'ha detto il revisore: «due famiglie di persone nella stessa strada»).
+## Quindi i pacchetti restano solo dove dicono qualcosa che il pupo non
+## sa dire: **l'operaio col casco giallo** e **il marenaro col cappello di
+## paglia**. Tutti gli altri — uomini e donne — sono pupi.
+const CUORPE_FORE := {
+	"operaio": ["quat_operaio", 0.35],
+	"marenaro": ["quat_cafone", 0.25],
+}
 
 
 func _che_cuorpo(femmina: bool) -> String:
 	if femmina:
-		if randf() >= QUOTA_PUPO_DONNE:
-			return str(Human.QUAT_DONNE[randi() % Human.QUAT_DONNE.size()])
 		return ""
-	if randf() < QUOTA_PUPO_UOMINI:
+	var fore: Array = CUORPE_FORE.get(str(mestiere.get("id", "")), [])
+	if fore.is_empty() or randf() >= float(fore[1]):
 		return ""
-	var scelte: Array = CUORPE_MESTIERE.get(str(mestiere.get("id", "")), [])
-	if scelte.is_empty():
-		return ""
-	var c: String = str(scelte[randi() % scelte.size()])
-	if c == "umano":
-		return "umano_q"
-	if c.begins_with("quat_"):
-		return c
-	return "omo_" + c + ("_liscio" if randf() < 0.5 else "")
+	return str(fore[0])
 
 
 ## **Chello ca tene 'n mano.**
