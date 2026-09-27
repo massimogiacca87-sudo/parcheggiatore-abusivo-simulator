@@ -13,6 +13,13 @@ extends CanvasLayer
 ## del ricordo di quello schermo, e un tabellone senza linguette non
 ## sembra un tabellone. Quella accesa è sempre *'A PARTITA*.
 ##
+## **(0.64) 'O tabellone s'è vestito comme a tutto 'o riesto.** Era l'unico
+## pannello fuori dal tema della 0.62: blu elettrico, rettangoli a spigolo
+## vivo, bottoni gialli piatti. La disposizione è rimasta quella dello
+## screenshot — le due caselle chiara e rossa, la fascia della cronaca, il
+## possesso, le linguette — ma i colori, gli angoli, i bordi d'oro e i
+## caratteri sono quelli di `UiStile`, come il negozio, il lotto e la scopa.
+##
 ## **Novanta minute 'n nove secunne.** Il cronometro sale da 0 a 90 in
 ## `DURATA` secondi; quando passa sopra il minuto di un fatto, la fascia
 ## cambia riga e (se è un gol) il punteggio scatta. La partita non è
@@ -30,13 +37,14 @@ const DURATA: float = 9.0
 ## Quanto resta ferma la fascia su una riga di cronaca, al minimo.
 const FASCIA_MIN: float = 0.9
 
-const BLU := Color(0.13, 0.13, 0.42)
-const BLU_CHIARO := Color(0.24, 0.24, 0.58)
-const ROSSO := Color(0.72, 0.10, 0.10)
-const CREMA := Color(0.96, 0.95, 0.92)
-const ORO := Color(0.98, 0.82, 0.22)
+## I colori sono quelli del tema (`UiStile`); qui restano solo i due della
+## partita: il rosso della squadra di fuori e il verde del prato.
+const ROSSO := Color(0.64, 0.15, 0.13)
+const CREMA := UiStile.TESTO
+const ORO := UiStile.ORO
 const VERDE := Color(0.30, 0.52, 0.28)
-const SPENTO := Color(0.70, 0.70, 0.78)
+const SPENTO := UiStile.TESTO_2
+const INCHIOSTRO := Color(0.10, 0.10, 0.12)
 
 enum Fase { SCHEDINA, PARTITA, FINE }
 
@@ -51,9 +59,9 @@ var _data_lab: Label
 var _torneo_lab: Label
 var _fascia: Panel
 var _fascia_lab: Label
-var _poss_cornice: ColorRect
-var _poss_casa: ColorRect
-var _poss_fore: ColorRect
+var _poss_cornice: Panel
+var _poss_casa: Panel
+var _poss_fore: Panel
 var _poss_lab_c: Label
 var _poss_lab_f: Label
 var _arbitro_lab: Label
@@ -146,22 +154,21 @@ func _costruisci() -> void:
 	_corpo.set_anchors_preset(Control.PRESET_CENTER)
 	_corpo.position = Vector2(-LARGH * 0.5, -ALT * 0.5)
 	_corpo.size = Vector2(LARGH, ALT)
-	var st := StyleBoxFlat.new()
-	st.bg_color = BLU
-	st.border_color = BLU_CHIARO
-	st.set_border_width_all(2)
+	var st := UiStile.box(Color(0.05, 0.055, 0.075, 0.97), UiStile.ORO, 2, 16)
+	st.shadow_color = Color(0, 0, 0, 0.45)
+	st.shadow_size = 14
 	_corpo.add_theme_stylebox_override("panel", st)
 	add_child(_corpo)
 
 	# --- 'A capa: 'e ddoje squadre e 'o punteggio -----------------------
 	_nome_casa = _fascetta(Vector2(14, 12), Vector2(330, 40), CREMA,
-		Color(0.10, 0.10, 0.12), 24, HORIZONTAL_ALIGNMENT_LEFT)
-	_gol_casa = _fascetta(Vector2(348, 12), Vector2(52, 40),
-		Color(0.86, 0.86, 0.88), Color(0.10, 0.10, 0.12), 24)
-	_nome_fore = _fascetta(Vector2(414, 12), Vector2(330, 40), ROSSO, CREMA,
+		INCHIOSTRO, 24, HORIZONTAL_ALIGNMENT_LEFT)
+	_gol_casa = _fascetta(Vector2(350, 12), Vector2(52, 40),
+		Color(0.12, 0.13, 0.17), UiStile.ORO_CHIARO, 26, HORIZONTAL_ALIGNMENT_CENTER, true)
+	_nome_fore = _fascetta(Vector2(416, 12), Vector2(330, 40), ROSSO, CREMA,
 		24, HORIZONTAL_ALIGNMENT_LEFT)
-	_gol_fore = _fascetta(Vector2(748, 12), Vector2(52, 40),
-		Color(0.86, 0.86, 0.88), Color(0.10, 0.10, 0.12), 24)
+	_gol_fore = _fascetta(Vector2(752, 12), Vector2(52, 40),
+		Color(0.12, 0.13, 0.17), UiStile.ORO_CHIARO, 26, HORIZONTAL_ALIGNMENT_CENTER, true)
 
 	# --- 'E linguette ----------------------------------------------------
 	var voci := ["'A PARTITA", "'E NUMMERE", "'O CAMPO", "'O RESOCONTO"]
@@ -170,33 +177,39 @@ func _costruisci() -> void:
 
 	_tempo_lab = _scritta("PRIMMO TIEMPO", Vector2(0, 96), Vector2(LARGH, 22),
 		18, ORO)
+	_tempo_lab.add_theme_font_override("font", UiStile.font_titolo())
 	_data_lab = _scritta("", Vector2(20, 122), Vector2(400, 18), 12,
-		Color(0.55, 0.90, 0.92), HORIZONTAL_ALIGNMENT_LEFT)
+		UiStile.AZZURRO, HORIZONTAL_ALIGNMENT_LEFT)
 	_torneo_lab = _scritta("CAMPIONATO D''E RRIONE", Vector2(LARGH - 420, 122),
-		Vector2(400, 18), 12, Color(0.55, 0.90, 0.92),
+		Vector2(400, 18), 12, UiStile.AZZURRO,
 		HORIZONTAL_ALIGNMENT_RIGHT)
 
 	# --- 'O campo verde: 'o fondo d''a fascia ---------------------------
-	var prato := ColorRect.new()
+	var prato := Panel.new()
 	prato.position = Vector2(14, 146)
 	prato.size = Vector2(LARGH - 28, 208)
-	prato.color = VERDE.darkened(0.25)
+	prato.add_theme_stylebox_override("panel",
+		UiStile.box(VERDE.darkened(0.3), Color(1, 1, 1, 0.10), 1, 12))
+	prato.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_corpo.add_child(prato)
-	# Le righe del campo, appena accennate: due strisce più chiare.
+	# Le righe del campo, appena accennate: strisce più chiare, dentro ai
+	# bordi arrotondati del prato.
 	for i in range(6):
 		var r := ColorRect.new()
-		r.position = Vector2(14, 146 + i * 36)
-		r.size = Vector2(LARGH - 28, 18)
-		r.color = VERDE.lightened(0.06)
-		r.modulate.a = 0.5
+		r.position = Vector2(26, 146 + 9 + i * 34)
+		r.size = Vector2(LARGH - 52, 17)
+		r.color = VERDE.lightened(0.04)
+		r.modulate.a = 0.42
+		r.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_corpo.add_child(r)
 
 	# --- 'A fascia rossa d''a cronaca -----------------------------------
 	_fascia = Panel.new()
 	_fascia.position = Vector2(70, 196)
 	_fascia.size = Vector2(LARGH - 140, 64)
-	var sf := StyleBoxFlat.new()
-	sf.bg_color = ROSSO
+	var sf := UiStile.box(Color(0.52, 0.11, 0.10, 0.95), UiStile.ORO, 1, 12)
+	sf.shadow_color = Color(0, 0, 0, 0.3)
+	sf.shadow_size = 6
 	_fascia.add_theme_stylebox_override("panel", sf)
 	_corpo.add_child(_fascia)
 
@@ -207,7 +220,8 @@ func _costruisci() -> void:
 	_fascia_lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_fascia_lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_fascia_lab.add_theme_font_size_override("font_size", 21)
-	_fascia_lab.add_theme_color_override("font_color", ORO)
+	_fascia_lab.add_theme_font_override("font", UiStile.font_grassetto())
+	_fascia_lab.add_theme_color_override("font_color", UiStile.ORO_CHIARO)
 	_fascia.add_child(_fascia_lab)
 
 	# --- 'A schedina: 'a lista d''e partite, primma ca se joca ----------
@@ -218,24 +232,14 @@ func _costruisci() -> void:
 	_corpo.add_child(_lista)
 
 	# --- 'O possesso -----------------------------------------------------
-	_poss_cornice = ColorRect.new()
-	var cornice := _poss_cornice
-	cornice.position = Vector2(150, 300)
-	cornice.size = Vector2(LARGH - 300, 22)
-	cornice.color = Color(0.06, 0.06, 0.10)
-	_corpo.add_child(cornice)
-	_poss_casa = ColorRect.new()
-	_poss_casa.position = Vector2(152, 302)
-	_poss_casa.size = Vector2((LARGH - 304) * 0.5, 18)
-	_poss_casa.color = Color(0.90, 0.90, 0.92)
-	_corpo.add_child(_poss_casa)
-	_poss_fore = ColorRect.new()
-	_poss_fore.position = Vector2(152 + (LARGH - 304) * 0.5, 302)
-	_poss_fore.size = Vector2((LARGH - 304) * 0.5, 18)
-	_poss_fore.color = ROSSO
-	_corpo.add_child(_poss_fore)
+	_poss_cornice = _pezza(Vector2(150, 300), Vector2(LARGH - 300, 22),
+		UiStile.box(Color(0.06, 0.06, 0.09, 0.9), Color(1, 1, 1, 0.12), 1, 11))
+	_poss_casa = _pezza(Vector2(152, 302), Vector2((LARGH - 304) * 0.5, 18),
+		UiStile.box(CREMA, Color(0, 0, 0, 0), 0, 9))
+	_poss_fore = _pezza(Vector2(152 + (LARGH - 304) * 0.5, 302),
+		Vector2((LARGH - 304) * 0.5, 18), UiStile.box(ROSSO.lightened(0.08), Color(0, 0, 0, 0), 0, 9))
 	_poss_lab_c = _scritta("", Vector2(160, 302), Vector2(120, 18), 12,
-		Color(0.10, 0.10, 0.12), HORIZONTAL_ALIGNMENT_LEFT)
+		INCHIOSTRO, HORIZONTAL_ALIGNMENT_LEFT)
 	_poss_lab_f = _scritta("", Vector2(LARGH - 280, 302), Vector2(120, 18), 12,
 		CREMA, HORIZONTAL_ALIGNMENT_RIGHT)
 
@@ -315,6 +319,7 @@ func _disegna_schedina() -> void:
 		nomi.custom_minimum_size = Vector2(360, 30)
 		nomi.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		nomi.add_theme_font_size_override("font_size", 15)
+		nomi.add_theme_font_override("font", UiStile.font_grassetto())
 		nomi.add_theme_color_override("font_color", CREMA)
 		riga.add_child(nomi)
 
@@ -328,12 +333,7 @@ func _disegna_schedina() -> void:
 			var ss: String = segni[k]
 			b.pressed.connect(func(): _scegli(ii, ss))
 			if _scelta == i and _segno == segni[k]:
-				b.add_theme_color_override("font_color", Color(0.12, 0.10, 0.03))
-				var stb := StyleBoxFlat.new()
-				stb.bg_color = ORO
-				stb.set_corner_radius_all(3)
-				b.add_theme_stylebox_override("normal", stb)
-				b.add_theme_stylebox_override("hover", stb)
+				_bottone_acceso(b)
 			riga.add_child(b)
 
 	_rifa_azioni()
@@ -373,11 +373,7 @@ func _rifa_azioni() -> void:
 				_puntata = v
 				_disegna())
 			if _puntata == q:
-				var stb := StyleBoxFlat.new()
-				stb.bg_color = ORO
-				stb.set_corner_radius_all(3)
-				b.add_theme_stylebox_override("normal", stb)
-				b.add_theme_color_override("font_color", Color(0.12, 0.10, 0.03))
+				_bottone_acceso(b)
 			_azioni.add_child(b)
 
 		var gioca := Button.new()
@@ -538,19 +534,21 @@ func _fine() -> void:
 # ---------------------------------------------------------------------------
 
 func _fascetta(pos: Vector2, dim: Vector2, sfondo: Color, testo: Color,
-		corpo: int, allinea: int = HORIZONTAL_ALIGNMENT_CENTER) -> Label:
+		corpo: int, allinea: int = HORIZONTAL_ALIGNMENT_CENTER,
+		bordo_oro: bool = false) -> Label:
 	var p := Panel.new()
 	p.position = pos
 	p.size = dim
-	var st := StyleBoxFlat.new()
-	st.bg_color = sfondo
-	p.add_theme_stylebox_override("panel", st)
+	p.add_theme_stylebox_override("panel", UiStile.box(sfondo,
+		UiStile.ORO if bordo_oro else Color(0, 0, 0, 0), 1 if bordo_oro else 0, 9))
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_corpo.add_child(p)
 	var l := Label.new()
 	l.set_anchors_preset(Control.PRESET_FULL_RECT)
 	l.horizontal_alignment = allinea
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	l.add_theme_font_size_override("font_size", corpo)
+	l.add_theme_font_override("font", UiStile.font_titolo())
 	l.add_theme_color_override("font_color", testo)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	p.add_child(l)
@@ -561,10 +559,8 @@ func _linguetta(testo: String, pos: Vector2, dim: Vector2, accesa: bool) -> void
 	var p := Panel.new()
 	p.position = pos
 	p.size = dim
-	var st := StyleBoxFlat.new()
-	st.bg_color = Color(0.42, 0.36, 0.14) if accesa else BLU_CHIARO
-	st.border_color = ORO if accesa else BLU_CHIARO.lightened(0.12)
-	st.set_border_width_all(1)
+	var st := UiStile.box(Color(0.93, 0.72, 0.31, 0.16) if accesa else Color(1, 1, 1, 0.05),
+		ORO if accesa else Color(1, 1, 1, 0.10), 1, 8)
 	p.add_theme_stylebox_override("panel", st)
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_corpo.add_child(p)
@@ -574,9 +570,32 @@ func _linguetta(testo: String, pos: Vector2, dim: Vector2, accesa: bool) -> void
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	l.add_theme_font_size_override("font_size", 11)
-	l.add_theme_color_override("font_color", ORO if accesa else CREMA)
+	if accesa:
+		l.add_theme_font_override("font", UiStile.font_grassetto())
+	l.add_theme_color_override("font_color", ORO if accesa else SPENTO)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	p.add_child(l)
+
+
+## Un rettangolo arrotondato senza scritta (la barra del possesso).
+func _pezza(pos: Vector2, dim: Vector2, stile: StyleBoxFlat) -> Panel:
+	var p := Panel.new()
+	p.position = pos
+	p.size = dim
+	p.add_theme_stylebox_override("panel", stile)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_corpo.add_child(p)
+	return p
+
+
+## Il bottone scelto (il segno, la puntata): pieno d'oro, scritta scura.
+func _bottone_acceso(b: Button) -> void:
+	var stb := UiStile.box(ORO, UiStile.ORO_CHIARO, 1, 8)
+	for stato in ["normal", "hover", "pressed", "focus"]:
+		b.add_theme_stylebox_override(stato, stb)
+	b.add_theme_color_override("font_color", INCHIOSTRO)
+	b.add_theme_color_override("font_hover_color", INCHIOSTRO)
+	b.add_theme_color_override("font_pressed_color", INCHIOSTRO)
 
 
 func _scritta(testo: String, pos: Vector2, dim: Vector2, corpo: int,

@@ -70,6 +70,17 @@ func _ready() -> void:
 		p.apri()
 		await _aspetta(10)
 		await _scatta("partite")
+		# (0.64) Pure a partita in corso e a partita finita: il tabellone ha
+		# tre facce, e se ne fotografava una sola.
+		p.call("_scegli", 0, "1")
+		await _aspetta(4)
+		await _scatta("partite_scelta")
+		p.call("_via")
+		await get_tree().create_timer(4.0, true, false, true).timeout
+		await _scatta("partite_gioco")
+		await get_tree().create_timer(7.0, true, false, true).timeout
+		await _scatta("partite_fine")
+		p.chiudi()
 		p.queue_free()
 		await _aspetta(4)
 
