@@ -1,6 +1,6 @@
 # Roadmap — dove stiamo e dove andiamo
 
-Aggiornata alla **v0.64 · 'O Rre e 'e Strisce**, 27 settembre 2026.
+Aggiornata alla **v0.65 · 'A scala d''e guaie**, 27 settembre 2026.
 
 *Da questa versione le note e la roadmap sono scritte in italiano. Il
 napoletano resta dove si sente giocando: dialoghi, cartelli, scritte a
@@ -909,7 +909,62 @@ completo in `NOVITA-v0.64.md`.
 
 ---
 
-## v0.65 — **'E vvoce**
+## Fatto — v0.65 · 'A scala d''e guaie
+
+Due richieste: le mani in prima persona durante la regia (perse alla 0.54) e
+le spese non pagate che si accumulano con conseguenze disastrose ed
+esilaranti fino al game over dopo una settimana. Racconto completo in
+`NOVITA-v0.65.md`.
+
+- [x] **'E mmane d''a regia** (`mani_fp.gd`): modellino appeso alla
+      telecamera come il fierro, **solo mentre dirigi**; mani a pezzi
+      (palmo, dita a due falangi, pollice), un gesto per tasto (W chiama, S
+      ferma a palme aperte, A/D indica + volante, F il dito per terra), la
+      botta, il «piano piano» del park-assist, il pollice su, le palme al
+      cielo; con la paletta il gesto lo fa lei; il fierro scende e torna
+- [x] **'A scala d''e guaie** (`game_manager.gd`, «'A SCALA D''E GUAIE»): un
+      gradino per sera con le spese aperte — bigliettino, luce, gas
+      (riallaccio €38, mattina a tre quarti), Donna Cuncetta
+      (`suocera_3d.gd`, sul tuo letto, 12% dalla giacca ogni mattina),
+      Nunzia che si tiene casa e criature (porta chiusa, cartoni e
+      biglietto, soldi sotto la porta, notte sui cartoni al 60% e il
+      mariuolo), l'avvocato (€90), e al settimo **FERNUTA** (`fernuta.gd`,
+      finale a sorte, «Ricumincia da capo»). Pagare tutto riporta a terra
+- [x] **Si vede**: riga del debito nell'HUD sotto «STASERA CE VONNO» col
+      guaio di stasera, biglietto sulla porta, riepilogo, pagina del
+      tutoriale «LA SCALA DEI GUAI»
+- [x] **Economia**: spese fisse +30% (circa €70 al giorno con le
+      disgrazie); **'o cunto d''o salumiere** (la spesa non pagata si somma
+      a metà invece di sparire); il digiuno che non scattava mai
+- [x] Prove nuove `prova_mani_regia` (gioca la regia coi tasti veri),
+      `prova_scala_guaie`; foto `foto_mani_regia`, `foto_guaie`
+
+### Rimasto aperto dalla 0.65
+
+- **Il bilancio va giocato.** Con €75 al giorno si resta a galla a fatica,
+  con €55 si arriva a FERNUTA, con €95 e più si compra la prima piazza fra
+  il decimo e il dodicesimo giorno. Le manopole: `SPESE_FISSE`,
+  `GRADINO_GAME_OVER` (7), il riallaccio del gas, la quota di Donna
+  Cuncetta (12%), la notte sui cartoni. Il furto d'auto non l'ho toccato.
+- **Le mani sono a scatole** (come il fierro): leggibili, non belle. Se si
+  vuole la qualità da Steam (`VISIONE.md`), il prossimo passo è un modello
+  vero di mani con le clip dei gesti. E manca ancora **l'idle in prima
+  persona** camminando (le mani ci sono solo durante la regia).
+- **Donna Cuncetta** è il corpo femmina vestito a lutto, col fazzoletto
+  viola delle signore sedute (0.64): meglio di prima (coi capelli bianchi
+  sembrava un signore), ma è grossa come un uomo. Una gonna e una statura
+  da nonna la farebbero riconoscere al primo colpo.
+- **La direttiva del designer** (`direttiva_designer.md` nella radice, non
+  mia): tre meccaniche, le ondate di macchine, la posteggiata a tre gradi,
+  trenta giornate e due finali. La scala dei guai ne copre un pezzo (il
+  conto che morde, una fine per chi perde); il resto va deciso col capo.
+- **Lo studio multi-agente** (`studio.py`) committa nello stesso repository:
+  prima di applicare le patch, `git log`; e i file che tocca vanno portati
+  nel contenitore (vedi `COME-RIPRENDERE.md`, 1.1c).
+
+---
+
+## v0.66 — **'E vvoce**
 
 - **Le voci registrate**: l'introduzione parlata, e qualche riga dei
   personaggi principali. Il gioco è pieno di gente che parla e nessuno fa
@@ -918,7 +973,8 @@ completo in `NOVITA-v0.64.md`.
 - **Altre animazioni**: la 0.62 ha tradotto 28 clip della libreria sugli
   altri due scheletri (`tools/retarget_ual.gd`); resta **una clip di idle in prima
   persona**, che è l'unico modo di vedersi le braccia camminando (la posa
-  a mano non funziona, ed è misurato in `prova_braccia`).
+  a mano non funziona, ed è misurato in `prova_braccia`). Dalla 0.65 le
+  mani della regia ci sono (`mani_fp.gd`): la stessa cosa, camminando.
 - **'E ccriature**: una quinta corporatura in `build_personaggi.py`.
   Mimmo 'o guaglione, per adesso, è un adulto scalato a 1,32.
 
@@ -1013,7 +1069,9 @@ dichiararlo, con quello che fa nelle ultime giornate.
 ## Le domande ancora aperte
 
 1. **Quanto deve durare una partita?** Con le giornate da sette minuti e
-   mezzo, trenta giorni sono tre ore e mezza di gioco.
+   mezzo, trenta giorni sono tre ore e mezza di gioco. (0.65: adesso la
+   partita **si può perdere** — sette sere senza pagare. Manca ancora un
+   modo di vincerla.)
 2. **Il finale è uno o due?** Il gioco finisce quando hai pagato tutto, o
    quando hai preso tutta la città?
 3. **Quanto vogliamo che la violenza resti un'opzione?** I tre fermi

@@ -1,4 +1,4 @@
-PARCHEGGIATORE ABUSIVO SIMULATOR - v0.64 "'O Rre e 'e Strisce"
+PARCHEGGIATORE ABUSIVO SIMULATOR - v0.65 "'A scala d''e guaie"
 ======================================================================
 
 COM'E' FATTA LA CARTELLA (dalla v0.62: una cartella sola, con Git)
@@ -10,7 +10,7 @@ COM'E' FATTA LA CARTELLA (dalla v0.62: una cartella sola, con Git)
                                        ParcheggiatoreAbusivoSimulator.exe
                                        (+ AVVIA-COMPATIBILITA.bat se la
                                        scheda video non regge Vulkan)
-  PAS-v0.64-Web-itchio.zip ........... il pacchetto per itch.io
+  PAS-v0.65-Web-itchio.zip ........... il pacchetto per itch.io
   DOcumentazione\ .................... note, roadmap, changelog, crediti e i
                                        documenti per ripartire in una chat
                                        nuova
@@ -25,7 +25,7 @@ COME SI GIOCA
   Doppio clic su Build\ParcheggiatoreAbusivoSimulator.exe.
   Se parte nero o si chiude: Build\AVVIA-COMPATIBILITA.bat.
 
-  Per itch.io: carica PAS-v0.64-Web-itchio.zip cosi' com'e' (non
+  Per itch.io: carica PAS-v0.65-Web-itchio.zip cosi' com'e' (non
   scompattarlo) e spunta "This file will be played in the browser".
 
 PER CONTINUARE IN UNA CHAT NUOVA
@@ -36,40 +36,34 @@ PER CONTINUARE IN UNA CHAT NUOVA
   computer: la chat nuova prende il progetto direttamente da questa
   cartella.
 
-CHE C'E' DI NUOVO (v0.64)
+CHE C'E' DI NUOVO (v0.65)
 
-  LE PIAZZE CHE PRENDI LAVORANO COME LA TUA. Comprata o presa a mazzate
-  (con un ferro: a mani nude il rivale non si stende, e te lo dice lui),
-  entri e dopo due-quattro secondi arriva la prima macchina. Il mercato ha
-  otto posti (ne aveva quattro), allo stadio le macchine ferme non stanno
-  piu' sopra ai posti, alla cornetteria c'e' la corsia per entrare, e il
-  cartello all'ingresso dice che la piazza e' tua.
+  LE MANI. Mentre guidi un'auto nel posto si vedono di nuovo le tue mani,
+  e ogni tasto e' un gesto: W "vieni, vieni" (le dita che chiamano), S la
+  palma aperta del "FERMO!", A/D il braccio che indica e l'altra mano che
+  fa il volante, F il dito che punta per terra ("mettila cca'"). Se
+  sbatti alzi le mani al cielo, se l'auto e' dentro fai il pollice su.
+  Con la paletta in tasca la tieni nella destra e i gesti li fai con lei.
 
-  'O RRE D''E PARCHEGGI. Dal terzo giorno, in una piazza tua, arriva un
-  signore con la corona, il mantello rosso e la paletta: "Ah, e tu vulisse
-  fa' 'o parcheggiatore? E famme vere'." Premi E e parte la sfida: un
-  minuto, le macchine le manda lui, e contano solo quelle messe DENTRO a
-  un posto.
-    5 o piu'  -> ti regala una piazza (senza boss e senza affitto)
-    3 o 4     -> ti da' un guaglione che lavora per te
-    2         -> niente, torna fra tre giorni
-    1 o 0     -> ti corre dietro e ti mena (senza mandarti all'ospedale)
+  LA SCALA DEI GUAI. Ogni sera che vai a dormire senza aver pagato tutto
+  sali di un gradino:
+    1a sera  il bigliettino sul frigorifero
+    2a sera  ti staccano la luce
+    3a sera  ti staccano il gas (e la mattina parti a tre quarti)
+    4a sera  arriva Donna Cuncetta, la suocera: dorme nel tuo letto e ogni
+             mattina ti prende qualche euro "p''o lotto"
+    5a sera  Nunzia si tiene la casa e le criature: dormi sui cartoni fuori
+             dalla porta, e i soldi li passi sotto la porta
+    6a sera  l'avvocato: separazione con addebito, e la parcella
+    7a sera  FERNUTA. La partita e' finita.
+  La sera che paghi tutto si torna a zero: Nunzia riapre e la suocera se
+  ne torna a Casoria. Il gradino e il guaio di stasera stanno sempre in
+  alto a destra, sotto "STASERA CE VONNO".
 
-  'E STRISCE BLU. Certe mattine (dal secondo giorno, una su cinque) il
-  Comune pitta le strisce blu in una piazza tua e mette i parchimetri.
-  Finche' c'e' un parchimetro in piedi, il cliente paga la macchinetta e
-  a te niente: sfasciali (pugni o ferro, cadono pure le monete). Poi le
-  strisce vanno ripittate di bianco, se no il cliente fa come se l'avessi
-  messo fuori dalle strisce: pittura e pennello al Bazar (tasto 7, 12
-  euro, sei passate), E accanto a ogni posto blu.
+  E POI: le spese di casa sono un po' piu' alte (circa 70 euro al giorno),
+  la spesa non pagata diventa il conto del salumiere invece di sparire, e
+  chi non ha cenato la mattina parte davvero a mezze forze.
 
-  E POI: la sala scommesse coi colori del resto del gioco, il balcone vero
-  di Donna Filumena, il fazzoletto in testa alle signore sedute, le vetrine
-  senza portoni dentro, una bottega aperta nella piazza di casa, le
-  pozzanghere anche nel browser, Borrelli con la faccia davanti (prima
-  aveva gli occhiali sulla nuca) e il telefonino alzato, il vigile con la
-  tazzina in mano, la signora con la borsa sotto al braccio.
-
-  Tutto spiegato in DOcumentazione\NOVITA-v0.64.md (anche gli sbagli).
-  Le novita' della versione prima stanno in NOVITA-v0.63.md.
+  Tutto spiegato in DOcumentazione\NOVITA-v0.65.md (anche gli sbagli).
+  Le novita' della versione prima stanno in NOVITA-v0.64.md.
   I suoni dei bottoni sono di Nathan Gibson (CC BY 4.0): vedi CREDITI.txt.

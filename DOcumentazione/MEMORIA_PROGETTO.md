@@ -1,12 +1,15 @@
 # MEMORIA DEL PROGETTO — Parcheggiatore Abusivo Simulator
 
 **Per il "nuovo me" che apre la chat successiva.** Aggiornato il 27 settembre
-2026, alla chiusura della **v0.64 · 'O Rre e 'e Strisce**. Tutto quello che
+2026, alla chiusura della **v0.65 · 'A scala d''e guaie**. Tutto quello che
 serve per ripartire da qui senza aver visto la chat precedente.
 
 Ordine di lettura consigliato: questo file → `COME-RIPRENDERE.md` (manuale
-operativo lungo, con le trappole) → `RIASSUNTO-CHAT-v0.64.md` (cronaca della
-chat) → `ROADMAP.md` → `NOVITA-v0.64.md`. Tutti stanno in `DOcumentazione\` sul computer del capo
+operativo lungo, con le trappole) → `RIASSUNTO-CHAT-v0.65.md` (cronaca della
+chat) → `ROADMAP.md` → `NOVITA-v0.65.md`. L'obiettivo del capo sta in
+`VISIONE.md` (lo *Schedule I* napoletano); il suo studio multi-agente in
+`STUDIO-MULTIAGENTE.md` (committa nello stesso repository: vedi
+`COME-RIPRENDERE.md` 1.1c). Tutti stanno in `DOcumentazione\` sul computer del capo
 e nei documenti del progetto claude.ai (`claude/…`).
 
 ---
@@ -104,7 +107,34 @@ sera, la casa, la famiglia come freno).
 
 ---
 
-## 2. STATO ATTUALE — v0.64
+## 2. STATO ATTUALE — v0.65
+
+### 2.0000 La 0.65 in breve (27 settembre, pomeriggio)
+
+Due richieste del capo: 1) **le mani in prima persona che fanno i gesti
+mentre dirigi un'auto** (perse alla 0.54, quando si buttarono le braccia
+finte doppie); 2) **le spese non pagate che si accumulano giorno dopo
+giorno** con conseguenze disastrose ed esilaranti (la moglie che se ne va
+coi figli e si tiene la casa, la luce staccata) fino al **game over dopo
+una settimana senza pagare** — «così si bilancia anche l'economia e il
+fatto delle auto rubate».
+
+Fatto (dettagli in `NOVITA-v0.65.md`):
+- `scripts/mani_fp.gd`: mani a pezzi appese alla telecamera, solo durante
+  la regia; un gesto per tasto (W, S, A/D, F), botta, park-assist, pollice
+  su, palme al cielo; la paletta in mano se comprata; il fierro scende
+  (`arma_fp.nascosta`). `player_fps._aggiorna_mani()` dà il gesto.
+- **'A scala d''e guaie** in `game_manager.gd`: un gradino per sera con
+  spese aperte — bigliettino, luce, gas, Donna Cuncetta (`suocera_3d.gd`),
+  Nunzia che si tiene casa e criature (porta chiusa, cartoni, soldi sotto
+  la porta: `porta_casa`, `vascio_3d.apri_fore`, `pannello_casa`),
+  l'avvocato, **FERNUTA** al settimo (`fernuta.gd`, «Ricumincia da
+  capo» con `GameManager.ricomincia_da_capo`). Pagare tutto riporta a
+  terra. HUD: riga del debito sotto «STASERA CE VONNO».
+- Economia: spese fisse +30%, 'o cunto d''o salumiere, il digiuno che non
+  scattava mai.
+- Prove `prova_mani_regia`, `prova_scala_guaie`; foto `foto_mani_regia`,
+  `foto_guaie`.
 
 ### 2.000 La 0.64 in breve (27 settembre)
 
@@ -322,15 +352,17 @@ Note sugli asset:
 
 ### 4.1 Dove ci siamo fermati
 
-**La 0.64 è chiusa e committata**, con la build (exe + web) in `Build\` e
-in radice. Rimasti (`ROADMAP.md`, «Rimasto aperto dalla 0.64»): il Rre da
+**La 0.65 è chiusa e committata** (rimasti in `ROADMAP.md`, «Rimasto
+aperto dalla 0.65»: il bilancio nuovo da giocare, le mani a scatole, Donna
+Cuncetta che da lontano sembra un signore, la direttiva del designer da
+discutere col capo). Dalla 0.64 restano:  (`ROADMAP.md`, «Rimasto aperto dalla 0.64»): il Rre da
 provare a mano (le manopole `RE_PE_A_PIAZZA`, `RE_DURATA`, la velocità
 delle macchine), la frequenza delle strisce blu (`STRISCE_BLU_PROB`), i
 numeri delle dieci giornate da confrontare col capo (€130 d'incasso e €57
 di spese al giorno per un onesto), la domanda «coi pugni» (a mani nude il
 rivale non si stende, ed è voluto: se il capo vuole le mani, è una riga);
 la traversata a piedi col panaro, il motorino con le chiavi. La prossima in roadmap è
-**v0.65 'E vvoce** (voci, idle in prima persona, criature).
+**v0.66 'E vvoce** (voci, idle in prima persona, criature).
 
 ### 4.2 I primissimi 3 passi nella chat nuova
 
@@ -338,7 +370,7 @@ la traversata a piedi col panaro, il motorino con le chiavi. La prossima in road
    1.1: `tar` della cartella `Progetto\parcheggiatore-abusivo` sul computer,
    stage, `tar -xf`, `git init` + tag `pc_sync`); Godot 4.3 in
    `/home/claude/godot4`; `cp tools/sh/*.sh /tmp/`; `nohup /tmp/batteriac.sh &`.
-2. **Chiedere al capo cosa vuole nella 0.65**, se non l'ha già scritto.
+2. **Chiedere al capo cosa vuole nella 0.66**, se non l'ha già scritto.
 3. **Un commit per ogni lavoro finito**, portato sul computer con le patch
    (`tools/sh/sincro.sh` + `git am`).
 

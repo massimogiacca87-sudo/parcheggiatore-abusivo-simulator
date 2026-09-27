@@ -1,9 +1,12 @@
 # Come riprendere il lavoro in una nuova chat
 
-Stato al **27 settembre 2026**, versione **v0.64 · 'O Rre e 'e Strisce**
-(la conquista delle piazze provata giocando e aggiustata; 'O Rre d''e
-Parcheggi e 'E Strisce Blu; chiusi i rimasti aperti delle versioni prima,
-compresa la prova che gioca dieci giornate — vedi `NOVITA-v0.64.md`).
+Stato al **27 settembre 2026**, versione **v0.65 · 'A scala d''e guaie**
+(le mani in prima persona durante la regia a gesti; la scala dei guai per
+chi non paga, fino al game over dopo sette sere — vedi `NOVITA-v0.65.md`).
+Prima: la **v0.64 · 'O Rre e 'e Strisce**.
+
+**Dalla 0.65 nello stesso repository lavora anche lo studio multi-agente
+del capo** (`studio.py`, commit `[studio/<agente>]`): vedi 1.1c.
 
 Questo documento è scritto per **chi apre la chat nuova** (cioè per me, senza
 memoria di questa). Si legge dall'alto: la sezione 1 dice cosa fare nei
@@ -19,9 +22,10 @@ nei documenti del progetto (`claude/…`):
 
 | file | cosa c'è |
 |---|---|
-| `RIASSUNTO-CHAT-v0.64.md` | la cronaca della chat che ha fatto la 0.64: richieste, decisioni, cosa è rimasto aperto |
-| `NOVITA-v0.64.md` | le note della versione (per il capo, in italiano, con trappole e lezione) |
-| `ROADMAP.md` | cosa è fatto versione per versione, «Rimasto aperto dalla 0.64», e cosa viene dopo (la 0.65 è **'E vvoce**) |
+| `RIASSUNTO-CHAT-v0.65.md` | la cronaca della chat che ha fatto la 0.65: richieste, decisioni, cosa è rimasto aperto |
+| `NOVITA-v0.65.md` | le note della versione (per il capo, in italiano, con trappole e lezione) |
+| `ROADMAP.md` | cosa è fatto versione per versione, «Rimasto aperto dalla 0.65», e cosa viene dopo (la 0.66 è **'E vvoce**) |
+| `VISIONE.md` (solo nei documenti del progetto) | l'obiettivo del capo: lo *Schedule I* napoletano |
 | `CHANGELOG.md` | una riga per versione, dalla 0.44 alla 0.64 |
 | `PROMPT-NUOVA-CHAT.md` | il messaggio da incollare per aprire la chat nuova |
 | `LEGGIMI.txt` | per il capo: com'è fatta la cartella e come si gioca |
@@ -205,6 +209,35 @@ contenitore.
 capo ha lasciato fuori (`Animations/…`, `addons/`, `demo/`,
 `assets/materials/` in radice): sono sue.
 
+### 1.1c Lo studio del capo nello stesso repository (dalla 0.65)
+
+Il capo ha un suo sistema multi-agente (`studio.py` in radice, CrewAI;
+`claude/STUDIO-MULTIAGENTE.md` nei documenti del progetto) che **committa
+nello stesso repository**, coi messaggi `[studio/<agente>]`. Alla 0.65, fra
+il tar del progetto e le mie patch, aveva toccato `sound_manager.gd` e
+`motorino_citta.gd`. Quindi:
+
+1. **Prima del `git am`**: `git log --oneline -10` e `git diff --stat
+   <ultimo commit mio> HEAD -- Progetto`. Se lo studio ha toccato gli
+   stessi file delle mie patch, `git am -3` (a tre vie); se non entra,
+   `git am --quit` (mai `--abort`) e si guarda.
+2. **Dopo il `git am`**, i file che lo studio ha cambiato si portano nel
+   contenitore, **col cmd e non con PowerShell** (il `>` di PowerShell
+   scrive in UTF-16):
+   `cmd /c "git show HEAD:Progetto/parcheggiatore-abusivo/scripts/x.gd > _claude_tmp\x.gd"`,
+   `device_stage_files`, copia al suo posto, commit «sync» nel contenitore
+   e `git tag -f pc_sync HEAD`. L'hash di `HEAD:scripts` deve essere lo
+   stesso di là.
+3. Non si toccano `studio.py`, `designer.py`, `artista.py`, `agenti/`,
+   `crew_output/` né i file non tracciati del capo in radice.
+
+**Il contenitore si può riavviare da solo** (alla 0.65 è successo a metà
+batteria: `uptime` di due minuti, niente più Godot in giro). `/tmp` e
+`/home/claude` restano, i processi no: una batteria interrotta si riprende
+saltando le prove già fatte (una copia di `batteriac.sh` con `grep -q "^$p "
+/tmp/batt_fatte.txt && continue`). E serve `rsync` (`apt-get update &&
+apt-get install -y rsync`) per `runc.sh`.
+
 ### 1.2 Godot e gli attrezzi
 
 ```bash
@@ -368,6 +401,9 @@ Valgono sempre, senza che le ripeta:
 | `scripts/sfida_hud.gd` | 160 | **(0.64)** il cronometro della sfida a schermo |
 | `scripts/parchimetro_3d.gd` | 380 | **(0.64)** il parchimetro: modello, botte, monete |
 | `scripts/strisce_blu.gd` | 245 | **(0.64)** pianta i parchimetri e colora i posti quando il Comune pitta; le regole stanno in `game_manager.gd` («'E STRISCE BLU») |
+| `scripts/mani_fp.gd` | 620 | **(0.65)** le mani della regia in prima persona: pose per gesto, paletta, avambraccio; `player_fps._aggiorna_mani` gli dice il gesto |
+| `scripts/suocera_3d.gd` | 60 | **(0.65)** Donna Cuncetta sul letto del vascio (quarto gradino) |
+| `scripts/fernuta.gd` | 120 | **(0.65)** la schermata del game over e «Ricumincia da capo» |
 
 ### I tre scheletri delle persone
 
@@ -666,6 +702,28 @@ che rovinò la 0.47): si traducono i nomi.
     macchine, i rivali, i guagliuni (`collision_layer` 4) e i muri. Le macchine del Rre, fino al punto d'attesa e poi uscendo, non
     sbattono neanche contro le altre macchine (0.64).
 
+**Aggiunte nella 0.65**
+
+68. **Prima di creare un file, `ls`.** `tools/foto_mani.gd` esisteva già
+    (la 0.54): l'ho sovrascritto e me ne sono accorto da una **M** in `git
+    status`. Rimesso a posto; il mio si chiama `foto_mani_regia.gd`.
+69. **Il modello `paletta` ha il disco perpendicolare al manico**: va bene
+    sul fianco, non in mano davanti all'occhio (in prima persona è fatta
+    a pezzi in `mani_fp.gd`).
+70. **Con xvfb il tempo del gioco va più piano dell'orologio** (il disegno
+    in software perde passi di fisica): una prova con la finestra deve
+    aspettare il tempo del gioco (un contatore del nodo, `_t`), non i
+    secondi di `create_timer(…, true, false, true)`.
+71. **Un controllo fatto dopo la funzione che cancella quello che
+    controlla** (il digiuno in `start_shift`, dopo `prepara_giornata`): non
+    dà errori, non scatta mai.
+72. **Lo stato iniziale si copia in profondità** (`stato_partita().duplicate(true)`):
+    se no «Ricumincia da capo» si porta dietro i dizionari della partita.
+73. **Cacciato 'e casa (`GameManager.cacciato_e_casa`) il vascio non si
+    apre**: chi porta il giocatore a casa (carabinieri, ospedale,
+    `rientro_forzato`) deve lasciarlo alla porta. Una cosa nuova che
+    «riporta a casa» deve chiedere a `vascio.entra`, che se ne occupa.
+
 ### Come si prova
 
 Cinquantotto `tools/prova_*.gd` (due vanno a parte: `prova_scopa`, che gira come script, e `prova_dieci_giornate`, che gioca dieci giornate col tempo accelerato). Ognuna è un autoload temporaneo che stampa
@@ -883,6 +941,21 @@ li numera sempre uguali); `car_3d._controlla_striscia_blu` decide il caso
 del cliente, `driver_3d` va alla macchinetta. La pittura è
 `GameManager.pittura` (passate in tasca).
 
+**Le mani della regia (0.65)**: `mani_fp.gd`, appese alla telecamera
+accanto al fierro; visibili solo mentre `directing_car` si sta dirigendo
+(più il pollice su o le palme al cielo alla fine). Le pose si scrivono per
+la mano destra, in metri veri, e la sinistra è a specchio; si guardano con
+`foto_mani_regia` e in città con `prova_mani_regia` (xvfb per le foto).
+
+**'A scala d''e guaie (0.65)**: `game_manager.gd`, sezione «'A SCALA D''E
+GUAIE». `_passo_d_a_scala(scoperto)` la sera (in `end_shift`, prima di
+girare la giornata), `_gradino(n)` il guaio, `_matina_d_e_guaie()` in
+`start_shift`, `_scala_a_terra()` quando si paga tutto; `giorni_debbito`,
+`gradino_fatto`, `gas_staccato`, `suocera_in_casa`, `cacciato_e_casa` nel
+salvataggio. `partita_persa` → `hud._su_partita_persa` → `fernuta.gd`. La
+porta chiusa: `porta_casa.gd` + `vascio.apri_fore()` +
+`pannello_casa._mostra_fore()`; `GameManager.dorme_fore()`.
+
 **La violenza** costa sciato (fiato), ossa che si ricomprano solo di notte,
 fermi (al terzo si passa la notte in cella, e ci si risveglia davanti alla
 galera sul Vomero), stelle che chiamano i carabinieri, e Borrelli.
@@ -898,13 +971,15 @@ disegna la metà dei triangoli di prima grazie ai gruppi a quadretti.
 
 ### Subito (se la chat nuova trova qualcosa aperto)
 
-La 0.64 è stata chiusa e committata. Rimasti (vedi `ROADMAP.md`, «Rimasto
-aperto dalla 0.64»):
+La 0.65 è stata chiusa e committata. Rimasti (vedi `ROADMAP.md`, «Rimasto
+aperto dalla 0.65» e «dalla 0.64»):
 
-1. **Chiedere al capo come va la 0.64 giocata**: il Rre a mano (cinque in un
-   minuto sono tante?), le strisce blu (una mattina su cinque è giusto?), e
-   i numeri delle dieci giornate in `NOVITA-v0.64.md`.
-2. La traversata a piedi col panaro, il motorino con le chiavi.
+1. **Chiedere al capo come va la scala dei guai giocata**: le spese nuove
+   (€70 al giorno) sono troppe o troppo poche? Sette sere sono giuste? E le
+   mani: leggibili? (Sono a scatole come il fierro: il salto di qualità è
+   un modello vero.)
+2. Dalla 0.64: il Rre a mano, la frequenza delle strisce blu.
+3. La traversata a piedi col panaro, il motorino con le chiavi.
 
 ### Borrelli e gli altri boss (0.63)
 
@@ -916,9 +991,10 @@ città). Il capo vuole **altri boss e un finale**: le proposte stanno nella
 `ROADMAP.md`, «I boss che verranno e il finale» — si sceglie con lui prima
 di scrivere codice.
 
-### La 0.65 — **'E vvoce**
+### La 0.66 — **'E vvoce**
 
-Voci registrate, clip di idle in prima persona, le criature con una
+Voci registrate, clip di idle in prima persona (camminando: durante la
+regia le mani ci sono dalla 0.65), le criature con una
 corporatura loro. Come sempre, **chiedere a lui** prima di cominciare, con
 la lista della roadmap in mano.
 

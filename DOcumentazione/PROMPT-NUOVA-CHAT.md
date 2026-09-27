@@ -7,15 +7,19 @@ Claude aperta sul computer, così la chat nuova vede la cartella del gioco).
 ---
 
 > Riprendiamo *Parcheggiatore Abusivo Simulator* esattamente da dove ci siamo
-> fermati: la **v0.64 · 'O Rre e 'e Strisce**, chiusa e committata ('O Rre
-> d''e Parcheggi, 'E Strisce Blu, la conquista delle piazze provata, la
-> prova che gioca dieci giornate).
+> fermati: la **v0.65 · 'A scala d''e guaie**, chiusa e committata (le mani
+> in prima persona che fanno i gesti mentre dirigi un'auto; la scala dei
+> guai per chi non paga le spese di casa, fino a FERNUTA dopo sette sere).
 >
+> 0. **L'obiettivo finale** sta in `claude/VISIONE.md`: il gioco deve
+>    diventare lo *Schedule I* napoletano, per qualità e per successo.
+>    Ogni scelta si misura su quello.
 > 1. Prima leggi, nei documenti del progetto, `claude/COME-RIPRENDERE.md`
 >    (il manuale: come rimettere in piedi il lavoro, le regole, le
->    trappole), `claude/MEMORIA_PROGETTO.md` e
->    `claude/RIASSUNTO-CHAT-v0.64.md`. Poi `claude/ROADMAP.md` e
->    `claude/NOVITA-v0.64.md`.
+>    trappole; **la 1.1c spiega come convivere col mio studio
+>    multi-agente**, che committa nello stesso repository),
+>    `claude/MEMORIA_PROGETTO.md` e `claude/RIASSUNTO-CHAT-v0.65.md`. Poi
+>    `claude/ROADMAP.md` e `claude/NOVITA-v0.65.md`.
 > 2. Il gioco sta sul mio computer in
 >    `C:\Users\Max\Downloads\Parcheggiatore Abusivo Simulator\`, che è un
 >    repository Git: il progetto Godot è in `Progetto\parcheggiatore-abusivo\`,
@@ -24,9 +28,9 @@ Claude aperta sul computer, così la chat nuova vede la cartella del gioco).
 >    prima del commit `base`) e scarica Godot 4.3 in `/home/claude/godot4`.
 > 3. Fai girare la batteria di prove (`tools/sh/batteriac.sh`, in due metà
 >    con `PARTE=1` e `PARTE=2`) e dimmi se è tutto come l'hai lasciato.
-> 4. Questa versione è la **0.65**. Ti dico io cosa voglio; se non lo
+> 4. Questa versione è la **0.66**. Ti dico io cosa voglio; se non lo
 >    scrivo, fammi le domande che ti servono partendo dalla roadmap
->    («Rimasto aperto dalla 0.64» e «v0.65 'E vvoce»).
+>    («Rimasto aperto dalla 0.65» e «v0.66 'E vvoce»).
 >
 > Le regole di sempre: dialoghi del gioco in napoletano, note e roadmap in
 > italiano, le note che raccontano anche gli sbagli. **Niente cartelle
