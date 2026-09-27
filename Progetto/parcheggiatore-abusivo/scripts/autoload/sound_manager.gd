@@ -92,6 +92,11 @@ const BRANI := {
 
 var _streams: Dictionary = {}
 var _players: Array = []
+## Quando ogni player d''o pool ha 'ncignato l'ultimo suono (Time.get_ticks_msec).
+## Serve solo pe' sapé, si stanno tutti occupate, qual è 'o cchiù vecchio
+## 'a rubbà: senza 'sta lista, 'o pool pieno faceva sparì 'o suono nuovo
+## senza dì niente (audit #4, gravità media).
+var _players_da: Array[int] = []
 var _music: AudioStreamPlayer
 ## Il secondo giradischi: mentre uno sfuma, l'altro entra. Con un solo
 ## player il cambio era uno stacco netto, e uno stacco netto in un gioco
@@ -122,6 +127,7 @@ func _ready() -> void:
 		var p := AudioStreamPlayer.new()
 		add_child(p)
 		_players.append(p)
+		_players_da.append(0)
 
 	for nome in BRANI:
 		var path: String = BRANI[nome]
@@ -360,13 +366,33 @@ func play(sound_name: String, volume_db: float = 0.0, pitch: float = 1.0, pitch_
 		return
 	if vol_effetti <= 0.001:
 		return # muto: nun se piglia manco 'nu canale d''o pool
-	for p in _players:
+	var ora := Time.get_ticks_msec()
+	for i in range(_players.size()):
+		var p: AudioStreamPlayer = _players[i]
 		if not p.playing:
 			p.stream = _streams[sound_name]
 			p.volume_db = volume_db + MASTER_OFFSET_DB + _db_effetti()
 			p.pitch_scale = pitch * randf_range(1.0 - pitch_rand, 1.0 + pitch_rand)
 			p.play()
+			_players_da[i] = ora
 			return
+	# **Pool pieno.** Prima qui si usciva senza suonare niente: nei momenti
+	# affollati (rissa, folla, monete a raffica) un suono spariva nel
+	# silenzio e sembrava un bug del gioco. Invece rubbammo 'o canale cchiù
+	# vecchio — quello che sta suonando da più tempo — e ci mettiamo il
+	# suono nuovo sopra: si sente sempre qualcosa, e quello che si interrompe
+	# e' sempre il più "consumato".
+	var i_vecchio := 0
+	for i in range(1, _players_da.size()):
+		if _players_da[i] < _players_da[i_vecchio]:
+			i_vecchio = i
+	var p: AudioStreamPlayer = _players[i_vecchio]
+	p.stop()
+	p.stream = _streams[sound_name]
+	p.volume_db = volume_db + MASTER_OFFSET_DB + _db_effetti()
+	p.pitch_scale = pitch * randf_range(1.0 - pitch_rand, 1.0 + pitch_rand)
+	p.play()
+	_players_da[i_vecchio] = ora
 
 
 ## Uno a caso fra tanti. Serve a non sentire tre volte identico lo stesso

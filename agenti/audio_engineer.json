@@ -1,7 +1,7 @@
 {
   "nome": "audio_engineer",
   "creato_il": "2026-09-27 16:18",
-  "incarichi": 4,
+  "incarichi": 5,
   "memoria": [
     {
       "data": "2026-09-27 16:19",
@@ -22,6 +22,11 @@
       "data": "2026-09-27 16:39",
       "compito": "BUGFIX #3 dell'audit (gravità ALTA) — UNA SOLA COSA.\nFile: Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd, funzione `set_music_volume(db)`.\n\nProblema: se è in corso un tween di dissolvenza fra brani, `set_music_volume()` fa `return` e il nuovo volume non viene mai raggiunto (il tw",
       "esito": "## Resoconto\n\n**File modificato:** `Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd`, funzione `set_music_volume(db)`.\n\n**Problema (audit, gravità ALTA):** durante un crossfade tra brani (`_tween` attivo, generato da `metti()`), `set_music_volume()` faceva un `return` secco senza applicare il nuovo volume: il tween proseguiva verso il target catturato *prima* — quello vecchio — e lo slider musica dell'utente restava senza effetto fino al brano successivo.\n\n**Soluzione scelta:** invece di uscire e basta, se c'è un tween valido lo uccido (`_tween.kill()`) e ne creo uno nuovo, b"
+    },
+    {
+      "data": "2026-09-27 16:41",
+      "compito": "BUGFIX #2 dell'audit (gravità ALTA) — UNA SOLA COSA.\nFile: Progetto/parcheggiatore-abusivo/scripts/motorino_citta.gd (e SOLO se indispensabile una riga in sound_manager.gd).\n\nProblema: il player 3D del motorino (`suono_3d(\"vespa_motore\", ...)`) fissa il volume al momento della creazione. Se il gioca",
+      "esito": "## Resoconto\n\n**File modificato:** `Progetto/parcheggiatore-abusivo/scripts/motorino_citta.gd`\n(non è stato necessario toccare `sound_manager.gd`: `volume_3d(volume_db)` esisteva già ed era corretto, semplicemente nessuno lo chiamava da qui).\n\n**Problema (audit, gravità ALTA):** il player 3D del motore del motorino (`_motore`, creato con `SoundManager.suono_3d(\"vespa_motore\", ...)`) impostava `volume_db` una volta sola, alla partenza del motorino (`_riparti` → `_process` quando finisce l'attesa). Se il giocatore spostava lo slider effetti mentre il motorino era già in transito, il rombo restav"
     }
   ],
   "ruolo": "Audio Programmer GDScript (Godot 4.3)",
