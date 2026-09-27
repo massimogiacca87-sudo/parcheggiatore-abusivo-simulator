@@ -35,6 +35,8 @@ var emblem_counter_label: Label
 var commission_label: Label
 var conto_label: Label
 var conto_voci: Label
+## (0.65) 'A scala d''e guaie: quante sere di debito, e che succede stasera.
+var debbito_label: Label
 var cumm_label: Label
 var event_banner: Label
 var client_pointer: Label
@@ -138,6 +140,7 @@ func _ready() -> void:
 	GameManager.heat_changed.connect(_on_heat_changed)
 	GameManager.shift_time_changed.connect(_on_shift_time_changed)
 	GameManager.shift_ended.connect(_on_shift_ended)
+	GameManager.partita_persa.connect(_su_partita_persa)
 	GameManager.purtato_n_galera.connect(_su_galera)
 	GameManager.sciato_cambiato.connect(_su_sciato)
 	GameManager.directing_started.connect(_on_directing_started)
@@ -986,6 +989,11 @@ func _build_ui() -> void:
 	cd.add_child(filo)
 	conto_label = _riga_destra(cd, 16, Color(1.0, 0.78, 0.42))
 	conto_label.add_theme_font_override("font", US.font_grassetto())
+	# (0.65) Sotto al conto, 'a scala d''e guaie: una minaccia che non si
+	# vede non minaccia nessuno.
+	debbito_label = _riga_destra(cd, 13, Color(1.0, 0.50, 0.42))
+	debbito_label.add_theme_font_override("font", US.font_grassetto())
+	debbito_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	conto_voci = _riga_destra(cd, 12, Color(0.86, 0.80, 0.72))
 	conto_voci.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
@@ -3422,6 +3430,7 @@ func _aggiorna_conto() -> void:
 		conto_label.text = "'O conto: PAVATO"
 		conto_label.modulate = Color(0.62, 1.0, 0.66)
 		conto_voci.text = ""
+		_aggiorna_debbito()
 	else:
 		conto_label.text = "STASERA CE VONNO  €%d" % dovuto
 		# Da arancione a rosso man mano che la giornata se ne va: alle
@@ -3441,6 +3450,7 @@ func _aggiorna_conto() -> void:
 			righe.append("%s €%d%s" % [str(v["nome"]), int(v["importo"]),
 				("  (+%dg)" % rit) if rit > 0 else ""])
 		conto_voci.text = "\n".join(righe)
+	_aggiorna_debbito()
 
 	if cumm_label != null and is_instance_valid(cumm_label):
 		var c: Dictionary = GameManager.commissione_in_mano()
@@ -3452,6 +3462,40 @@ func _aggiorna_conto() -> void:
 				sana = "  · sana %d%%" % int(float(c.get("integrita", 1.0)) * 100.0)
 			cumm_label.text = "%s → %s   (%d\")%s" % [str(c["nome"]),
 				str(c["nome_a"]), int(maxf(float(c.get("scade", 0.0)), 0.0)), sana]
+
+
+## **'A scala d''e guaie** (0.65) nell'HUD: da quante sere si dorme col
+## debito, e che guaio scatta stasera se non si paga tutto.
+func _aggiorna_debbito() -> void:
+	if debbito_label == null or not is_instance_valid(debbito_label):
+		return
+	var gm := GameManager
+	var n: int = gm.giorni_debbito
+	var dovuto: int = gm.spese_dovute()
+	var righe: Array = []
+	if n > 0:
+		righe.append("DEBBITO: %d juorne 'e %d" % [n, gm.GRADINO_GAME_OVER])
+	if dovuto > 0:
+		var g: String = gm.prossimo_guaio()
+		if g == "FERNUTA":
+			righe.append("Si nun paghe stasera: È FERNUTA")
+		elif g != "":
+			righe.append("Si nun paghe stasera: %s" % g)
+	debbito_label.text = "\n".join(righe)
+	debbito_label.visible = not righe.is_empty()
+	# Più si sale, più diventa rosso.
+	var k: float = clampf(float(n) / float(gm.GRADINO_GAME_OVER - 1), 0.0, 1.0)
+	debbito_label.modulate = Color(1.0, 0.72, 0.46).lerp(Color(1.0, 0.30, 0.26), k)
+
+
+## Il settimo gradino: la partita è persa (vedi `fernuta.gd`).
+func _su_partita_persa(fine: Dictionary) -> void:
+	if summary_panel != null and is_instance_valid(summary_panel):
+		summary_panel.visible = false
+	var f := preload("res://scripts/fernuta.gd").new()
+	f.name = "Fernuta"
+	get_tree().root.add_child(f)
+	f.mostra(fine)
 
 
 func _riepilogo_giornata(s: Dictionary) -> String:
@@ -3504,6 +3548,13 @@ func _riepilogo_giornata(s: Dictionary) -> String:
 	r.append("In sacca: €%d" % int(s.get("money", 0)))
 	var umore: float = float(s.get("umore_moglie", 60.0))
 	r.append("Nunzia: %s" % _faccia_moglie(umore))
+	# (0.65) 'A scala d''e guaie.
+	var gd: int = int(s.get("giorni_debbito", 0))
+	if gd > 0:
+		var pg: String = str(s.get("prossimo_guaio", ""))
+		r.append("DEBBITO: %d sere 'e fila. %s" % [gd,
+			"Dimane sera, si nun paghe: È FERNUTA." if pg == "FERNUTA"
+			else ("Dimane sera, si nun paghe: %s." % pg if pg != "" else "")])
 	for f in s.get("conseguenze", []):
 		r.append("!! " + str(f))
 	r.append("")
