@@ -1190,6 +1190,11 @@ func _moglie_e_criature(r: Node3D) -> void:
 ## siede sul bordo del **tuo** letto, verso la stanza. Il letto sta a
 ## (LARG/2 − 1,1, −PROF/2 + 1,35), largo 1,5 lungo x: il bordo verso la
 ## stanza è a x − 0,75.
+## Il fazzoletto di Donna Cuncetta: viola scuro. Nero come il vestito si
+## leggeva come capelli (un giovanotto coi capelli neri).
+const FAZZOLETTO_SUOCERA := Color(0.36, 0.20, 0.34)
+
+
 func _suocera(r: Node3D) -> void:
 	var c := StaticBody3D.new()
 	c.name = "Suocera"
@@ -1206,13 +1211,20 @@ func _suocera(r: Node3D) -> void:
 	cs.shape = cap
 	cs.position = Vector3(0, 0.7, 0)
 	c.add_child(cs)
-	# Vestita di nero, capelli bianchi, la pancia della nonna.
+	# Vestita a lutto, la pancia della nonna, e il fazzoletto nero in testa
+	# come le signore sedute davanti ai bassi (`RobbaPsx._fazzoletto`): al
+	# primo giro, coi capelli bianchi, da lontano sembrava un signore.
+	var lutto := Color(0.13, 0.12, 0.15)
 	var parti: Dictionary = Human.build(
-		Color(0.10, 0.10, 0.12), Color(0.14, 0.13, 0.15), "", 1.56,
-		{"skin": Color(0.84, 0.68, 0.56), "hair": Color(0.86, 0.85, 0.82),
-		 "corpo": "femmina", "belly": 0.7, "bald": false,
+		Color(0.24, 0.20, 0.26), lutto, "", 1.56,
+		{"skin": Color(0.84, 0.68, 0.56), "hair": FAZZOLETTO_SUOCERA,
+		 "corpo": "femmina", "belly": 0.75, "bald": false,
 		 "moustache": false})
 	c.add_child(parti["root"])
+	var testa = parti.get("head", null)
+	if testa != null:
+		preload("res://scripts/robba_psx.gd")._fazzoletto(testa as Node3D,
+			FAZZOLETTO_SUOCERA)
 	# Seduta sul bordo del letto: il materasso sta a 0,62, una sedia a 0,45.
 	(parti["root"] as Node3D).position.y = 0.16
 	c.parti = parti
