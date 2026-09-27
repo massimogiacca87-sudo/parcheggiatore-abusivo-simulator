@@ -1,7 +1,7 @@
 {
   "nome": "audio_engineer",
   "creato_il": "2026-09-27 16:18",
-  "incarichi": 5,
+  "incarichi": 6,
   "memoria": [
     {
       "data": "2026-09-27 16:19",
@@ -27,6 +27,11 @@
       "data": "2026-09-27 16:41",
       "compito": "BUGFIX #2 dell'audit (gravità ALTA) — UNA SOLA COSA.\nFile: Progetto/parcheggiatore-abusivo/scripts/motorino_citta.gd (e SOLO se indispensabile una riga in sound_manager.gd).\n\nProblema: il player 3D del motorino (`suono_3d(\"vespa_motore\", ...)`) fissa il volume al momento della creazione. Se il gioca",
       "esito": "## Resoconto\n\n**File modificato:** `Progetto/parcheggiatore-abusivo/scripts/motorino_citta.gd`\n(non è stato necessario toccare `sound_manager.gd`: `volume_3d(volume_db)` esisteva già ed era corretto, semplicemente nessuno lo chiamava da qui).\n\n**Problema (audit, gravità ALTA):** il player 3D del motore del motorino (`_motore`, creato con `SoundManager.suono_3d(\"vespa_motore\", ...)`) impostava `volume_db` una volta sola, alla partenza del motorino (`_riparti` → `_process` quando finisce l'attesa). Se il giocatore spostava lo slider effetti mentre il motorino era già in transito, il rombo restav"
+    },
+    {
+      "data": "2026-09-27 16:42",
+      "compito": "BUGFIX #4 dell'audit (gravità MEDIA) — UNA SOLA COSA.\nFile: Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd, funzione `play()`.\n\nProblema: il pool ha POOL_SIZE=18 player; `play()` scorre i player e se sono TUTTI occupati esce senza suonare nulla e senza avvisare. Nei momenti pieni ",
+      "esito": "## Resoconto\n\n**File modificato:** `Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd`\n\n**Problema (audit #4, gravità MEDIA):** `play()` scorreva i 18 player del pool e, se erano tutti occupati, usciva con un `return` silenzioso senza suonare nulla. Nei momenti affollati (rissa, folla, raffica di monete, UI) un suono poteva semplicemente sparire, dando l'impressione di un bug del gioco.\n\n**Correzione applicata (diff):**\n\n```diff\n var _streams: Dictionary = {}\n var _players: Array = []\n+## Quando ogni player d''o pool ha 'ncignato l'ultimo suono (Time.get_ticks_msec).\n+## Serve "
     }
   ],
   "ruolo": "Audio Programmer GDScript (Godot 4.3)",

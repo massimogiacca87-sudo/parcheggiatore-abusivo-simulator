@@ -230,7 +230,14 @@ func metti(nome: String, fade: float = 2.5) -> void:
 	_music.play()
 
 	if _tween and _tween.is_valid():
+		# 'O chain_callback ca fermava 'o player vecchio (_music_b.stop(),
+		# programmato piu' sotto col chain()) sta dinto 'o tween ca stiamo
+		# ammazzanno proprio mo: si nun 'o chiammammo nuje a mano, chillo
+		# nun parte maje, e 'o player abbandunato resta a sunà 'o brano
+		# 'e primma pe' n'ata frazione 'e secondo, sovrapponendose â
+		# dissolvenza nova (emergenze ravvicinate tipo caccia -> boss).
 		_tween.kill()
+		_music_b.stop()
 	if fade <= 0.01:
 		_music.volume_db = _volume_base
 		_music_b.stop()
