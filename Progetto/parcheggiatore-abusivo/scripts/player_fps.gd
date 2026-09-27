@@ -65,6 +65,16 @@ const PUNCH_RANGE: float = 2.4
 var head: Node3D
 var camera: Camera3D
 var current_target: Node = null
+## **'A riga d''e comandi nun resta appesa** (0.66). La riga «[E]… · [G]…»
+## la scrive `_update_interaction` a ogni passo di fisica. Quando il
+## giocatore smette di guardarsi attorno (guida, scassa, lo tengono, cade,
+## si arrampica) quella funzione non gira più, e l'ultima riga restava a
+## schermo: «[G] arruobbe 'o stemma» mentre ti portavano via. Adesso chi
+## scrive la riga si segna *quando* l'ha scritta, e `_process` la spegne
+## se è rimasta quella e nessuno l'ha rinfrescata da tre passi.
+var _riga_bersaglio: String = ""
+var _riga_passo: int = -100
+var _riga_attuale: String = ""
 var directing_car: Node = null # != null mentre il player sta dirigendo un'auto
 var _seduto: bool = false # sulla sedia sdraio del salotto
 var _sedia: Node3D = null # quale sedia (per restare appoggiati lì)
@@ -173,6 +183,7 @@ var _appiglio_a: Vector3
 
 func _ready() -> void:
 	add_to_group("player")
+	prompt_changed.connect(_su_riga)
 	collision_layer = 2
 	# Il player è solido contro mondo E auto/persone: niente più passare
 	# attraverso le macchine.
@@ -1943,10 +1954,28 @@ func _update_interaction() -> void:
 	if kind != was_kind:
 		shop_focus_changed.emit(kind)
 
+	var riga := ""
 	if target and target.has_method("get_interact_prompt"):
-		prompt_changed.emit(target.get_interact_prompt(global_position))
-	else:
-		prompt_changed.emit("")
+		riga = str(target.get_interact_prompt(global_position))
+	_riga_bersaglio = riga
+	_riga_passo = Engine.get_physics_frames()
+	prompt_changed.emit(riga)
+
+
+func _su_riga(testo: String) -> void:
+	_riga_attuale = testo
+
+
+## Spegne la riga del bersaglio se nessuno la rinfresca più (vedi
+## `_riga_bersaglio`). Le righe scritte apposta da uno stato (seduto, regia,
+## piazzamento) non sono del bersaglio e restano.
+func _riga_scaduta() -> void:
+	if _riga_attuale == "" or _riga_attuale != _riga_bersaglio:
+		return
+	if Engine.get_physics_frames() - _riga_passo <= 3:
+		return
+	_riga_bersaglio = ""
+	prompt_changed.emit("")
 
 
 # ---------------------------------------------------------------------------
@@ -1954,6 +1983,7 @@ func _update_interaction() -> void:
 # ---------------------------------------------------------------------------
 
 func _process(delta: float) -> void:
+	_riga_scaduta()
 	_hands_time += delta
 	if _arma_fp != null:
 		# Si nasconde quando le mani servono ad altro: al volante, a
