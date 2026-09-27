@@ -389,12 +389,24 @@ const CUORPE_MESTIERE := {
 }
 
 
+## **(0.66) 'O pupo nuovo va 'nnanze.** Dalla 0.59 sei uomini su dieci
+## prendevano un corpo dei pacchetti, perché il pupo era uno solo e trenta
+## pupi uguali si vedevano. Il pupo della 0.66 ha otto capigliature, quattro
+## palpebre, cinque sopracciglia, tre nasi, sei bocche, quattro barbe,
+## quattro rughe, colletto, cintura, catenina e gonna: la varietà ce l'ha
+## lui, e in più ha lo stile del gioco (occhi a palla, faccia dipinta),
+## mentre i corpi dei pacchetti accanto a lui sembrano di un altro gioco.
+## Quindi il pupo diventa la regola e i pacchetti l'eccezione.
+const QUOTA_PUPO_UOMINI := 0.80
+const QUOTA_PUPO_DONNE := 0.88
+
+
 func _che_cuorpo(femmina: bool) -> String:
 	if femmina:
-		if randf() < 0.36:
+		if randf() >= QUOTA_PUPO_DONNE:
 			return str(Human.QUAT_DONNE[randi() % Human.QUAT_DONNE.size()])
 		return ""
-	if randf() < 0.4:
+	if randf() < QUOTA_PUPO_UOMINI:
 		return ""
 	var scelte: Array = CUORPE_MESTIERE.get(str(mestiere.get("id", "")), [])
 	if scelte.is_empty():
