@@ -11,6 +11,7 @@ const Human := preload("res://scripts/human_builder.gd")
 const Tex := preload("res://scripts/textures.gd")
 const Models := preload("res://scripts/models.gd")
 const ArmaFp := preload("res://scripts/arma_fp.gd")
+const ManiFp := preload("res://scripts/mani_fp.gd")
 
 const WALK_SPEED: float = 4.8 # la piazza è grande: si cammina un po' più svelti
 const SPRINT_SPEED: float = 8.2
@@ -80,6 +81,8 @@ var _arma_vista: Node3D
 var _arma_mo: String = ""
 ## Il fierro che vedi tu, appeso alla telecamera (0.61). Vedi `arma_fp.gd`.
 var _arma_fp: Node3D = null
+## Le mani che fanno i gesti mentre dirigi un'auto (0.65). Vedi `mani_fp.gd`.
+var _mani_fp: Node3D = null
 var _punch_timer: float = 0.0
 var _step_cd: float = 0.0
 ## Accovacciato (C). Letto anche da fuori: le signore si accorgono meno di
@@ -227,6 +230,9 @@ func _build_hands() -> void:
 	_arma_fp = ArmaFp.new()
 	_arma_fp.name = "ArmaFp"
 	camera.add_child(_arma_fp)
+	_mani_fp = ManiFp.new()
+	_mani_fp.name = "ManiFp"
+	camera.add_child(_mani_fp)
 
 
 ## Si chiama dopo il corpo, perché ha bisogno delle ossa delle mani.
@@ -914,6 +920,7 @@ func knock_down(push_dir: Vector3) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_aggiorna_mani()
 	# **Assettato ô tavulo: nun se scappa.**
 	#
 	# Il capo: "quando si gioca a scopa non si esce mai dal tavolo". E
@@ -1442,6 +1449,40 @@ func _handle_directing(delta: float) -> void:
 		if not directing_car.is_being_directed():
 			directing_car = null
 			prompt_changed.emit("")
+
+
+## **'E mmane d''a regia** (0.65). Dice a `mani_fp` che gesto fare, con gli
+## stessi tasti che legge la macchina (`car_3d._process_directing`): S frena,
+## A e D girano, W chiama, niente tasti = aspetta. Il turista capisce i gesti
+## al contrario, ma le mani fanno quello che hai premuto tu: è lui che
+## sbaglia, non tu.
+##
+## Mentre le mani stanno davanti all'occhio, il fierro scende: una mazza in
+## mano e due palme aperte fanno tre mani.
+func _aggiorna_mani() -> void:
+	if _mani_fp == null:
+		return
+	var g := ""
+	if directing_car != null and is_instance_valid(directing_car) \
+			and directing_car.is_being_directed():
+		if bool(directing_car.get("_assist_active")):
+			g = "piano"
+		elif Input.is_action_pressed("move_down"):
+			g = "frena"
+		elif Input.is_action_pressed("move_left"):
+			g = "sinistra"
+		elif Input.is_action_pressed("move_right"):
+			g = "destra"
+		elif Input.is_action_pressed("move_up"):
+			g = "avanti"
+		else:
+			g = "aspetta"
+		if Input.is_action_just_pressed("park_here") \
+				or Input.is_action_just_pressed("vandalize"):
+			_mani_fp.lampo("mettila")
+	_mani_fp.regia(g)
+	if _arma_fp != null:
+		_arma_fp.set("nascosta", _mani_fp.in_vista())
 
 
 ## Paracadute: se malgrado i muri invisibili si finisce sotto il piano di

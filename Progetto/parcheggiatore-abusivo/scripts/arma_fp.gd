@@ -87,6 +87,9 @@ var _t_cambio: float = -1.0
 var _passo: float = 0.0
 var _respiro: float = 0.0
 var _moto: float = 0.0     # 0 fermo, 1 cammina, ~1.7 corre
+## (0.65) Vero mentre le mani della regia stanno davanti all'occhio: il
+## fierro non si vede (lo scrive `player_fps._aggiorna_mani`).
+var nascosta: bool = false
 
 
 func _ready() -> void:
@@ -383,6 +386,7 @@ const DURATE := {"fendente": 0.46, "stoccata": 0.34, "sparo": 0.22,
 func _process(delta: float) -> void:
 	if not visible:
 		return
+	_rig.visible = not nascosta
 	_respiro += delta
 	if _moto > 0.05:
 		_passo += delta * (6.2 + 3.0 * maxf(0.0, _moto - 1.0))
