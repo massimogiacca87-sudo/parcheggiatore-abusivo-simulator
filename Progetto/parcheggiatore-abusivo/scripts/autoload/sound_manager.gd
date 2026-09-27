@@ -249,7 +249,21 @@ func set_music_volume(db: float) -> void:
 	db = _volume_base
 	if _music and _music.playing:
 		if _tween and _tween.is_valid():
-			return # sta già sfumando: ci pensa il tween ad arrivarci
+			# **Non la lasciamo a mezza strada.** Prima qui si faceva
+			# `return` e si lasciava il tween vecchio a tirare verso il
+			# volume di *prima*: chi girava la manopola durante un cambio
+			# brano vedeva lo slider muoversi ma il suono no, finche' non
+			# cambiava brano di nuovo. Ammazziamo il tween vecchio e ne
+			# facciamo uno breve (0.2s) che porta il brano nuovo al volume
+			# giusto e intanto finisce di far sparire quello vecchio,
+			# senza tagliarlo di colpo.
+			_tween.kill()
+			_tween = create_tween()
+			_tween.set_parallel(true)
+			_tween.tween_property(_music, "volume_db", db, 0.2)
+			_tween.tween_property(_music_b, "volume_db", -80.0, 0.2)
+			_tween.chain().tween_callback(_music_b.stop)
+			return
 		_music.volume_db = db
 
 

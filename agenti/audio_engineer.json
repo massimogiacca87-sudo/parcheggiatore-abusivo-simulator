@@ -1,7 +1,7 @@
 {
   "nome": "audio_engineer",
   "creato_il": "2026-09-27 16:18",
-  "incarichi": 2,
+  "incarichi": 3,
   "memoria": [
     {
       "data": "2026-09-27 16:19",
@@ -12,6 +12,11 @@
       "data": "2026-09-27 16:36",
       "compito": "AUDIT (solo lettura + un documento, NESSUNA modifica al codice in questo compito).\nAnalizza il codice audio del gioco e scrivi il referto in 'crew_output/AUDIT-AUDIO.md'.\n\nFile da leggere:\n- Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd (477 righe, autoload 'SoundManager')\n- Prog",
       "esito": "# AUDIT-AUDIO — Parcheggiatore Abusivo Simulator\n\n**Data:** 2026-09-27\n**Autore:** Audio Programmer (GDScript)\n**Tipo di incarico:** Sola lettura. Nessun file .gd è stato toccato.\n**File analizzati:** `sound_manager.gd` (477 righe), `regia_musicale.gd` (187 righe), `motorino_citta.gd` (137 righe), più ~120 chiamate `SoundManager.*` sparse in tutti gli script di `scripts/`.\n\n---\n\n## Riepilogo veloce\n\n- **Nomi fantasma (usati nel codice ma NON presenti in `SOUND_NAMES`):** **nessuno trovato.** Ho passato in rassegna tutte le chiamate `play()`, `play_uno()`, `ui()`, `soldi()`, `pugno()`, `suono_3"
+    },
+    {
+      "data": "2026-09-27 16:38",
+      "compito": "BUGFIX #1 dell'audit (crew_output/AUDIT-AUDIO.md, gravità ALTA) — UNA SOLA COSA.\nFile: Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd\n\nProblema: `ambiente(quanto, fade)` calcola il volume come `AMBIENTE_DB + linear_to_db(quanto)` senza tenere conto della manopola effetti (`_db_eff",
+      "esito": "## Resoconto\n\n**File modificato:** `Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd`\n\n**Diff completo applicato:**\n\n```diff\n@@ nella sezione delle variabili volume/ambiente\n var _ambiente: AudioStreamPlayer\n var _ambiente_db: float = AMBIENTE_DB\n var _amb_tween: Tween\n+var _ambiente_quanto: float = 0.0 # ll'urdemo \"quanto\" chiesto, pe' aggiornà 'o tappeto quanno cagna 'a manopola effetti\n\n@@ func set_vol_effetti(v: float) -> void:\n func set_vol_effetti(v: float) -> void:\n \tvol_effetti = clampf(v, 0.0, 1.0)\n+\t# Si 'o tappeto sta già sonanno, s'adda aggiornà mo: no' quanno cagn"
     }
   ],
   "ruolo": "Audio Programmer GDScript (Godot 4.3)",
