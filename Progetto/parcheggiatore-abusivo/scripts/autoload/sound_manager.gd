@@ -301,6 +301,9 @@ func _db_musica() -> float:
 
 func set_vol_effetti(v: float) -> void:
 	vol_effetti = clampf(v, 0.0, 1.0)
+	# Si 'o tappeto sta già sonanno, s'adda aggiornà mo: no' quanno cagna scena.
+	if _ambiente != null and _ambiente.playing:
+		ambiente(_ambiente_quanto, 0.15)
 	salva_volume()
 
 
@@ -443,6 +446,7 @@ const AMBIENTE_DB: float = -22.0
 var _ambiente: AudioStreamPlayer
 var _ambiente_db: float = AMBIENTE_DB
 var _amb_tween: Tween
+var _ambiente_quanto: float = 0.0 # ll'urdemo "quanto" chiesto, pe' aggiornà 'o tappeto quanno cagna 'a manopola effetti
 
 
 func _avvia_ambiente() -> void:
@@ -463,10 +467,13 @@ func ambiente(quanto: float, fade: float = 1.2) -> void:
 	if _ambiente == null:
 		return
 	quanto = clampf(quanto, 0.0, 1.0)
+	_ambiente_quanto = quanto
 	if not _ambiente.playing:
 		_ambiente.play()
-	var db: float = -80.0 if quanto <= 0.01 \
-		else AMBIENTE_DB + linear_to_db(quanto)
+	# 'A manopola effetti conta pure ccà: si sta abbascio 'o tappeto adda
+	# sta' zitto, no' sempe a tutto volume comme si nisciuno l'avesse toccata.
+	var db: float = -80.0 if (quanto <= 0.01 or vol_effetti <= 0.001) \
+		else AMBIENTE_DB + linear_to_db(quanto) + _db_effetti()
 	if _amb_tween and _amb_tween.is_valid():
 		_amb_tween.kill()
 	if fade <= 0.01:
