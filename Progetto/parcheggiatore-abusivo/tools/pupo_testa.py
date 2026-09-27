@@ -33,7 +33,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import bpy  # noqa: E402,F401 — porta con sé mathutils
-from mathutils import Vector                    # noqa: E402
+from mathutils import Matrix, Vector            # noqa: E402
 from mathutils.bvhtree import BVHTree           # noqa: E402
 import build_personaggi as B                    # noqa: E402
 
@@ -380,9 +380,19 @@ def testa(g):
 # dell'occhio per quella di sopra, dal fondo per quella di sotto). Agli
 # angoli dell'occhio le due palpebre si incontrano sempre a 100° dalla
 # cima, e il bordo ci arriva curvando (`_bordo_su`): è la forma a mandorla.
-# **Chiuse** (la forma `chiudi`) quella di sopra scende a 102° e quella di
-# sotto sale a 80° dal fondo: si incontrano tre millimetri sotto al centro,
-# con due gradi di sovrapposizione.
+# **Chiuse** (la forma `chiudi`) quella di sopra scende a 105° e quella di
+# sotto sale a 80° dal fondo: si incontrano cinque millimetri sotto al
+# centro, con cinque gradi di sovrapposizione.
+#
+# **E da sotto se vedeva 'o janco.** Alla prima consegna le due palpebre
+# chiuse si sovrapponevano di due gradi soltanto, e il bordo di quella di
+# sotto (una colonna ogni 45°) fra una colonna e l'altra fa corda e rientra
+# dentro la palla di un millimetro: guardando la faccia dal basso, sulla
+# cucitura, si vedeva un filo di bianco. Adesso quella di sopra scende di
+# più (105°) e, **solo nella forma chiusa**, i due bordi stanno un
+# millimetro più larghi, quanto la corda si mangia. Il conto si rifà coi
+# raggi da sei lati (davanti, tre quarti, alto, basso) su tutte le
+# combinazioni di palpebre, nasi, sopracciglia e baffi.
 #
 # **'O guscio se 'nfila dint'â faccia.** La prima riga (dietro alla cima
 # dell'occhio) e le due colonne d'angolo vengono spinte sotto la pelle
@@ -393,7 +403,8 @@ def testa(g):
 # shape sposta i vertici in linea retta, e un punto che gira attorno a una
 # palla tagliando la corda passa sotto la superficie. Il guscio sta cinque
 # millimetri sopra al bianco apposta: con la corsa più lunga (sveglie, da
-# 58° a 102°) il punto a metà strada resta ancora fuori.
+# 58° a 105°) a metà strada il guscio resta ancora fuori; solo il bordo di
+# dentro sfiora il bianco, per i sette centesimi di secondo del battito.
 #
 #   nome: (bordo di sopra, quanto scende verso il naso,
 #          bordo di sotto, quanto sale verso l'esterno)
@@ -404,7 +415,7 @@ PALPEBRE = {
 	"furbe": (71.0, 7.0, 62.0, 9.0),
 }
 ANGOLO = 100.0
-SU_CHIUSA = 102.0
+SU_CHIUSA = 105.0
 GIU_CHIUSA = 80.0
 R_SU_FUORI = R_OCCHIO + 0.0048
 R_SU_DENTRO = R_OCCHIO + 0.0012
@@ -436,7 +447,11 @@ def _dir_occhio(sx, th, psi, sotto):
 		z))
 
 
-def _righe_palpebra(te, sotto):
+## Quanto si allarga il bordo nella forma chiusa (sopra, sotto).
+BORDO_CHIUSO = (0.0007, 0.0013)
+
+
+def _righe_palpebra(te, sotto, largo=0.0):
 	"""Le quattro righe di una colonna: radice (sotto la pelle), metà, bordo
 	di fuori, bordo di dentro (quasi sul bianco)."""
 	if sotto:
@@ -445,7 +460,7 @@ def _righe_palpebra(te, sotto):
 		ro, ri, stacco = R_SU_FUORI, R_SU_DENTRO, 5.0
 	tr = -10.0
 	tb = te - stacco
-	return [(tr, ro), ((tr + tb) * 0.5, ro), (tb, ro + 0.0004), (te, ri)]
+	return [(tr, ro), ((tr + tb) * 0.5, ro), (tb, ro + 0.0004), (te, ri + largo)]
 
 
 def _palpebra(g, sx, sotto, aperta, psis):
@@ -456,7 +471,8 @@ def _palpebra(g, sx, sotto, aperta, psis):
 	for psi in psis:
 		col = []
 		ra = _righe_palpebra(aperta(psi), sotto)
-		rc = _righe_palpebra(max(chiusa, aperta(psi)), sotto)
+		rc = _righe_palpebra(max(chiusa, aperta(psi)), sotto,
+			BORDO_CHIUSO[1] if sotto else BORDO_CHIUSO[0])
 		for i, ((ta, r_a), (tc, r_c)) in enumerate(zip(ra, rc)):
 			# Le colonne d'angolo si allargano prima di finire sotto la pelle:
 			# spinte all'indietro e basta, la corda fra loro e la colonna
@@ -1087,14 +1103,56 @@ def _prof_tuppo(a, j):
 	return _con_rimbocco(righe, te)
 
 
+## **'O tuppo 'e Donna Filumena.** La prima crocchia era una pallina di sette
+## centimetri a mezza nuca: vista di tre quarti sembrava attaccata di lato, e
+## da dieci metri non c'era. Il tuppo è *la* sagoma della nonna e della
+## signora del lotto, e si deve leggere di profilo e da dietro: adesso sta
+## **in mezzo, sulla nuca alta dietro alla corona**, largo dieci centimetri
+## e mezzo e alto sette (con nove per cinque e mezzo, da dieci metri era tre
+## pixel), e non è una palla ma un rotolo avvolto — l'asse esce dalla
+## testa, i giri della treccia sono una spirale di bozzi.
+##   (distanza lungo l'asse dalla pelle, raggio) dalla base alla cima
+TUPPO_ANGOLO = 54.0                 # gradi dalla verticale, dietro (giro 180)
+TUPPO_PROFILO = [(-0.020, 0.036), (0.014, 0.053), (0.035, 0.052),
+	(0.055, 0.039), (0.066, 0.020)]
+TUPPO_CIMA = 0.071
+TUPPO_SEG = 10
+
+
+def _crocchia(g):
+	u = _dir(TUPPO_ANGOLO, 180.0)
+	base = O + u * _raggio(u)
+	w = u.normalized()
+	s = Vector((1.0, 0.0, 0.0))            # u sta nel piano x = 0: in mezzo
+	v = w.cross(s)
+	righe = []
+	for k, (t, r) in enumerate(TUPPO_PROFILO):
+		asse = base + w * t
+		riga = []
+		for j in range(TUPPO_SEG):
+			a = 2.0 * math.pi * j / TUPPO_SEG
+			# La spirale: il bozzo gira di riga in riga, come i giri di una
+			# treccia arrotolata. La base sta sotto la pelle (la testa è
+			# curva, e un anello largo sette centimetri appena sopra la
+			# pelle ai bordi ne usciva): niente bozzi lì.
+			giro = 0.0045 * math.cos(2.0 * a + 1.3 * k) if k > 0 else 0.0
+			riga.append(g.vert(asse + (s * math.cos(a) + v * math.sin(a))
+				* (r + giro), PH))
+		righe.append((asse, riga))
+	for (a0, r0), (a1, r1) in zip(righe, righe[1:]):
+		cen = (a0 + a1) * 0.5
+		for j in range(TUPPO_SEG):
+			q = [r0[j], r1[j], r1[(j + 1) % TUPPO_SEG], r0[(j + 1) % TUPPO_SEG]]
+			_poli(g, q, "capelli", sum((p.co for p in q), Vector()) / 4 - cen)
+	cima = g.vert(base + w * TUPPO_CIMA, PH)
+	ult = righe[-1][1]
+	for j in range(TUPPO_SEG):
+		_poli(g, [ult[j], ult[(j + 1) % TUPPO_SEG], cima], "capelli", w)
+
+
 def capelli_tuppo(g):
 	_calotta(g, LATO_UOMO, _prof_tuppo, 0.0082)
-	# 'A crocchia: dietro e in alto, grossa quanto un pugno piccolo — da
-	# davanti ne spunta la cima sopra la testa, che è come si riconosce
-	# una nonna a cinquanta metri.
-	u = _dir(72.0, 180.0)
-	cen = O + u * (_raggio(u) + 0.022)
-	g.sfera(cen, Vector((0.037, 0.029, 0.033)), PH, "capelli", 8, 5)
+	_crocchia(g)
 
 
 # -- lunghi: fino alle spalle ------------------------------------------------
@@ -1277,7 +1335,15 @@ def verifica():
 	"""Costruisce ogni pezzo (senza scheletro vero) e misura: triangoli
 	contro i tetti, le misure del contratto, quanto stanno lontani i capelli
 	dalla pelle (la trappola delle chiazze), se un orecchio buca i capelli e
-	se le palpebre chiuse lasciano scoperto un pezzo di bianco."""
+	se le palpebre chiuse lasciano scoperto un pezzo di bianco.
+
+	Le palpebre si guardano **come le guarda una camera**: raggi paralleli
+	da dieci lati (davanti, tre quarti, di lato, dall'alto, dal basso) su
+	ogni occhio, e conta chi colpisce il bulbo prima di ogni altra cosa. Il
+	controllo "a raggiera" dal centro dell'occhio, alla prima consegna, il
+	filo di bianco sulla cucitura visto da sotto non lo vedeva. Si prova la
+	palpebra da sola sulla testa: naso, sopracciglia e baffi possono solo
+	coprire di più."""
 	class _Osso:
 		def __init__(self, n):
 			self.name = n
@@ -1296,6 +1362,25 @@ def verifica():
 	for sx in (1.0, -1.0):
 		A, Q, fondo, D = orecchio(sx)
 		orecchie += A + Q
+	gt = B.Pupo("_testa_prova", _Arm())
+	testa(gt)
+	occhi = {B.MAT["occhio_bianco"], B.MAT["iride"]}
+	tv = [v.co.copy() for v in gt.bm.verts]
+	gt.bm.verts.index_update()
+	bulbi = BVHTree.FromPolygons(tv, [[v.index for v in f.verts]
+		for f in gt.bm.faces if f.material_index in occhi])
+	pelle = BVHTree.FromPolygons(tv, [[v.index for v in f.verts]
+		for f in gt.bm.faces if f.material_index not in occhi])
+	gt.bm.free()
+	gt.bm = None
+	viste = []
+	for giro, su in ((0, 0), (40, 0), (-40, 0), (70, 0), (0, -45), (0, -60),
+			(35, -35), (0, 40), (0, 60), (35, 35)):
+		d = Vector((0.0, 1.0, 0.0))
+		d.rotate(Matrix.Rotation(math.radians(su), 3, 'X'))
+		d.rotate(Matrix.Rotation(math.radians(giro), 3, 'Z'))
+		a = d.cross(Vector((0.0, 0.0, 1.0))).normalized()
+		viste.append((d, a, d.cross(a).normalized()))
 	for nome, fn in pezzi():
 		g = B.Pupo(nome, _Arm())
 		fn(g)
@@ -1336,18 +1421,19 @@ def verifica():
 				v.co = co
 			tr = BVHTree.FromBMesh(g.bm)
 			scoperti = 0
-			for sx in (1.0, -1.0):
-				E = centro_occhio(sx)
-				for i in range(0, 91, 3):
-					for k in range(0, 360, 6):
-						a, b = math.radians(i), math.radians(k)
-						d = Vector((math.sin(a) * math.cos(b), -math.cos(a),
-							math.sin(a) * math.sin(b)))
-						if dentro(E + d * R_OCCHIO, 0.0003):
-							continue
-						if tr.ray_cast(E + d * (R_OCCHIO + 0.0002), d)[0] is None:
-							scoperti += 1
-			nota = "chiuse: bianco scoperto in %d direzioni" % scoperti
+			for d, a, b in viste:
+				for sx in (1.0, -1.0):
+					E = centro_occhio(sx)
+					for i in range(-20, 21):
+						for k in range(-20, 21):
+							o = E + a * (i * 0.0016) + b * (k * 0.0016) - d * 0.4
+							hb = bulbi.ray_cast(o, d)
+							if hb[0] is None:
+								continue
+							if all(h[0] is None or h[3] >= hb[3] - 1e-5
+									for h in (tr.ray_cast(o, d), pelle.ray_cast(o, d))):
+								scoperti += 1
+			nota = "chiuse: raggi che vedono il bulbo (10 viste): %d" % scoperti
 			ok = ok and scoperti == 0
 		ok = ok and tri <= tetto
 		print("  %-26s %4d tri (tetto %d)  %s" % (nome, tri, tetto, nota))
