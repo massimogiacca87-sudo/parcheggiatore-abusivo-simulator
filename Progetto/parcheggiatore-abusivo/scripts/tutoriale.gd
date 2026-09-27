@@ -173,6 +173,21 @@ const PAGINE := [
 		"chiusa": "La piazza torna tua quando i parchimetri sono tutti a terra e le strisce tutte bianche.",
 	},
 	{
+		"titolo": "LA SCALA DEI GUAI",
+		"sopra": "Dalla 0.65: ogni sera che vai a dormire senza aver pagato tutto è un gradino.",
+		"righe": [
+			["1ª sera", "Il bigliettino sul frigorifero. Solo un avviso."],
+			["2ª sera", "Ti staccano la luce: la casa al buio finché non paghi il riallaccio."],
+			["3ª sera", "Ti staccano il gas: pasta cruda, e la mattina parti a tre quarti."],
+			["4ª sera", "Arriva Donna Cuncetta, la suocera: dorme nel tuo letto e ogni mattina ti prende qualche euro."],
+			["5ª sera", "Nunzia si tiene la casa e le criature. Dormi sui cartoni fuori dalla porta; i soldi si passano sotto la porta."],
+			["6ª sera", "L'avvocato: separazione con addebito, e la parcella la paghi tu."],
+			["7ª sera", "FERNUTA. La partita finisce."],
+			["Si torna a terra", "La sera che paghi tutto la scala torna a zero: Nunzia riapre e la suocera se ne torna a Casoria."],
+		],
+		"chiusa": "Il gradino e il guaio di stasera stanno sempre in alto a destra, sotto «STASERA CE VONNO».",
+	},
+	{
 		"titolo": "DOVE SI PERDONO I SOLDI",
 		"sopra": "Ogni piazza ha il bar e il tabaccaio. In giro ci sono le sale e i tavolini.",
 		"righe": [
