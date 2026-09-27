@@ -300,6 +300,7 @@ func _physics_process(delta: float) -> void:
 				# `multa_confronto_finita()`, che invece rimetteva il
 				# contatore della sosta — ed e' esattamente il giro che
 				# non finiva mai.
+				_allaccia_cintura()
 				_despawn_silent()
 
 
@@ -559,7 +560,28 @@ func _saglie_e_se_ne_va(delta: float) -> void:
 	if global_position.distance_to(meta) < 1.5:
 		if car.paid and randf() < 0.5:
 			_say(SAY_CIAO[randi() % SAY_CIAO.size()])
+		_allaccia_cintura()
 		_despawn()
+
+
+## **'O clic d''a cintura** (proposta di `sound_designer`, sì del capo).
+##
+## `cintura.ogg` stava caricato da sempre e nisciuno 'o sunava. È il
+## rumore giusto per dire "è montato e se ne va": prima la macchina
+## ripartiva in silenzio. Il suono sta **attaccato alla macchina** e non è
+## un suono "di schermo": un autista che rimonta dall'altra parte della
+## città non si deve sentire in piazza. Si attacca alla macchina e non
+## all'autista perché l'autista, subito dopo, fa `queue_free()`.
+func _allaccia_cintura() -> void:
+	if car == null or not is_instance_valid(car) or not (car is Node3D):
+		return
+	var p := SoundManager.suono_3d("cintura", -2.0, 4.0, 30.0)
+	if p.stream == null:
+		p.free()
+		return
+	car.add_child(p)
+	p.finished.connect(p.queue_free)
+	p.play()
 
 
 # ---------------------------------------------------------------------------
