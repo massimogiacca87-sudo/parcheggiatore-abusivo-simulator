@@ -177,6 +177,7 @@ static func build(shirt_color: Color, pants_color: Color, model_name: String = "
 	var suonatore: AnimationPlayer = _trova_player(modello)
 	_scegli_pezzi(modello, opts)
 	_vesti(modello, shirt_color, pants_color, opts)
+	_alleggerisci(modello)
 
 	var bones := {}
 	var head_att: Node3D = null
@@ -1005,6 +1006,32 @@ static func _scegli_pezzi(modello: Node3D, opts: Dictionary) -> void:
 			if p != null:
 				p.remove_child(m)
 			m.free()
+
+
+## **'E piezze piccerille nun fanno ombra e 'a luntano nun se vedeno**
+## (0.66). Il pupo nuovo è fatto di più pezzi del vecchio (palpebre,
+## sopracciglia, naso, baffi, catenina, colletto, cintura): ognuno è una
+## chiamata di disegno in più, e con l'ombra del sole — che si ridisegna in
+## quattro fette — quattro in più ancora. Un'ombra di sopracciglio non la
+## vede nessuno, e a venticinque metri un naso è due pixel: oltre quella
+## distanza questi pezzi non si disegnano, e nessuno fa ombra. Corpo, testa
+## e capelli restano sempre (sono la sagoma).
+const PEZZI_PICCERILLI := ["palpebre", "sopracciglia", "naso", "baffi",
+	"catenina", "colletto", "cintura"]
+const LUNTANO_PICCERILLI := 25.0
+
+
+static func _alleggerisci(modello: Node3D) -> void:
+	var lista: Array = []
+	_mesh_di(modello, lista)
+	for mi in lista:
+		var m: MeshInstance3D = mi
+		var famiglia: String = str(m.name).get_slice("_", 0)
+		if not PEZZI_PICCERILLI.has(famiglia):
+			continue
+		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		m.visibility_range_end = LUNTANO_PICCERILLI
+		m.visibility_range_end_margin = 2.0
 
 
 ## Veste il personaggio: ogni superficie della mesh porta il nome della sua
