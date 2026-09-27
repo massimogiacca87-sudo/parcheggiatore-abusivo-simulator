@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(/agenti/**)",
+      "Edit(/crew_output/**)"
+    ],
+    "ask": [
+      "Edit(/studio.py)",
+      "Edit(/designer.py)",
+      "Edit(/artista.py)",
+      "Edit(/direttiva_designer.md)",
+      "Edit(/.gitignore)",
+      "Edit(/.claude/**)",
+      "Bash(git push:*)"
+    ]
+  }
+}
