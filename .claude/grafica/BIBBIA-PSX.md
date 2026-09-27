@@ -169,9 +169,31 @@ Le API del gioco da conoscere (leggerle nel codice prima di usarle):
 `scripts/citta_3d.gd` (`_panda`, `_panda_c`, `_batched`, `_solido`,
 `_lontananza`), `scripts/robba_psx.gd` (esempio completo di come si arreda).
 
-La memoria lunga del progetto sta in `DOcumentazione/` e nei documenti del
-progetto claude.ai (`COME-RIPRENDERE.md` con le trappole numerate,
-`MEMORIA_PROGETTO.md`). **Prima di un lavoro grosso si leggono le trappole.**
+La memoria lunga del progetto sta in `DOcumentazione/` (è nel repository):
+`COME-RIPRENDERE.md` (le trappole numerate e i comandi), `MEMORIA_PROGETTO.md`
+(le API e dove sta ogni cosa), `ROADMAP.md`, `CHANGELOG.md` e l'ultima
+`NOVITA-v0.XX.md` (**il punto in cui siamo**). **Prima di un lavoro grosso si
+leggono le trappole.**
+
+### Se lavori da un clone di GitHub (nel cloud, su Linux)
+
+I percorsi Windows della tabella qui sopra non esistono. Allora:
+- **Godot 4.3** per Linux si scarica come dice `DOcumentazione/COME-RIPRENDERE.md`
+  §1.2 (binario ufficiale 4.3-stable), poi `--headless --path . --import`
+  prima di qualsiasi prova.
+- Gli script di `tools/sh/` lì funzionano quasi così come sono: cambia solo
+  il percorso del progetto (`/home/claude/parcheggiatore-abusivo` → dove sta
+  il tuo clone) e quello di Godot. Foto con `xvfb-run`.
+- Blender si scarica dal sito ufficiale (versione 4.2 o successiva) se serve.
+- **Nel repository NON ci sono**: i pacchetti originali (`Models/`,
+  `Animations/` di Quaternius, gli zip), i `.blend`/`.fbx` sorgente, le build,
+  `_claude_tmp/`. Il gioco si apre e gira lo stesso (i modelli convertiti
+  in `assets/models/` e l'audio ci sono). Se ti serve un originale, **scrivilo
+  nel rapporto**: ce l'ha solo Massimo sul PC.
+- Prima di cominciare controlla che il clone sia aggiornato
+  (`git log -1`): se l'ultima `NOVITA` nel repo è più vecchia di quella di
+  cui parla Massimo, il PC ha commit non ancora pushati — **fermati e
+  diglielo**.
 
 ---
 
