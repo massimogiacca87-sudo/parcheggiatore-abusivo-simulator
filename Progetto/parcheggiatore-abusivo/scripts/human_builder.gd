@@ -79,7 +79,7 @@ const RUGHE := ["", "stanco", "vecchio", "vecchia", "arraggiato"]
 ## I pezzi che dipendono dalla corporatura (il colletto del panzone non
 ## entra sul sicco): nel file si chiamano `<pezzo>_<corporatura>`, e si
 ## accendono con `opts[<pezzo>] = true`.
-const EXTRA_CORPO := ["colletto", "cintura", "catenina"]
+const EXTRA_CORPO := ["colletto", "cintura", "catenina", "gilet"]
 ## Gli occhi: quasi tutti scuri, come in via Toledo.
 const OCCHI := [
 	Color(0.20, 0.12, 0.07), Color(0.20, 0.12, 0.07), Color(0.28, 0.17, 0.09),
@@ -927,7 +927,10 @@ static func _scegli_faccia(opts: Dictionary, femmina: bool,
 	if not opts.has("cintura"):
 		opts["cintura"] = d.randf() < (0.25 if femmina else 0.55)
 	if not opts.has("colletto"):
-		opts["colletto"] = d.randf() < (0.15 if femmina else 0.30)
+		# I capelli lunghi coprono il colletto (e con gonna, cintura e
+		# catenina la ragazza sforerebbe il tetto dei triangoli).
+		opts["colletto"] = d.randf() < (0.15 if femmina else 0.30) \
+			and str(opts.get("capelli", "")) != "lunghi"
 	if not opts.has("catenina"):
 		opts["catenina"] = d.randf() < (0.10 if femmina else 0.18)
 
@@ -1059,6 +1062,8 @@ static func _vesti(modello: Node3D, camicia: Color, pantaloni: Color,
 		"camicia": camicia,
 		"pantaloni": calze,
 		"gonna": pantaloni,
+		# Il gilet (0.66): arancione da parcheggiatore, se non si dice altro.
+		"gilet": Color(opts.get("gilet_colore", Color(0.92, 0.46, 0.10))),
 		"scarpe": Color(opts.get("scarpe", Color(0.10, 0.09, 0.09))),
 		"capelli": capelli,
 		"peli": Color(opts.get("peli", capelli)),
@@ -1072,7 +1077,7 @@ static func _vesti(modello: Node3D, camicia: Color, pantaloni: Color,
 	# cancellano (`_scegli_pezzi`), e i tratti hanno il loro materiale.
 	var ruvido := {
 		"pelle": 0.72, "faccia": 0.72, "camicia": 0.92, "pantaloni": 0.92,
-		"gonna": 0.92, "scarpe": 0.55, "capelli": 0.95, "peli": 0.95, "banda": 0.88,
+		"gonna": 0.92, "gilet": 0.85, "scarpe": 0.55, "capelli": 0.95, "peli": 0.95, "banda": 0.88,
 		"iride": 0.30,
 	}
 	# La faccia si fa una volta per persona e si usa su tutte le superfici
@@ -1120,6 +1125,7 @@ static func _vesti(modello: Node3D, camicia: Color, pantaloni: Color,
 ## Si tinge a colore pieno come prima.
 const TRAME := {
 	"camicia": "stoffa_camicia.png", "gonna": "stoffa_camicia.png",
+	"gilet": "stoffa_cazune.png",
 	"pantaloni": "stoffa_cazune.png", "capelli": "ciocche.png",
 	"iride": "iride.png",
 }

@@ -100,6 +100,8 @@ MATERIALI = [
 	# sempre (le signore col fazzoletto hanno i "capelli" a fiori).
 	("peli", (0.15, 0.10, 0.07), 0.95),
 	("gonna", (0.24, 0.26, 0.32), 0.92),
+	# Il gilet del parcheggiatore (arancione o giallo): lo tinge il gioco.
+	("gilet", (0.92, 0.46, 0.10), 0.85),
 	# Questi il gioco non li tinge: restano del colore del file.
 	("suola", (0.52, 0.48, 0.44), 0.80),
 	("cuoio", (0.20, 0.12, 0.08), 0.60),
@@ -257,7 +259,7 @@ def uv_per_materiale(bm):
 				else:
 					l[uv].uv = _uv(0.5 + p.x / FACCIA_L,
 						0.5 - (p.z - c.z) / FACCIA_L)
-		elif nome in ("camicia", "pantaloni", "gonna"):
+		elif nome in ("camicia", "pantaloni", "gonna", "gilet"):
 			n = f.normal
 			ax = max(range(3), key=lambda i: abs(n[i]))
 			for l in f.loops:
