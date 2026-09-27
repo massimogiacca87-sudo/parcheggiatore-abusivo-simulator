@@ -346,6 +346,13 @@ func _ready() -> void:
 	# Collide con il mondo E con le altre auto (e persone): gli incidenti
 	# tra macchine sono reali, con danni visibili su entrambe.
 	collision_mask = 1 | 4
+	# **'E machine d''o Rre trasono 'e corsa** (0.64): fino al punto d'attesa
+	# non sbattono contro le altre macchine (sì contro i muri). Una ogni
+	# pochi secondi per la stessa bocca della piazza, e bastava una ferma
+	# di traverso per tapparle tutte: il minuto finiva con due arrivate.
+	# Arrivate in coda tornano solide: la regia a gesti conta le botte.
+	if sfida:
+		collision_mask = 1
 	_pick_type()
 	_build_visual()
 	_build_collision()
@@ -1157,6 +1164,8 @@ func _physics_process(delta: float) -> void:
 			if global_position.distance_to(waiting_point) < 0.8 \
 					and _tappa > _via_in.size():
 				state = State.WAITING
+				if sfida:
+					collision_mask = 1 | 4
 				# Arrivata: due colpi di clacson per chiamarti. Solo se stai
 				# in piazza: il clacson è un richiamo, e un richiamo che ti
 				# arriva mentre sei a tre quartieri di distanza è solo
@@ -1202,7 +1211,9 @@ func _physics_process(delta: float) -> void:
 			_guida_player(delta)
 		State.LEAVING:
 			var meta_out: Vector3 = _prossima_tappa(_via_out, exit_point)
-			_guida_verso(meta_out, DRIVE_SPEED, delta)
+			# Quelle del Rre se ne vanno di corsa come sono venute (0.64):
+			# a passo di cliente tappavano l'ingresso a quelle che arrivavano.
+			_guida_verso(meta_out, DRIVE_SPEED * (veloce if sfida else 1.0), delta)
 			_face_toward(meta_out)
 			if global_position.distance_to(meta_out) < 0.8 \
 					and _tappa > _via_out.size():
@@ -1322,6 +1333,15 @@ func guagliuno_arriva() -> void:
 
 
 func _give_up() -> void:
+	# Una macchina del Rre che non arriva non è un cliente tuo perso: se ne
+	# va e basta, senza toccare niente (0.64).
+	if sfida:
+		_release_spot()
+		collision_mask = 0
+		_sfida_fantasma()
+		_tappa = 1
+		state = State.LEAVING
+		return
 	GameManager.register_client_lost()
 	_release_spot()
 	state = State.LEAVING
@@ -1383,7 +1403,19 @@ func _depart() -> void:
 	_fermo_da = 0.0
 	_release_spot()
 	collision_mask = 0
+	_sfida_fantasma()
 	state = State.LEAVING
+
+
+## **Chi se ne va nun tappa chi arriva** (0.64). Chi esce passa già
+## attraverso a tutto (`collision_mask = 0`), ma chi entra sbatteva contro
+## di lui: nella sfida del Rre, dove una macchina esce e una entra ogni
+## pochi secondi per la stessa bocca della piazza, si piantavano a vicenda
+## e il minuto finiva con due macchine arrivate. Quelle del Rre, uscendo,
+## non le tocca più nessuno.
+func _sfida_fantasma() -> void:
+	if sfida:
+		collision_layer = 0
 
 
 # ---------------------------------------------------------------------------
@@ -2763,6 +2795,7 @@ func sfida_se_ne_va() -> void:
 		GameManager.directing_ended.emit(0.0, true)
 	_release_spot()
 	collision_mask = 0
+	_sfida_fantasma()
 	_tappa = 1
 	state = State.LEAVING
 

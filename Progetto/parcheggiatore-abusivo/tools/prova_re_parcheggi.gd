@@ -191,6 +191,11 @@ func _sfida(quante: int, una_fore: bool, guarda_mazzate: bool = false) -> Dictio
 				normali_nate += 1
 			if int(c.get("state")) != 1 or guidate.has(id):
 				continue
+			# Solo quelle d''o Rre: un cliente che stava già in coda quando è
+			# partita la sfida, messo con F sul punto d'attesa, tappava la
+			# coda a tutte le altre (una prova su tre andava storta per questo).
+			if c.get("sfida") != true:
+				continue
 			if messe >= quante and not (una_fore and not fore_messa):
 				continue
 			c.player_interact()
@@ -253,3 +258,23 @@ func _sfida(quante: int, una_fore: bool, guarda_mazzate: bool = false) -> Dictio
 func _tieni_juorno() -> void:
 	GameManager.shift_time_left = maxf(GameManager.shift_time_left, GameManager.shift_duration * 0.6)
 	GameManager.azzera_stelle()
+	_scansa_motorino()
+
+
+## **'O motorino se scansa** (come in `prova_dieci_giornate`). Punta la
+## corsia dove stai, ogni mezzo minuto: fermo in mezzo alla piazza per sei
+## minuti, il giocatore della prova se lo prendeva in pieno otto-nove volte
+## e finiva all'ospedale a metà della terza sfida (che si chiudeva lì).
+func _scansa_motorino() -> void:
+	if _pl == null or not is_instance_valid(_pl):
+		return
+	for m in get_tree().get_nodes_in_group("motorini"):
+		if not is_instance_valid(m):
+			continue
+		var mp: Vector3 = (m as Node3D).global_position
+		var pp: Vector3 = _pl.global_position
+		if absf(mp.z - pp.z) > 2.6 or absf(mp.x - pp.x) > 30.0:
+			continue
+		var verso: float = 1.0 if pp.z >= mp.z else -1.0
+		_metti_giocatore(Vector3(pp.x, 0.0, mp.z + verso * 4.5))
+		return

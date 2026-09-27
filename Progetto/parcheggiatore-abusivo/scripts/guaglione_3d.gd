@@ -248,6 +248,10 @@ func _machina_da_fa() -> Node3D:
 			continue
 		if not c.has_method("guagliuno_sale"):
 			continue
+		# **'E machine d''o Rre so' d''o capo** (0.64). La sfida è tua: il
+		# guaglione guarda e fa il tifo, non te le posteggia lui.
+		if c.get("sfida") == true:
+			continue
 		# **Senza posto libero nun ce se va** (0.61): al mercato, coi quattro
 		# posti pieni, correva alla macchina, non trovava posto, tornava
 		# indietro e ripartiva — sessanta volte in quattro minuti.
