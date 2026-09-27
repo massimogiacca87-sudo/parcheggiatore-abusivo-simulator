@@ -239,3 +239,24 @@ Librerie di asset non toccate.
 2026-09-27 13:46  v0.64  Cestino: %TEMP%\pas_patch_064\ (le 17 patch della 0.64, gia' applicate con git am)
 2026-09-27 13:52  v0.64  Cestino: _claude_tmp\0001-0.64-Dialogic-nascosto-come-LimboAI-.gdignore.patch (applicata)
 Librerie di asset non toccate. Lasciati dove stanno i file nuovi in radice che non sono miei (artista.py, designer.py).
+2026-09-27T17:47:20  Cestino: _claude_tmp\exe.part00
+2026-09-27T17:47:20  Cestino: _claude_tmp\exe.part01
+2026-09-27T17:47:20  Cestino: _claude_tmp\exe.part02
+2026-09-27T17:47:20  Cestino: _claude_tmp\exe.part03
+2026-09-27T17:47:20  Cestino: _claude_tmp\exe.part04
+2026-09-27T17:47:20  Cestino: _claude_tmp\exe.part05
+2026-09-27T17:47:20  Cestino: _claude_tmp\exe.part06
+2026-09-27T17:47:20  Cestino: _claude_tmp\exe.part07
+2026-09-27T17:47:20  Cestino: _claude_tmp\exe.part08
+2026-09-27T17:47:20  Cestino: _claude_tmp\exe.part09
+2026-09-27T17:47:20  Cestino: _claude_tmp\mc.gd
+2026-09-27T17:47:20  Cestino: _claude_tmp\pA.tar
+2026-09-27T17:47:20  Cestino: _claude_tmp\pB1.tar
+2026-09-27T17:47:20  Cestino: _claude_tmp\pB2.tar
+2026-09-27T17:47:20  Cestino: _claude_tmp\sm.gd
+2026-09-27T17:47:20  Cestino: _claude_tmp\web.part00
+2026-09-27T17:47:20  Cestino: _claude_tmp\web.part01
+2026-09-27T17:47:20  Cestino: _claude_tmp\web.part02
+2026-09-27T17:47:20  Cestino: _claude_tmp\web.part03
+2026-09-27T17:47:20  Cestino: _claude_tmp\web.part04
+2026-09-27T17:47:20  Cestino: Build\ParcheggiatoreAbusivoSimulator.exe (v0.64) e PAS-v0.64-Web-itchio.zip, sostituiti dalla v0.65
