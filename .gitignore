@@ -1,4 +1,4 @@
-﻿*.zip
+*.zip
 *.7z
 *.rar
 *.blend
@@ -7,7 +7,7 @@
 *.wav
 *.mp3
 Claude outputs/
-Models/
+/Models/
 # Godot: cache dell'editor e build (si rigenerano)
 .godot/
 Build/
@@ -16,3 +16,19 @@ _claude_tmp/
 
 # asset esterni CC0/open (res://assets/esterni): i .glb qui vanno versionati (sono piccoli)
 !Progetto/parcheggiatore-abusivo/assets/esterni/**/*.glb
+
+# asset del gioco: modelli e suoni servono per aprire il progetto da un clone pulito
+!Progetto/parcheggiatore-abusivo/assets/models/**/*.glb
+!Progetto/parcheggiatore-abusivo/audio/*.wav
+!Progetto/parcheggiatore-abusivo/audio/*.mp3
+
+# script locali con chiavi API: MAI su GitHub
+artista.py
+designer.py
+
+# materiale sorgente/riferimento fuori dal progetto Godot
+/Animations/Animated Human by @Quaternius/
+/Animations/Low Poly Animated Humans/
+/assets/*.jfif
+# demo dell'addon, non servono al gioco
+/Progetto/parcheggiatore-abusivo/addons/proton_scatter/demos/assets/models/
