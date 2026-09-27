@@ -1,13 +1,8 @@
 {
   "nome": "audio_engineer",
   "creato_il": "2026-09-27 16:18",
-  "incarichi": 6,
+  "incarichi": 7,
   "memoria": [
-    {
-      "data": "2026-09-27 16:19",
-      "compito": "AUDIT (solo lettura + un documento, NESSUNA modifica al codice in questo compito).\nAnalizza il codice audio del gioco e scrivi il referto in 'crew_output/AUDIT-AUDIO.md'.\n\nFile da leggere:\n- Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd (477 righe, autoload 'SoundManager')\n- Prog",
-      "esito": "L'incarico è fallito con un errore: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CfU6C5paQGtkGPZ5vJX3t'}"
-    },
     {
       "data": "2026-09-27 16:36",
       "compito": "AUDIT (solo lettura + un documento, NESSUNA modifica al codice in questo compito).\nAnalizza il codice audio del gioco e scrivi il referto in 'crew_output/AUDIT-AUDIO.md'.\n\nFile da leggere:\n- Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd (477 righe, autoload 'SoundManager')\n- Prog",
@@ -32,6 +27,11 @@
       "data": "2026-09-27 16:42",
       "compito": "BUGFIX #4 dell'audit (gravità MEDIA) — UNA SOLA COSA.\nFile: Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd, funzione `play()`.\n\nProblema: il pool ha POOL_SIZE=18 player; `play()` scorre i player e se sono TUTTI occupati esce senza suonare nulla e senza avvisare. Nei momenti pieni ",
       "esito": "## Resoconto\n\n**File modificato:** `Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd`\n\n**Problema (audit #4, gravità MEDIA):** `play()` scorreva i 18 player del pool e, se erano tutti occupati, usciva con un `return` silenzioso senza suonare nulla. Nei momenti affollati (rissa, folla, raffica di monete, UI) un suono poteva semplicemente sparire, dando l'impressione di un bug del gioco.\n\n**Correzione applicata (diff):**\n\n```diff\n var _streams: Dictionary = {}\n var _players: Array = []\n+## Quando ogni player d''o pool ha 'ncignato l'ultimo suono (Time.get_ticks_msec).\n+## Serve "
+    },
+    {
+      "data": "2026-09-27 16:51",
+      "compito": "BUGFIX #5 dell'audit (gravità MEDIA) — UNA SOLA COSA.\nFile: Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd, funzione `metti()`.\n\nProblema: quando arriva un secondo `metti()` prima che finisca la dissolvenza (caso emergenze ravvicinate: caccia → boss, fine sfida → caccia, fade 0.9 ",
+      "esito": "## Resoconto\n\n**File modificato:** `Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd`, funzione `metti()`.\n\n**Problema (audit #5, gravità MEDIA):** quando un secondo `metti()` arrivava prima che finisse la dissolvenza precedente (es. caccia → boss), il vecchio `_tween` veniva ucciso con `_tween.kill()`. Ma lo stop del player che stava sfumando era programmato come `_tween.chain().tween_callback(_music_b.stop)` **dentro quello stesso tween**: uccidendolo, quella callback non veniva mai eseguita, e il player abbandonato restava a suonare il brano vecchio a volume udibile, sovrap"
     }
   ],
   "ruolo": "Audio Programmer GDScript (Godot 4.3)",

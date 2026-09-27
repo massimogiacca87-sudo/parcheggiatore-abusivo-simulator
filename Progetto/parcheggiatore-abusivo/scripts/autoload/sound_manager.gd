@@ -45,6 +45,15 @@ const VARIANTI := {
 	"clacson_lungo": ["clacson_lungo", "clacson_lungo2"],
 	"clacson_corto": ["clacson_corto", "clacson_mito1"],
 	"moto_pass": ["moto_pass", "motorino_passa"],
+	# 'O richiamo d''o committente ("Guagliò, vien' ccà!") è 'o stesso
+	# suono d''o saluto ca già varia da solo (passante_3d, jurnata_vista):
+	# ccà nisciuno l'aveva mai variato, e chiammava sempe "saluto".
+	"saluto": ["saluto", "saluto2"],
+	# 'A manciata 'e monete che si paga a mano (l'autista che paga per lo
+	# scasso, 'a puntata â scopa) chiammava sempe e sulamente "monete",
+	# mentre dinto 'a soldi() 'e ttre pezze giranno già da tiempo: 'e
+	# facimmo girà pure ccà.
+	"monete": ["monete", "monete2", "monete3"],
 }
 const POOL_SIZE := 18
 const MASTER_OFFSET_DB := -6.0 # tutto un po' più discreto
