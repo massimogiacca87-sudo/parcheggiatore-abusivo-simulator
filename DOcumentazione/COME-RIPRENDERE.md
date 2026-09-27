@@ -1,8 +1,9 @@
 # Come riprendere il lavoro in una nuova chat
 
-Stato al **26 settembre 2026**, versione **v0.63 · 'O Duttore** (Borrelli
-torna: due porte col dado che cresce, non si tocca, si calma con sigaretta
-e caffè — vedi `NOVITA-v0.63.md`).
+Stato al **27 settembre 2026**, versione **v0.64 · 'O Rre e 'e Strisce**
+(la conquista delle piazze provata giocando e aggiustata; 'O Rre d''e
+Parcheggi e 'E Strisce Blu; chiusi i rimasti aperti delle versioni prima,
+compresa la prova che gioca dieci giornate — vedi `NOVITA-v0.64.md`).
 
 Questo documento è scritto per **chi apre la chat nuova** (cioè per me, senza
 memoria di questa). Si legge dall'alto: la sezione 1 dice cosa fare nei
@@ -18,10 +19,10 @@ nei documenti del progetto (`claude/…`):
 
 | file | cosa c'è |
 |---|---|
-| `RIASSUNTO-CHAT-v0.62.md` | la cronaca della chat che ha fatto la 0.62: richieste, decisioni, il passaggio a Git, cosa è rimasto aperto |
-| `NOVITA-v0.62.md` | le note della versione (per il capo, in italiano, con trappole e lezione) |
-| `ROADMAP.md` | cosa è fatto versione per versione, e cosa viene dopo (la 0.63 è **'E vvoce**, più i rimasti della 0.62) |
-| `CHANGELOG.md` | una riga per versione, dalla 0.44 alla 0.62 |
+| `RIASSUNTO-CHAT-v0.64.md` | la cronaca della chat che ha fatto la 0.64: richieste, decisioni, cosa è rimasto aperto |
+| `NOVITA-v0.64.md` | le note della versione (per il capo, in italiano, con trappole e lezione) |
+| `ROADMAP.md` | cosa è fatto versione per versione, «Rimasto aperto dalla 0.64», e cosa viene dopo (la 0.65 è **'E vvoce**) |
+| `CHANGELOG.md` | una riga per versione, dalla 0.44 alla 0.64 |
 | `PROMPT-NUOVA-CHAT.md` | il messaggio da incollare per aprire la chat nuova |
 | `LEGGIMI.txt` | per il capo: com'è fatta la cartella e come si gioca |
 | `CREDITI.txt` | chi ha fatto i suoni, i caratteri, le icone (la CC BY dei suoni va citata) |
@@ -71,10 +72,41 @@ tar -cf _claude_tmp\pB2.tar --exclude=decals -C Progetto\parcheggiatore-abusivo\
 ```
 
 e nel contenitore `tar -xf pA.tar`, poi i due `pB` dentro a
-`parcheggiatore-abusivo/assets/esterni/materiali/`. (Attenzione al `-C`:
-se si passa il percorso intero come argomento, il tar se lo porta dietro e
-i materiali finiscono in una cartella annidata.) Poi `--import` in
-background (qualche minuto).
+`parcheggiatore-abusivo/assets/esterni/materiali/` (**la cartella
+`materiali` va creata prima**: il `pA` la esclude, e `tar -C` in una
+cartella che non c'è fallisce). (Attenzione al `-C`: se si passa il
+percorso intero come argomento, il tar se lo porta dietro e i materiali
+finiscono in una cartella annidata.) Poi `--import` in background (qualche
+minuto).
+
+**Dalla 0.64, subito dopo l'estrazione e prima del commit `base`, tutti i
+file di testo si portano a LF**, come li tiene il Git del PC. Così gli
+alberi del contenitore hanno gli stessi hash di quelli del PC (si
+controlla: `git rev-parse pc_sync:scripts` qui = `git rev-parse
+HEAD:Progetto/parcheggiatore-abusivo/scripts` là), e nessuno strumento che
+riscrive un file cambia gli a-capo di nascosto:
+
+```bash
+cd /home/claude/parcheggiatore-abusivo
+python3 - <<'PY2'
+import os
+TESTO = ('.gd', '.gdshader', '.cfg', '.godot', '.tres', '.tscn', '.import',
+         '.py', '.sh', '.md', '.txt', '.json', '.csv', '.gdextension', '.svg',
+         '.glsl', '.html', '.js', '.gdignore', '.remap', '.ps1', '.bat')
+for radice, cartelle, nomi in os.walk('.'):
+    cartelle[:] = [c for c in cartelle if c not in ('.godot', '.git')]
+    for n in nomi:
+        if n.lower().endswith(TESTO):
+            p = os.path.join(radice, n)
+            b = open(p, 'rb').read()
+            if b'\r\n' in b and b.count(b'\r\n') == b.count(b'\n'):
+                open(p, 'wb').write(b.replace(b'\r\n', b'\n'))
+PY2
+git init -q && git add -A && git commit -qm base && git tag pc_sync
+```
+
+(I file con gli a-capo misti — due `License.txt` di Kenney — restano come
+sono: così li tiene anche il Git del PC.)
 
 poi `device_stage_files` di `…\_claude_tmp\progetto.tar` (arriva in
 `/mnt/user-data/uploads/…`), e nel contenitore:
@@ -216,12 +248,19 @@ pozzanghere) c'è `tools/sh/foto_vk.sh`: Vulkan in software, con
 ### 1.3 Controllare che tutto sia come l'ho lasciato
 
 ```bash
-nohup /tmp/batteriac.sh > /tmp/batteriac.log 2>&1 &     # ~45 minuti
-cat /tmp/batteriac.txt                                   # una riga per prova
+# (0.64) in due metà che girano insieme, ognuna sulla sua copia: ~1 ora
+PARTE=1 nohup /tmp/batteriac.sh > /dev/null 2>&1 &
+PARTE=2 nohup /tmp/batteriac.sh > /dev/null 2>&1 &
+cat /tmp/batteriac_1.txt /tmp/batteriac_2.txt            # una riga per prova
 ```
 
-Risultato atteso alla chiusura della 0.62 (53 prove): **tutte a zero storte**, con tre
-eccezioni che non sono guasti:
+Senza `PARTE` gira tutto in fila come prima (`/tmp/batteriac.txt`, quasi
+due ore con le prove lunghe della 0.64). `prova_dieci_giornate` sta fuori
+dalla batteria: si lancia a parte col tempo accelerato (vedi «Come si
+prova»).
+
+Risultato atteso alla chiusura della 0.64 (56 prove più `prova_scopa`; `prova_dieci_giornate` a parte):
+**tutte a zero storte**, con tre eccezioni che non sono guasti:
 
 - `prova_braccia` stampa `=== fernuto ===` (è una misura, non un collaudo);
 - `prova_manella` e `prova_pose` escono «nisciun risultato» perché la loro
@@ -324,7 +363,11 @@ Valgono sempre, senza che le ripeta:
 | `scripts/panaro_3d.gd` | 225 | **(0.61)** il panaro di Donna Filumena (+ `panaro_corpo.gd`) |
 | `scripts/robba_esterna.gd` | 615 | **(0.62)** la biblioteca esterna in città: decalcomanie (tombini, rattoppi, olio, gomme, colature, umido, graffiti) e arredo (motorini al cordolo, sedie di Vienna, coni, bidoni, casse, sedie d'ufficio); seme suo, `rifiuti` conta i perché |
 | `scripts/filtri_schermo.gd` | 130 | **(0.62)** i filtri a schermo intero del menu di pausa e la botta |
-| `scripts/pozzanghere.gd` | 60 | **(0.62)** le pozzanghere quando piove (solo Forward+) |
+| `scripts/pozzanghere.gd` | 60 | **(0.62)** le pozzanghere quando piove (solo Forward+); nel browser le fa `jurnata_vista.gd` (0.64) |
+| `scripts/re_parcheggi_3d.gd` | 1.040 | **(0.64)** 'O Rre d''e Parcheggi: modello, quando viene, la sfida, il conto, le mazzate |
+| `scripts/sfida_hud.gd` | 160 | **(0.64)** il cronometro della sfida a schermo |
+| `scripts/parchimetro_3d.gd` | 380 | **(0.64)** il parchimetro: modello, botte, monete |
+| `scripts/strisce_blu.gd` | 245 | **(0.64)** pianta i parchimetri e colora i posti quando il Comune pitta; le regole stanno in `game_manager.gd` («'E STRISCE BLU») |
 
 ### I tre scheletri delle persone
 
@@ -549,13 +592,90 @@ che rovinò la 0.47): si traducono i nomi.
     vero, volata compresa: `foto_vigile_citta` (xvfb, chiama il «Gioca»
     del menu da solo) — conta i vigili fotogramma per fotogramma.
 
+**Aggiunte nella 0.64**
+
+57. **Le facce si montano a +Z.** Sull'osso della testa il davanti è +Z:
+    Borrelli aveva occhiali e barba a −Z, cioè **sulla nuca**, da quando i
+    personaggi sono passati sullo scheletro delle animazioni (e con lui gli
+    occhiali di chi va in motorino e dello Zio). Una cosa attaccata a un
+    osso si fotografa **da davanti e da dietro**: `tools/foto_modello.gd`
+    (`MODELLO=res://scripts/x.gd NOME=x /tmp/fotoc.sh foto_modello 200`;
+    per chi lo costruisce la città ci sono `MODELLO=vigile_cafe` e
+    `MODELLO=signora_assettata`, `FACCIA_Y=` per chi sta seduto,
+    `GIRA=3.14159` per chi guarda a +Z).
+58. **`hold_bone` non si usa più per puntare un braccio**: congela la posa di
+    riposo (braccia aperte). C'è `animator.punta_osso(osso, direzione)`, con
+    la direzione nel verso del personaggio (avanti −Z, su +Y, destra +X):
+    ogni fotogramma gira l'osso quanto basta, partendo dalla posa animata;
+    `lascia_osso` lo libera. Si puntano prima i padri (spalla) poi i figli
+    (gomito). Una cosa in mano che deve restare dritta (la tazzina, la
+    borsa) si appende al personaggio e le si dà la posizione della mano con
+    un `RemoteTransform3D` (`update_rotation = false`).
+59. **Una variabile ripetuta in una funzione spegne tutto lo script** («There
+    is already a variable named…»): e con lui, a cascata, chi lo precarica.
+    `--check-only` su ogni file toccato, sempre.
+60. **Il suolo della città ha il corpo due centimetri sotto allo zero**, il
+    manto delle strade è a +0,01, gli slarghi a +0,015, e marciapiedi e
+    salotto della piazza sono scatole di 12 cm **senza corpo**. Chi appoggia
+    qualcosa per terra col raggio (le pozzanghere del browser) deve stare
+    sopra al manto e fuori dai marciapiedi.
+61. **Un bot deve stare dove sta un giocatore.** Il primo parcheggiatore finto
+    si metteva accanto alle macchine (in carreggiata) e sulla corsia del
+    motorino: finiva all'ospedale e i conti erano sbagliati.
+62. **I commit si fanno man mano.** Spezzare dopo un lavoro grosso che tocca
+    gli stessi file è possibile ma costa: pezzi di diff senza contesto
+    (`git apply --unidiff-zero`) finiscono nel posto sbagliato. Se tocca
+    farlo: per ogni commit si costruisce il file dell'indice **togliendo**
+    dal file di lavoro i pezzi dei commit dopo (script `stage_rev.py` nello
+    spazio di lavoro della 0.64, non nel progetto), e **si avvia il gioco su
+    quella versione esatta** prima del commit (copia del progetto coi file
+    dell'indice, `--quit-after 2500`, zero `SCRIPT ERROR`).
+63. **Con `addons/limboai/.gdignore`** la cache `.godot/extension_list.cfg`
+    nomina ancora l'estensione: va tolta prima della prima apertura (lo rifà
+    Godot). Sul PC del capo l'ho già mandata nel Cestino alla consegna della
+    0.64; nel contenitore si toglie dopo il `tar -xf`. Nel contenitore il primo `--import`
+    dopo il cambio è crollato una volta (segmentation fault), il secondo è
+    andato. Per rimettere LimboAI: si cancella il `.gdignore`. Anche
+    **Dialogic** ha il suo `addons/dialogic/.gdignore` (dalla fine della
+    0.64): per rimetterlo si cancella quello e poi Progetto → Impostazioni →
+    Plugin (rimette da solo l'autoload).
+64. **La piazza di casa ha i palazzi suoi**, costruiti da `zone_vicolo_3d`: la
+    città (`ISOLATI`, `dint_ô_palazzo`, `_facciate_verso`) non li conosce.
+    Per le vetrine, per l'occhio delle fotografie, per chi cerca un muro: lì
+    la città vede il vuoto. Chi deve sapere se c'è un muro chiede al motore
+    fisico (`intersect_ray`), come fa adesso `foto_vetrine`.
+65. **Una prova che va storta una volta su tre non si rifà finché passa: si
+    guarda mentre gira.** `prova_re_parcheggi` dava «2 storte» e alla volta
+    dopo zero. Il modo che ha funzionato: una copia della prova (nello
+    spazio di lavoro, non nel progetto) con una `_dump()` ogni tre secondi
+    — per ogni macchina stato, posizione con la y, velocità, punto
+    d'attesa, e contro cosa sbatte (`get_slide_collision(i).get_collider()`)
+    — più una riga a ogni calo delle ossa con la distanza del motorino. Per
+    confrontare col codice di prima: la stessa copia coi file di `HEAD`
+    (`git show HEAD:scripts/x.gd > copia/scripts/x.gd`). Così sono uscite
+    la bocca della piazza tappata, la macchina sul tetto (y = 1,3), la coda
+    cieca alle F, e il motorino che mandava la prova all'ospedale.
+66. **Il motorino della piazza di casa punta la corsia dove stai**
+    (`zone_vicolo_3d._spawn_motorino`, ogni 30-45 s): una prova che tiene il
+    giocatore fermo in piazza per minuti deve scansarlo (`_scansa_motorino`
+    in `prova_dieci_giornate` e `prova_re_parcheggi`), se no misura
+    l'ospedale.
+67. **Le macchine non sbattono contro il giocatore** (il suo
+    `collision_layer` è 2, fuori dalla loro maschera `1 | 4`): è il
+    giocatore che viene spostato. Chi le può fermare sono le altre
+    macchine, i rivali, i guagliuni (`collision_layer` 4) e i muri. Le macchine del Rre, fino al punto d'attesa e poi uscendo, non
+    sbattono neanche contro le altre macchine (0.64).
+
 ### Come si prova
 
-Cinquantadue `tools/prova_*.gd` (una, `prova_scopa`, va a parte). Ognuna è un autoload temporaneo che stampa
+Cinquantotto `tools/prova_*.gd` (due vanno a parte: `prova_scopa`, che gira come script, e `prova_dieci_giornate`, che gioca dieci giornate col tempo accelerato). Ognuna è un autoload temporaneo che stampa
 `=== N storte ===` e chiude; lo script la infila in `project.godot`, la fa
 girare e rimette a posto.
 
 ```bash
+/tmp/runc.sh copiaA prova_x 300   # (0.64) su una copia sua, headless → /tmp/outr_prova_x.txt
+VELOCE=20 /tmp/runc.sh copiaA prova_dieci_giornate 2400   # tempo accelerato (--fixed-fps 20, ~3,5×)
+/tmp/fotoc.sh foto_x 300          # (0.64) fotografie su /home/claude/copia3 (xvfb) → /tmp/out_foto_x.txt
 /tmp/prova.sh  prova_gente 150    # nel progetto, headless → /tmp/out_prova_gente.txt
 /tmp/minic.sh  prova_a prova_b    # su una copia (/home/claude/copia) → /tmp/minic.txt
 /tmp/provaxc.sh prova_x 260       # sulla copia, con xvfb + opengl3 (per i MultiMesh)
@@ -582,6 +702,19 @@ modelli PSX), `prova_ngombri` (niente dentro a niente), `prova_ntuppate`
 terra sta a terra), `prova_conti` (istanze e triangoli, anche dentro al
 raggio di vista), `prova_mira`, `prova_commissione`, `prova_confronto`,
 `prova_vascio_fondale` (xvfb).
+
+Le prove, le fotografie e le sonde della 0.64: `prova_conquista` (compra
+il mercato, prende lo stadio a mazzate, compra la cornetteria, e guarda
+cento secondi per piazza: arrivate, posteggiate, pagate, posti murati),
+`prova_re_parcheggi` (quattro sfide, una per esito), `prova_strisce_blu`
+(sette parti), `prova_dieci_giornate` (dieci giornate giocate da un bot
+onesto: `GIORNI=`, `RIENTRO=` in ore sul quadrante 12…28; stampa la tabella
+e il quadernetto delle uscite; si lancia con `VELOCE=20`);
+`foto_sessantaquattro` (`SOLO=parchimetro,blu,sfida,panaro,pioggia`),
+`foto_modello` (vedi trappola 57), `foto_vetrine` (tutte le mete del
+gruppo `negozi`, `/tmp/vet_NN.png`) con `tools/foto_provino.py` che le
+mette in provini, `foto_piazze_alto` (le piazze dall'alto coi posti);
+`sonda_posto`, `sonda_varchi`.
 
 Le fotografie e le sonde della 0.62 (biblioteca esterna):
 `foto_esterni_citta` (asfalto, muffa, facciate, tombino, olio, colature,
@@ -733,7 +866,22 @@ menu di pausa e la botta quando ti colpiscono, le pozzanghere quando piove
 (solo exe), sei persone nuove di Quaternius, il borsello che si svuota, la
 pagina dei crediti. Cosa è entrato e cosa no: `assets/esterni/ASSET-ESTERNI.md`
 (la tabella in cima) e `NOVITA-v0.62.md`. I tre plugin (ProtonScatter,
-Dialogic, LimboAI) sono installati ma **non usati**.
+Dialogic, LimboAI) sono installati ma **non usati**; dalla 0.64 Dialogic e
+LimboAI hanno un `.gdignore` (Godot non li guarda), ProtonScatter vive
+nell'editor.
+
+**'O Rre d''e Parcheggi (0.64)**: le regole (quando viene, cosa lascia) stanno
+in `game_manager.gd`, sezione «'O RRE D''E PARCHEGGI» (`re_oggi`,
+`re_esito`, le costanti `RE_*`); chi è e come si muove in
+`re_parcheggi_3d.gd`. Durante la sfida il rubinetto normale della piazza è
+chiuso (`re_sfida_attiva`, `re_zona_sfida`, guardati da `posteggio_3d` e
+`zone_vicolo_3d`) e le macchine le chiama lui (`sfida_manna_machina`).
+
+**'E Strisce Blu (0.64)**: `GameManager.strisce_blu` = zona → {dal, rotti,
+pittati, parchimetri}; i posti hanno `zona_id` e `indice` fissi (la pianta
+li numera sempre uguali); `car_3d._controlla_striscia_blu` decide il caso
+del cliente, `driver_3d` va alla macchinetta. La pittura è
+`GameManager.pittura` (passate in tasca).
 
 **La violenza** costa sciato (fiato), ossa che si ricomprano solo di notte,
 fermi (al terzo si passa la notte in cella, e ci si risveglia davanti alla
@@ -750,14 +898,13 @@ disegna la metà dei triangoli di prima grazie ai gruppi a quadretti.
 
 ### Subito (se la chat nuova trova qualcosa aperto)
 
-La 0.62 è stata chiusa e committata. Rimasti (vedi `ROADMAP.md`, «Rimasto
-aperto dalla 0.62»):
+La 0.64 è stata chiusa e committata. Rimasti (vedi `ROADMAP.md`, «Rimasto
+aperto dalla 0.64»):
 
-1. **Chiedere al capo come va la 0.62 giocata**: la UI nuova, le
-   commissioni col committente, l'economia (berlina a €100).
-2. **La prova che gioca dieci giornate da sola.**
-3. La sala scommesse è l'unico pannello col suo stile a parte.
-4. Il balcone del panaro, la traversata a piedi, il motorino con le chiavi.
+1. **Chiedere al capo come va la 0.64 giocata**: il Rre a mano (cinque in un
+   minuto sono tante?), le strisce blu (una mattina su cinque è giusto?), e
+   i numeri delle dieci giornate in `NOVITA-v0.64.md`.
+2. La traversata a piedi col panaro, il motorino con le chiavi.
 
 ### Borrelli e gli altri boss (0.63)
 
@@ -769,7 +916,7 @@ città). Il capo vuole **altri boss e un finale**: le proposte stanno nella
 `ROADMAP.md`, «I boss che verranno e il finale» — si sceglie con lui prima
 di scrivere codice.
 
-### La 0.64 — **'E vvoce**
+### La 0.65 — **'E vvoce**
 
 Voci registrate, clip di idle in prima persona, le criature con una
 corporatura loro. Come sempre, **chiedere a lui** prima di cominciare, con

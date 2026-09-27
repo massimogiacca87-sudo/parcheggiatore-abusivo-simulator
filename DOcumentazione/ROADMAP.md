@@ -1,6 +1,6 @@
 # Roadmap — dove stiamo e dove andiamo
 
-Aggiornata alla **v0.63 · 'O Duttore**, 26 settembre 2026.
+Aggiornata alla **v0.64 · 'O Rre e 'e Strisce**, 27 settembre 2026.
 
 *Da questa versione le note e la roadmap sono scritte in italiano. Il
 napoletano resta dove si sente giocando: dialoghi, cartelli, scritte a
@@ -664,15 +664,15 @@ gameplay.»*
 
 ---
 
-## Cose piccole rimaste dalla 0.60
+## Cose piccole rimaste dalla 0.60 (chiuse nella 0.64)
 
-- Guardare in fotografia le trenta vetrine della 0.59 (le prove dicono che
-  non toccano niente, ma nessuno le ha ancora viste tutte).
-- Il negozio più vicino alla **tua** piazza sta a 37 m: capire perché le
-  facciate oltre il Decumano non passano (`sonda_vetrine`).
-- Le **tre signore sedute** davanti ai bassi sono pupi femmina con i
-  capelli grigi e corti: da lontano sembrano vecchi. Un fazzoletto in
-  testa o i capelli raccolti le farebbe leggere subito.
+- [x] Guardare in fotografia le trenta vetrine della 0.59 → fatto
+  (`foto_vetrine`): mezza bottega aveva un portone dentro al vetro, e ora
+  non più.
+- [x] Il negozio più vicino alla **tua** piazza stava a 37 m → la piazza di
+  casa ha i palazzi suoi che la città non conosce; le serrande aperte con
+  la merce fuori sono diventate mete: ora 18 m.
+- [x] Le **signore sedute** sembravano vecchi → il fazzoletto in testa.
 
 ---
 
@@ -731,28 +731,29 @@ cartella sola** (vedi `COME-RIPRENDERE.md`).
 
 ### Rimasto aperto dalla 0.62
 
-- **La prova che gioca dieci giornate da sola** resta da scrivere (era già
-  nella lista della 0.61).
+- ~~**La prova che gioca dieci giornate da sola**~~ → `prova_dieci_giornate`
+  (0.64).
 - **L'economia nuova va giocata**: sulla carta una giornata onesta lascia
   una ventina d'euro e una berlina ne vale cento. Alla prima partita lunga
   guardare se il furto torna a mangiarsi il posteggio (la manopola è
-  `VENNUTA_CALO`).
-- **`prova_guagliune_vere` al mercato è al limite**: ogni tanto il
-  guaglione fa 2 clienti in quattro minuti contro una soglia di 3 (anche
-  sulla 0.61). Al mercato arrivano quattro auto in quattro minuti: o si
-  allunga la prova, o si guarda perché il mercato ne riceve così poche.
-- **La sala scommesse** ha ancora il suo stile a parte (blu e rosso, da
-  «football manager»): voluto, ma è l'unico pannello fuori dal tema.
-- **Il panaro**, la traversata a piedi e 'o motorino con le chiavi: fermi.
-- **I tre plugin della biblioteca** (ProtonScatter, Dialogic, LimboAI)
+  `VENNUTA_CALO`). → **Misurata nella 0.64** (`prova_dieci_giornate`): un
+  giocatore onesto e diligente nella piazza di casa incassa €130 al giorno
+  e ne dà 57 alla moglie, cioè ne restano una settantina: una berlina
+  rubata vale un giorno e mezzo di lavoro, non cinque. Resta da giocarla.
+- ~~**`prova_guagliune_vere` al mercato è al limite**~~ → il mercato aveva
+  quattro posti; con otto (0.64) il guaglione ne fa 7 in quattro minuti.
+- ~~**La sala scommesse** col suo stile a parte~~ → rifatta col tema (0.64).
+- **Il panaro** (il balcone: fatto nella 0.64), la traversata a piedi e 'o
+  motorino con le chiavi: fermi.
+- **I tre plugin della biblioteca** (0.64: Dialogic e LimboAI nascosti con un
+  `.gdignore`; ProtonScatter resta, vive nell'editor) (ProtonScatter, Dialogic, LimboAI)
   sono installati ma il gioco non li usa (il perché in `NOVITA-v0.62.md`).
   Se si decide di non usarli mai, si possono togliere: l'autoload di
   Dialogic parte a ogni avvio per niente, e LimboAI (già fuori
   dall'esportazione: bloccava la build web) lascia tre righe d'errore
   all'avvio.
-- **Le pozzanghere nella build web**: lì non ci sono (niente profondità
-  negli shader del renderer Compatibility). Un ripiego possibile: una
-  decalcomania di pozzanghera e l'asfalto più lucido quando piove.
+- ~~**Le pozzanghere nella build web**~~ → chiazze d'acqua scure, solo nel
+  browser (0.64).
 - **I motorini davanti ai bassi**: tolti perché tappavano i vicoli da
   quattro metri. Se si vogliono, vanno nei vicoli larghi o di sbieco.
 - **`prova_ntuppate` è una prova a caso** (passanti e pause dei vigili
@@ -804,11 +805,9 @@ vale tantissimo); poi rifinire e arricchire. Racconto completo in
   finché il furto pagava sei giornate non si sentiva. Adesso i guagliuni
   funzionano e danno il margine — ma va guardato alla prima partita lunga
   (la manopola è `RESA_DIPENDENTE`, non il furto).
-- **La prova che gioca dieci giornate da sola** resta da scrivere: la
-  0.61 ha mostrato che è l'unico modo di vedere quello che vede il capo.
-- **Il panaro** si appende a un muro davanti alla tua piazza: in
-  fotografia il balcone è una soletta chiara su una facciata già piena.
-  Un balcone del pacchetto al posto delle scatole sarebbe meglio.
+- ~~**La prova che gioca dieci giornate da sola**~~ → fatta nella 0.64.
+- ~~**Il panaro** su una soletta chiara~~ → un balcone vero della città
+  (0.64).
 - La traversata a piedi e 'o motorino con le chiavi: ancora fermi.
 
 ---
@@ -835,7 +834,82 @@ Una richiesta sola: *«Borrelli non esce più.»* Racconto completo in
 
 ---
 
-## v0.64 — **'E vvoce**
+## Fatto — v0.64 · 'O Rre e 'e Strisce
+
+Tre richieste: prima assicurarsi che la conquista funzioni e che le piazze
+prese lavorino come quella di casa; poi 'O Rre d''e Parcheggi e 'E Strisce
+Blu, col twist del capo; poi tutto quello che era rimasto aperto. Racconto
+completo in `NOVITA-v0.64.md`.
+
+- [x] **La conquista, giocata** (`prova_conquista`): nove guasti trovati e
+      chiusi — la piazza appena comprata che non ti metteva in servizio, il
+      cartello col vecchio padrone, il primo cliente che tardava, il mercato
+      con quattro posti (ora otto, con la fila di fondo), le macchine
+      d'arredo sui posti dello stadio, i posti murati, le code che si
+      tappavano (punto libero e non tappato, anche a casa), il vico stretto
+      della cornetteria (corsia d'ingresso), il rivale che non cresceva
+- [x] **'O Rre d''e Parcheggi** (`re_parcheggi_3d.gd`, `sfida_hud.gd`): dal
+      terzo giorno, modello fatto da zero; un minuto con tarantella e tic
+      tac, le macchine le manda lui, contano solo quelle dentro a un posto.
+      5 → piazza in omaggio (senza boss di capitolo, senza affitto; €450 se
+      le hai tutte), 3-4 → Sasà 'o Lampo (o €60), 2 → rivincita fra tre
+      giorni, 0-1 → ti mena (tre botte, mai all'ospedale) e rivincita
+- [x] **'E Strisce Blu** (`strisce_blu.gd`, `parchimetro_3d.gd`): dal secondo
+      giorno una mattina su cinque, in una piazza tua; 2-4 parchimetri
+      riconoscibili che si sfasciano (monete dentro); col parchimetro in
+      piedi il cliente paga la macchinetta, senza è «fuori dalle strisce»;
+      pittura e pennello al Bazar (€12, sei passate); tutto nel salvataggio
+- [x] **Rimasti aperti, chiusi**: la prova che gioca dieci giornate
+      (`prova_dieci_giornate`), la sala scommesse col tema, il balcone del
+      panaro, il fazzoletto delle signore sedute, la bottega nella piazza di
+      casa (37 → 18 m), le vetrine senza portoni dentro, le pozzanghere nel
+      browser, Dialogic e LimboAI spenti
+- [x] **Dalle foto da tutti i lati** (`foto_modello`): la faccia di Borrelli
+      stava sulla nuca (e gli occhiali di motorino e Zio); `animator.punta_osso`
+      al posto di `hold_bone` per il telefonino di Borrelli, la tazzina del
+      vigile, la borsa della signora
+- [x] **Le code, rifacendo le prove alla fine**: le macchine del Rre che si
+      tappavano nel varco di casa (entrano ed escono senza sbattere contro
+      le altre macchine), la macchina sul tetto di un'altra (arrivo misurato
+      in piano), la coda cieca alle macchine messe con F, il guaglione che
+      si prendeva le macchine del Rre, e chi si ferma a meno di tre metri
+      dal punto d'attesa aspetta lì invece di andarsene
+- [x] Prove nuove: `prova_conquista`, `prova_re_parcheggi`,
+      `prova_strisce_blu`, `prova_dieci_giornate`; fotografie
+      `foto_sessantaquattro`, `foto_modello`, `foto_vetrine` (+
+      `foto_provino.py`), `foto_piazze_alto`; sonde `sonda_posto`,
+      `sonda_varchi`
+
+### Rimasto aperto dalla 0.64
+
+- **Il Rre va giocato a mano.** La prova mette le macchine sul posto di
+  colpo; a gesti, in un minuto, cinque sono tante? Se il capo non ci
+  arriva mai, le manopole sono `RE_PE_A_PIAZZA` (5) e `RE_DURATA` (60 s),
+  o la velocità delle sue macchine (`veloce` = 2).
+- **Le strisce blu una mattina su cinque** possono essere troppe (o troppo
+  poche): la manopola è `STRISCE_BLU_PROB`.
+- **«Con i soldi o con i pugni».** A mani nude il rivale non si stende (un
+  pugno toglie 2, lui ne ha 40 più 15 per ogni piazza tua, e te ne toglie
+  11 a botta): è voluto da qualche versione, il muro che ti manda a
+  comprarti un ferro, e alla seconda botta a vuoto te lo dice lui. Se il
+  capo vuole che bastino le mani: il danno a mani nude contro i rivali, o
+  `rivale_3d.MAX_HP`.
+- **I numeri delle dieci giornate** (in `NOVITA-v0.64.md`: €130 d'incasso e
+  €57 di spese al giorno, €706 dopo dieci giorni, zero multe) sono quelli di
+  un giocatore diligente e onesto nella piazza di casa: servono al capo per
+  dire se l'economia gli torna. I clienti persi (0-9 al giorno) non li ho
+  guardati uno per uno.
+- ~~**Tre foto di vetrine** (quelle sul Decumano sotto alla piazza di casa)
+  escono coi muri~~ → era la macchina fotografica di `foto_vetrine` dentro
+  ai palazzi della piazza; adesso chiede al motore fisico, e le 31 mete si
+  vedono tutte da fuori (0.64).
+- Restano dalla 0.62: il panaro con la traversata a piedi, 'o motorino con
+  le chiavi, i motorini davanti ai bassi, `prova_ntuppate` lunga prima di
+  ogni consegna, Git LFS se si vuole un repo completo.
+
+---
+
+## v0.65 — **'E vvoce**
 
 - **Le voci registrate**: l'introduzione parlata, e qualche riga dei
   personaggi principali. Il gioco è pieno di gente che parla e nessuno fa
@@ -873,8 +947,9 @@ scrivere una riga. La regola resta quella della 0.55: **ogni boss è una
 meccanica diversa**, non un Borrelli con un'altra faccia.
 
 Oggi ci sono: **Borrelli** (non si tocca: si fa finta di niente e si
-spiega), e i tre **boss di capitolo** ('O Cardinale vuole soldi, Donna
-Carmela vuole una quota, Tonino 'e Notte non tratta).
+spiega), i tre **boss di capitolo** ('O Cardinale vuole soldi, Donna
+Carmela vuole una quota, Tonino 'e Notte non tratta), e dalla 0.64 **'O Rre
+d''e Parcheggi** (la sfida di mestiere, idea 3) e **'E Strisce Blu** (idea 4).
 
 ### Boss possibili
 
@@ -888,10 +963,13 @@ Carmela vuole una quota, Tonino 'e Notte non tratta).
    moglie, dai guagliuni, nel panaro di Donna Filumena) prima che ti
    fermino. Quello che trovano addosso te lo tolgono. Il boss che rende
    utile tutto il quartiere che hai costruito.
-3. **'O Re d''e Strisce** — l'abusivo più grosso della città vuole la tua
+3. ✔ **'O Re d''e Strisce** → fatto nella 0.64 come **'O Rre d''e
+   Parcheggi**, col twist del capo (un minuto, premi a soglie, le mazzate).
+   L'idea di partenza: l'abusivo più grosso della città vuole la tua
    piazza. **Sfida di mestiere**: tre minuti, chi posteggia più macchine e
    incassa di più. Si vince lavorando meglio, non menando.
-4. **'E Strisce Blu** — il Comune dipinge le strisce blu nella tua piazza
+4. ✔ **'E Strisce Blu** → fatto nella 0.64 (i parchimetri si sfasciano, le
+   strisce si ripittano). L'idea di partenza: il Comune dipinge le strisce blu nella tua piazza
    e mette il parchimetro: per una settimana le macchine pagano la
    macchinetta e non te. Un boss lungo, a giornate: si vince facendo
    rompere il parchimetro, convincendo i clienti fissi, o cambiando

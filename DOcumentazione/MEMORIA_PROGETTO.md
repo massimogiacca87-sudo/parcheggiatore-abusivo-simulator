@@ -1,13 +1,12 @@
 # MEMORIA DEL PROGETTO — Parcheggiatore Abusivo Simulator
 
-**Per il "nuovo me" che apre la chat successiva.** Aggiornato il 26 settembre
-2026, alla chiusura della **v0.62 · 'A faccia nova** (con la biblioteca di
-asset esterni agganciata al gioco). Tutto quello che serve
-per ripartire da qui senza aver visto la chat precedente.
+**Per il "nuovo me" che apre la chat successiva.** Aggiornato il 27 settembre
+2026, alla chiusura della **v0.64 · 'O Rre e 'e Strisce**. Tutto quello che
+serve per ripartire da qui senza aver visto la chat precedente.
 
 Ordine di lettura consigliato: questo file → `COME-RIPRENDERE.md` (manuale
-operativo lungo, con le trappole) → `RIASSUNTO-CHAT-v0.62.md` (cronaca della
-chat) → `ROADMAP.md`. Tutti stanno in `DOcumentazione\` sul computer del capo
+operativo lungo, con le trappole) → `RIASSUNTO-CHAT-v0.64.md` (cronaca della
+chat) → `ROADMAP.md` → `NOVITA-v0.64.md`. Tutti stanno in `DOcumentazione\` sul computer del capo
 e nei documenti del progetto claude.ai (`claude/…`).
 
 ---
@@ -21,12 +20,13 @@ e nei documenti del progetto claude.ai (`claude/…`).
 2. Nel contenitore nuovo: sul computer `tar -cf _claude_tmp\progetto.tar -C
    Progetto parcheggiatore-abusivo` (Desktop Commander, PowerShell),
    `device_stage_files`, `tar -xf` in `/home/claude` → nasce
-   `/home/claude/parcheggiatore-abusivo`; `git init`, commit, `git tag
-   pc_sync` (vedi `COME-RIPRENDERE.md` 1.1).
+   `/home/claude/parcheggiatore-abusivo`; (dalla 0.64) a-capo portati a LF,
+   poi `git init`, commit, `git tag pc_sync` (vedi `COME-RIPRENDERE.md` 1.1).
 3. Godot 4.3 stabile in `/home/claude/godot4`, `xvfb-run` per le foto,
    `cp tools/sh/*.sh /tmp/ && chmod +x /tmp/*.sh`.
-4. Batteria di prove: `nohup /tmp/batteriac.sh &` → `/tmp/batteriac.txt`
-   (attese tutte a zero storte).
+4. Batteria di prove, in due metà insieme: `PARTE=1 nohup /tmp/batteriac.sh &`
+   e `PARTE=2 …` → `/tmp/batteriac_1.txt`, `/tmp/batteriac_2.txt` (attese
+   tutte a zero storte, circa un'ora).
 5. Ogni lavoro finito e provato = un commit nel contenitore → `tools/sh/sincro.sh`
    fa le patch → `device_commit_files` in `_claude_tmp\` → `git am
    --directory=Progetto/parcheggiatore-abusivo` sul computer (1.1b).
@@ -86,11 +86,13 @@ sera, la casa, la famiglia come freno).
   (`project.godot`: `rendering_method.mobile="gl_compatibility"`); build Web
   per itch.io; su Windows c'è `AVVIA-COMPATIBILITA.bat` (`--rendering-driver opengl3`).
 - **Due autoload**: `GameManager` (`scripts/autoload/game_manager.gd`, stato
-  + 67 segnali + salvataggio JSON in `user://`) e `SoundManager`
-  (`scripts/autoload/sound_manager.gd`).
-- **98 script**, circa 57.500 righe.
+  + 73 segnali + salvataggio JSON in `user://`) e `SoundManager`
+  (`scripts/autoload/sound_manager.gd`). (Dalla 0.64 Dialogic e LimboAI
+  hanno un `.gdignore` e l'autoload di Dialogic è tolto: i plugin
+  installati e non usati non partono.)
+- **115 script**, circa 67.500 righe (alla 0.64).
 - Attrezzi: `tools/*.py` (mappa `pianta.py`, audio `gen_audio.py`, texture),
-  `tools/blender/` (modelli), **48 prove** `tools/prova_*.gd` (autoload
+  `tools/blender/` (modelli), **58 prove** `tools/prova_*.gd` (autoload
   iniettato in `project.godot` da uno script, stampano `=== storte: N ===`),
   **foto** `tools/foto_*.gd` (xvfb + opengl3, PNG in `/tmp`), **sonde**
   `tools/sonda_*.gd`, script shell in `tools/sh/`, recupero da `.pck` in
@@ -102,7 +104,51 @@ sera, la casa, la famiglia come freno).
 
 ---
 
-## 2. STATO ATTUALE — v0.62
+## 2. STATO ATTUALE — v0.64
+
+### 2.000 La 0.64 in breve (27 settembre)
+
+Richiesta del capo in tre tempi: 1) **provare che la conquista delle altre
+piazze funziona** (coi soldi e coi pugni) e che una piazza presa lavora
+come quella di casa; 2) due idee nuove col suo twist: **'O Rre d''e
+Parcheggi** (dal terzo giorno un figuro inventato da zero ti sfida: un
+minuto, musica e tic tac; ≥5 posteggiate → una piazza in omaggio, ≥3 → un
+guaglione, 1 → ti insegue e ti mena: «ma arò t'avvie omm' 'e sfaccimma, va'
+a faticà va'») e **'E Strisce Blu** (certe mattine il Comune pitta le
+strisce blu con i parchimetri in una tua piazza: si sfasciano i
+parchimetri e si ripittano i posti di bianco con la pittura del bazar,
+se no i clienti non pagano o fanno come «fuori dalle strisce»); 3) **i
+rimasti aperti** delle versioni prima.
+
+Fatto (dettagli in `NOVITA-v0.64.md`):
+- `prova_conquista` gioca la conquista nella città vera: nove guasti trovati
+  e chiusi (servizio che non partiva comprando da dentro, cartello col
+  vecchio padrone, primo cliente lento, mercato con 4 posti → 8 con la
+  fila di fondo, arredo sopra ai posti dello stadio, posti murati spenti,
+  code che s'incastravano, `zona_persa`…);
+- `re_parcheggi_3d.gd` (Don Vicienzo Cuoppo: corona, mantello, sigaro,
+  paletta), `sfida_hud.gd`, la tarantella della sfida; regole in
+  `game_manager.gd` («'O RRE D''E PARCHEGGI»); la piazza in omaggio non
+  arma il boss di capitolo;
+- `parchimetro_3d.gd`, `strisce_blu.gd`, la pittura al Bazar (tasto 7);
+- rimasti chiusi: la prova che gioca dieci giornate (`prova_dieci_giornate`,
+  bot onesto), la sala scommesse col tema, il balcone del panaro, il
+  fazzoletto delle signore sedute, le botteghe della piazza di casa come
+  mete, le trenta vetrine fotografate e aggiustate, le pozzanghere nel
+  browser, i plugin non usati spenti;
+- trovati guardando: **Borrelli aveva la faccia sulla nuca** (e gli occhiali
+  di chi va in motorino e dello Zio), braccia sbagliate col vecchio
+  `hold_bone` → `animator.punta_osso`.
+
+### 2.001 La 0.63 in breve
+
+**'O Duttore**: Borrelli non usciva più (la sera diceva sempre di no, la
+radio del vigile si scaricava dopo la prima chiamata). Adesso due porte col
+dado che cresce (la sera dal secondo giorno, 5% +5% al giorno; la chiamata
+del vigile ai carabinieri, 1% +10 a chiamata), il vigile mandato via tre
+volte chiama; Borrelli non si tocca con le armi, si calma con sigaretta o
+caffè e si convince con le criature. Prove `prova_borrelli`,
+`prova_borrelli_gioca`.
 
 ### 2.00 La 0.62 in breve
 
@@ -186,19 +232,22 @@ Quello che segue è lo stato scritto alla 0.60, ancora valido.
 | script | righe | cosa fa |
 |---|---|---|
 | `scripts/main.gd` | — | radice di `Main.tscn`: crea `caricamento` (schermata di caricamento), `Citta` (`citta_3d.gd`), il giocatore (`player_fps.gd`), l'HUD (`hud.gd`), l'intro, la volata iniziale; gestisce il risveglio (dopo la galera: `GALERA_FORE + GALERA_VERSO * 2.2 + (0,0.6,0)`, davanti al portone) |
-| `scripts/autoload/game_manager.gd` | 5.660 | **il cervello**: soldi, calore, reputazione, giornata e fasce, turni, conto della sera, oggetti, fermi e stelle, salvataggio JSON; **67 segnali** |
+| `scripts/autoload/game_manager.gd` | 6.330 | **il cervello**: soldi, calore, reputazione, giornata e fasce, turni, conto della sera, oggetti, fermi e stelle, piazze e boss, il Rre e le strisce blu (0.64), salvataggio JSON; **73 segnali** |
 | `scripts/autoload/sound_manager.gd` | — | effetti (pool di `AudioStreamPlayer`), musica con dissolvenza su due giradischi, ambiente, volumi in `user://audio.cfg` |
-| `scripts/citta_3d.gd` | 8.450 | **costruisce tutta la città**: tabelle `STRADE`, `ISOLATI`, `SLARGHI`, `ZONE`, `VARCHI`, `ISOLATO_GALERA`; facciate e isolati, bassi (`_vascio_pt`), piazze (`zone_vicolo_3d.gd`), vetrine, verde, arredo, galera, collina, gruppi a quadretti; catasto delle cose `_ingombri`; `_solido`, `_sta_libero`/`_perche_nun_sta`, `_batched`/`_flush_batch` (MultiMesh) |
-| `scripts/zone_vicolo_3d.gd` | 3.230 | una piazza giocabile: posti auto, rivale, munnezza, bacheca, arredo del vicolo |
-| `scripts/car_3d.gd` | 2.950 | le auto: arrivo, sosta, pagamento, danni, furto, guida |
+| `scripts/citta_3d.gd` | 8.770 | **costruisce tutta la città**: tabelle `STRADE`, `ISOLATI`, `SLARGHI`, `ZONE`, `VARCHI`, `ISOLATO_GALERA`; facciate e isolati, bassi (`_vascio_pt`), piazze (`zone_vicolo_3d.gd`), vetrine, verde, arredo, galera, collina, gruppi a quadretti; catasto delle cose `_ingombri`; `_solido`, `_sta_libero`/`_perche_nun_sta`, `_batched`/`_flush_batch` (MultiMesh) |
+| `scripts/zone_vicolo_3d.gd` | 3.400 | una piazza giocabile: posti auto, rivale, munnezza, bacheca, arredo del vicolo; (0.64) il servizio quando la piazza è tua, la coda, le botteghe della piazza di casa |
+| `scripts/posteggio_3d.gd` | 610 | la piazza di casa: posti, rubinetto delle macchine, (0.64) la sfida del Rre |
+| `scripts/re_parcheggi_3d.gd` | 1.040 | **(0.64)** 'O Rre d''e Parcheggi |
+| `scripts/parchimetro_3d.gd`, `strisce_blu.gd`, `sfida_hud.gd` | 380, 245, 160 | **(0.64)** i parchimetri, le strisce blu, il cronometro della sfida |
+| `scripts/car_3d.gd` | 3.170 | le auto: arrivo, sosta, pagamento, danni, furto, guida |
 | `scripts/driver_3d.gd` | 1.300 | l'autista: scende, fa la spesa, torna, cerca, confronto (stati `EXITING…CERCA`) |
-| `scripts/player_fps.gd` | 2.020 | il giocatore (`CharacterBody3D`, prima persona, interazioni, `GRUPPI_BERSAGLIO`) |
-| `scripts/hud.gd` | 3.460 | interfaccia (barre, soldi, orologio, pannelli, versione) |
+| `scripts/player_fps.gd` | 2.330 | il giocatore (`CharacterBody3D`, prima persona, interazioni, `GRUPPI_BERSAGLIO`) |
+| `scripts/hud.gd` | 3.720 | interfaccia (barre, soldi, orologio, pannelli, versione) |
 | `scripts/vascio_3d.gd` | 1.350 | la casa: porta nel vicolo, stanza a (300,0,300) fuori pianta, famiglia, letto, consegna |
 | `scripts/vigile_3d.gd` | 1.100 | il vigile: ronda, sospetto, verbali, pausa al bar, smonta alle 20 |
 | `scripts/passante_3d.gd` | 770 | i passanti: corpo fisico, tappe, strada A*, recupero se piantati, mestieri |
 | `scripts/human_builder.gd` | 750 | costruisce le persone (pupo/omini/umano_q), vestiti, clip fisse, la clip `Fermo` dell'umano_q (`_prepara_fermo`) |
-| `scripts/animator.gd` | 480 | animazioni: tabella clip per scheletro, `set_speed` (misura la velocità vera), `action`, `sit` |
+| `scripts/animator.gd` | 590 | animazioni: tabella clip per scheletro, `set_speed` (misura la velocità vera), `action`, `sit`; (0.64) `punta_osso`/`lascia_osso` |
 | `scripts/passo.gd` | 350 | `class_name Passo`: il passo di chi cammina **senza fisica** (autisti, vigili, bambini, signora, Borrelli, carabinieri): dritto → strada A* → striscia → esci, con valvola |
 | `scripts/cammino.gd` | 340 | griglia A* da 1 m (`AStarGrid2D`) con palazzi, cose e Vomero; «corda tirata»; `strada`, `raggiungibile`, `vicino_raggiungibile` |
 | `scripts/ostacoli.gd` | 300 | registro dei corpi solidi (censiti a città fatta e 1,5 s dopo), `dentro`, `fore` |
@@ -273,12 +322,15 @@ Note sugli asset:
 
 ### 4.1 Dove ci siamo fermati
 
-**La 0.62 è chiusa e committata**, con la biblioteca esterna dentro e la
-build (exe + web) in `Build\` e in radice. Rimasti (`ROADMAP.md`, «Rimasto aperto
-dalla 0.62»): la prova che gioca dieci giornate; l'economia nuova da
-giocare (berlina a €100, spese −1/6); la sala scommesse col suo stile a
-parte; il panaro, la traversata a piedi, il motorino. La prossima in
-roadmap è **v0.63 'E vvoce** (voci, idle in prima persona, criature).
+**La 0.64 è chiusa e committata**, con la build (exe + web) in `Build\` e
+in radice. Rimasti (`ROADMAP.md`, «Rimasto aperto dalla 0.64»): il Rre da
+provare a mano (le manopole `RE_PE_A_PIAZZA`, `RE_DURATA`, la velocità
+delle macchine), la frequenza delle strisce blu (`STRISCE_BLU_PROB`), i
+numeri delle dieci giornate da confrontare col capo (€130 d'incasso e €57
+di spese al giorno per un onesto), la domanda «coi pugni» (a mani nude il
+rivale non si stende, ed è voluto: se il capo vuole le mani, è una riga);
+la traversata a piedi col panaro, il motorino con le chiavi. La prossima in roadmap è
+**v0.65 'E vvoce** (voci, idle in prima persona, criature).
 
 ### 4.2 I primissimi 3 passi nella chat nuova
 
@@ -286,7 +338,7 @@ roadmap è **v0.63 'E vvoce** (voci, idle in prima persona, criature).
    1.1: `tar` della cartella `Progetto\parcheggiatore-abusivo` sul computer,
    stage, `tar -xf`, `git init` + tag `pc_sync`); Godot 4.3 in
    `/home/claude/godot4`; `cp tools/sh/*.sh /tmp/`; `nohup /tmp/batteriac.sh &`.
-2. **Chiedere al capo cosa vuole nella 0.63**, se non l'ha già scritto.
+2. **Chiedere al capo cosa vuole nella 0.65**, se non l'ha già scritto.
 3. **Un commit per ogni lavoro finito**, portato sul computer con le patch
    (`tools/sh/sincro.sh` + `git am`).
 
@@ -330,3 +382,15 @@ roadmap è **v0.63 'E vvoce** (voci, idle in prima persona, criature).
 10. **La biblioteca esterna è esclusa dall'esportazione**: un asset di
     `assets/esterni/` usato davvero va tolto dall'`exclude_filter` dei due
     preset, se no nell'exe non c'è (e `spawn` torna `null` in silenzio).
+11. **(0.64) Sull'osso della testa il davanti è +Z**: occhiali, barba,
+    visiere vanno a +Z. Un personaggio si fotografa da davanti e da dietro
+    (`tools/foto_modello.gd`).
+12. **(0.64) `hold_bone` congela la posa di riposo**: per un braccio che
+    tiene qualcosa si usa `animator.punta_osso(osso, direzione)`, e la cosa
+    in mano segue la mano con un `RemoteTransform3D` senza rotazione.
+13. **(0.64) I commit si fanno man mano**: spezzare a fine lavoro un diff
+    grosso che tocca gli stessi file ha messo righe nel posto sbagliato; se
+    tocca, ogni commit si prova avviando il gioco sui file dell'indice.
+14. **(0.64) Un bot di prova deve stare dove sta un giocatore**: il primo
+    bot delle dieci giornate si metteva in carreggiata e finiva
+    all'ospedale.

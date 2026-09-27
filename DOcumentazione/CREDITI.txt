@@ -69,3 +69,11 @@ Se il gioco viene pubblicato (itch.io o altro), questa pagina va messa
 nei crediti: le licenze CC BY dei suoni dell'interfaccia, della Vespa, dei
 due scooter e dei graffiti chiedono di citare l'autore. Dentro al gioco
 c'e' gia' la pagina "Chi ha fatto 'o joco" (ultima pagina del tutoriale).
+
+FATTI A CODICE PER LA v0.64
+  La tarantella della sfida del Rre (audio/musica/sfida.ogg), il tic tac,
+  la campana di fine sfida e la pennellata sono sintetizzati da
+  tools/genera_suoni_064.py (mandolino e chitarra a corda pizzicata,
+  Karplus-Strong): la melodia e' scritta apposta, non e' una tarantella
+  esistente. L'icona della pittura (assets/icone/pittura.png) e' disegnata
+  da tools/genera_icona_pittura.py.
