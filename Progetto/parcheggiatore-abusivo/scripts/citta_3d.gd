@@ -7366,6 +7366,13 @@ func _build_personagge_nove() -> void:
 	add_child(pan)
 	pan.global_position = meglio[0]
 	pan.configura(meglio[1])
+	# (0.64) **'O balcone 'e Donna Filumena è 'nu balcone d''a città**, no
+	# 'na soletta chiara 'ncopp'a 'na facciata già chiena (la foto della
+	# 0.61): mensola di pietra, ringhiera di ferro battuto coi balaustrini
+	# veri, i vasi e magari la sciarpa. È lo stesso `_balcone` dei palazzi,
+	# stile "ferro", con la mensola all'altezza dove lei si affaccia.
+	_balcone(meglio[0], meglio[1], 3.0, PanaroScript.PAVIMENTO + 0.51,
+		{"stile_balcone": "ferro", "cornicione": Color(0.74, 0.68, 0.58)})
 
 
 func _dint_pe_panaro(p: Vector3) -> bool:

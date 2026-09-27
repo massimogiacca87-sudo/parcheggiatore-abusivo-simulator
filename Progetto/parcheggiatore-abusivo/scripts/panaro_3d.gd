@@ -21,6 +21,14 @@ const Human := preload("res://scripts/human_builder.gd")
 const Tex := preload("res://scripts/textures.gd")
 
 const ALTEZZA: float = 7.2
+## Il pavimento del balcone (0.64): il balcone lo costruisce la città
+## (`citta_3d._build_personagge_nove`, lo stesso `_balcone` dei palazzi),
+## con la mensola che finisce qui. Donna Filumena ci sta sopra.
+const PAVIMENTO: float = ALTEZZA + 0.97
+## Il panaro tirato su sta appeso fuori dalla ringhiera, sotto al corrimano.
+const SU: float = PAVIMENTO + 0.5
+## La ringhiera sta a 0,88 dal muro: corda e panaro passano appena fuori.
+const FUORI: float = 1.0
 const RICHIESTE := [
 	{"id": "sigarette", "chiede": "Guagliò! M'accatte cinche sigarette? Mo' te calo 'e sorde!",
 		"prompt": "cinche sigarette", "paga": 7},
@@ -44,8 +52,8 @@ var _cesto: Node3D
 var _corda: MeshInstance3D
 var _corpo: StaticBody3D
 var _bubble: Node3D
-var _altezza_cesto: float = ALTEZZA
-var _meta_cesto: float = ALTEZZA
+var _altezza_cesto: float = SU
+var _meta_cesto: float = SU
 var _richiesta: Dictionary = {}
 var _orari: Array = []
 var _giornata: int = -1
@@ -61,25 +69,11 @@ func configura(verso: Vector3) -> void:
 func _ready() -> void:
 	_balcone = Node3D.new()
 	add_child(_balcone)
-	var soletta := MeshInstance3D.new()
-	var sb := BoxMesh.new()
-	sb.size = Vector3(1.8, 0.14, 0.9)
-	soletta.mesh = sb
-	soletta.material_override = Tex.flat(Color(0.78, 0.74, 0.66), 0.9)
-	soletta.position = Vector3(0, ALTEZZA + 0.9, 0.45)
-	_balcone.add_child(soletta)
-	var ringhiera := MeshInstance3D.new()
-	var rb := BoxMesh.new()
-	rb.size = Vector3(1.8, 0.8, 0.04)
-	ringhiera.mesh = rb
-	ringhiera.material_override = Tex.flat(Color(0.12, 0.12, 0.12), 0.5)
-	ringhiera.position = Vector3(0, ALTEZZA + 1.37, 0.88)
-	_balcone.add_child(ringhiera)
-	# Donna Filumena, affacciata.
+	# Donna Filumena, affacciata (il balcone lo mette la città).
 	var parts := Human.build(Color(0.34, 0.2, 0.36), Color(0.2, 0.18, 0.2), "",
 		1.55, {"corpo": "femmina", "hair": Color(0.82, 0.82, 0.8), "belly": 0.5})
 	_nonna = parts["root"]
-	_nonna.position = Vector3(0.35, ALTEZZA + 0.97, 0.45)
+	_nonna.position = Vector3(0.35, PAVIMENTO, 0.45)
 	_nonna.rotation.y = PI
 	_balcone.add_child(_nonna)
 	_nonna.visible = false
@@ -133,10 +127,11 @@ func _ready() -> void:
 
 
 func _posa_cesto() -> void:
-	_cesto.position = Vector3(0, _altezza_cesto, 0.75)
-	var lung: float = maxf(0.05, ALTEZZA + 1.0 - _altezza_cesto)
+	_cesto.position = Vector3(0, _altezza_cesto, FUORI)
+	# La corda va dal manico del panaro al corrimano, dove la tiene lei.
+	var lung: float = maxf(0.05, PAVIMENTO + 0.9 - (_altezza_cesto + 0.22))
 	(_corda.mesh as CylinderMesh).height = lung
-	_corda.position = Vector3(0, _altezza_cesto + 0.22 + lung * 0.5, 0.75)
+	_corda.position = Vector3(0, _altezza_cesto + 0.22 + lung * 0.5, FUORI)
 	_bubble.position = Vector3(0, ALTEZZA + 2.9, 0.75)
 
 
@@ -146,7 +141,7 @@ func _programma() -> void:
 	_giornata = GameManager.giornata
 	_orari = [randf_range(13.0, 16.5), randf_range(18.5, 22.5)]
 	_richiesta = {}
-	_meta_cesto = ALTEZZA
+	_meta_cesto = SU
 
 
 func _process(delta: float) -> void:
@@ -166,7 +161,7 @@ func _process(delta: float) -> void:
 	if absf(_altezza_cesto - _meta_cesto) > 0.01:
 		_altezza_cesto = move_toward(_altezza_cesto, _meta_cesto, delta * 1.6)
 		_posa_cesto()
-		if _altezza_cesto >= ALTEZZA - 0.01 and _richiesta.is_empty():
+		if _altezza_cesto >= SU - 0.01 and _richiesta.is_empty():
 			_nonna.visible = false
 	_corpo.collision_layer = 4 if (not _richiesta.is_empty()
 		and _altezza_cesto < 0.3) else 0
@@ -222,4 +217,4 @@ func interagisci() -> void:
 	GameManager.event_started.emit(
 		"Donna Filumena t'ha calato €%d dint'ô panaro." % paga)
 	_richiesta = {}
-	_meta_cesto = ALTEZZA
+	_meta_cesto = SU
