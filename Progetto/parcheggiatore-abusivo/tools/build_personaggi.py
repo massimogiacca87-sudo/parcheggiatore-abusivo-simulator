@@ -29,7 +29,21 @@ gomito appena accennato, il petto è un barile morbido. E i **vestiti sono
 geometria vera** — una camicia è un guscio più largo del corpo che finisce
 con un orlo arrotondato, non una zona di colore.
 
-    python3 tools/build_personaggi.py
+    python3 tools/build_personaggi.py [uscita.glb]
+
+**Dalla 0.66 'o pupo se fa a tre mane.** Questo file è il regista: tiene
+la cassetta degli attrezzi (`Pupo`: tubi, sfere, cupole, pesi), i
+materiali, le corporature, le UV e l'esportazione. La testa con tutti i
+suoi pezzi (capelli, palpebre, sopracciglia, nasi, baffi) sta in
+`pupo_testa.py`, il corpo coi vestiti in `pupo_corpo.py`. Se uno dei due
+manca si usa il pupo della 0.49 che sta qui sotto.
+
+**E nun esce cchiù `pupo.glb`.** Il file sorgente dello scheletro
+(`UAL1_Standard.glb`) sta solo sul computer del capo; lo scheletro si
+ricava da `pupo.scn` con `tools/esporta_scheletro.gd`, e il corpo che esce
+da qui (`_claude_tmp/grafica/pupo/pupo_nuovo.glb`, **senza animazioni**) si
+rimonta sulle quarantatré clip vecchie con `tools/monta_pupo.gd`, che
+scrive `assets/models/pupo.scn`.
 """
 import math
 import os
@@ -43,9 +57,12 @@ from mathutils import Vector                  # noqa: E402
 import blender_comune as C                    # noqa: E402
 
 RADICE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-USCITA = os.path.join(RADICE, "assets", "models", "pupo.glb")
+LAVORO = os.path.normpath(os.path.join(RADICE, "..", "..", "_claude_tmp",
+	"grafica", "pupo"))
+USCITA = os.path.join(LAVORO, "pupo_nuovo.glb")
 
 FONTI = [
+	os.path.join(LAVORO, "pupo_scheletro.glb"),
 	"/tmp/ual/UAL1_Standard.glb",
 	"/mnt/user-data/uploads/Parcheggiatore Abusivo Simulator/Animations/"
 	"Universal Animation Library[Standard]/Universal Animation Library"
@@ -74,6 +91,19 @@ MATERIALI = [
 	# 'A banda rossa d''e carabiniere: sta 'a parte, e si accende solo a
 	# chi la deve portare.
 	("banda", (0.64, 0.09, 0.11), 0.88),
+	# (0.66) La pelle della faccia: ha le UV della faccia, e in gioco ci
+	# disegna sopra bocca, barba e rughe lo shader `pupo_faccia`.
+	("faccia", (0.87, 0.69, 0.55), 0.72),
+	# L'iride (con la pupilla dipinta): il colore lo mette il gioco.
+	("iride", (0.22, 0.14, 0.08), 0.30),
+	("gonna", (0.24, 0.26, 0.32), 0.92),
+	# Questi il gioco non li tinge: restano del colore del file.
+	("suola", (0.52, 0.48, 0.44), 0.80),
+	("cuoio", (0.20, 0.12, 0.08), 0.60),
+	("metallo", (0.72, 0.72, 0.74), 0.35),
+	("oro", (0.86, 0.66, 0.24), 0.30),
+	("corallo", (0.80, 0.08, 0.07), 0.40),
+	("bottoni", (0.90, 0.88, 0.82), 0.45),
 ]
 MAT = {n: i for i, (n, _, _) in enumerate(MATERIALI)}
 
@@ -165,6 +195,86 @@ def avanti(z, corp):
 
 
 # ---------------------------------------------------------------------------
+# 'E UV, materiale per materiale (0.66)
+# ---------------------------------------------------------------------------
+#
+# Il pupo della 0.49 non aveva UV: era tutto a colore pieno. Adesso tre
+# cose portano una texture, e le coordinate le mette qui il regista, dopo,
+# guardando il materiale di ogni faccia — così chi modella non ci deve
+# pensare, e le texture si possono disegnare prima ancora del modello.
+# **Questo è il contratto con chi fa le texture: non si cambia senza
+# cambiare anche loro.**
+#
+# * `faccia` — proiezione piatta da davanti. Una finestra di FACCIA_L
+#   metri centrata sul centro della testa: u = 0,5 + x/L (x positivo è la
+#   **sinistra del pupo**, cioè la destra di chi lo guarda), v = 0,5 −
+#   (z − TESTA_C.z)/L. Le facce che non guardano avanti (normale·(−Y) <
+#   0,15) vanno tutte nell'angolo neutro (0,015, 0,015), che nelle texture
+#   è sempre bianco (o nero, per la barba): così la bocca non si stampa
+#   anche sulla nuca.
+# * `camicia`, `pantaloni`, `gonna` — la trama della stoffa, che si ripete:
+#   proiezione a scatola, un'unità di UV = TRAMA_M metri.
+# * `capelli` — le ciocche: coordinate sferiche attorno al centro della
+#   testa, u lungo il giro e v dalla cima in giù, in metri/TRAMA_M. Le
+#   righe della texture (che corrono lungo v) diventano capelli pettinati
+#   dalla fronte alla nuca.
+# * `iride` — proiezione piatta da davanti sull'occhio più vicino: il
+#   disco dell'iride (raggio IRIDE_R) riempie il quadrato [0,1]², con la
+#   pupilla al centro.
+FACCIA_L = 0.26
+TRAMA_M = 0.25
+OCCHIO_X = 0.043           # dove stanno gli occhi: ±x…
+OCCHIO_Z_SU = 0.012        # …e quanto sopra al centro della testa
+IRIDE_R = 0.0125
+
+
+def uv_per_materiale(bm):
+	uv = bm.loops.layers.uv.verify()
+	per_nome = {i: n for i, (n, _, _) in enumerate(MATERIALI)}
+	c = TESTA_C
+	for f in bm.faces:
+		nome = per_nome.get(f.material_index, "")
+		if nome == "faccia":
+			davanti = -f.normal.y
+			for l in f.loops:
+				p = l.vert.co
+				if davanti < 0.15:
+					l[uv].uv = (0.015, 0.015)
+				else:
+					l[uv].uv = (0.5 + p.x / FACCIA_L,
+						0.5 - (p.z - c.z) / FACCIA_L)
+		elif nome in ("camicia", "pantaloni", "gonna"):
+			n = f.normal
+			ax = max(range(3), key=lambda i: abs(n[i]))
+			for l in f.loops:
+				p = l.vert.co
+				if ax == 0:
+					a, b = p.y, p.z
+				elif ax == 1:
+					a, b = p.x, p.z
+				else:
+					a, b = p.x, p.y
+				l[uv].uv = (a / TRAMA_M, -b / TRAMA_M)
+		elif nome == "capelli":
+			for l in f.loops:
+				d = l.vert.co - c
+				r = max(0.05, d.length)
+				giro = math.atan2(d.x, -d.y)
+				polo = math.acos(max(-1.0, min(1.0, d.z / r)))
+				l[uv].uv = (giro * 0.12 / TRAMA_M, polo * 0.12 / TRAMA_M)
+		elif nome == "iride":
+			for l in f.loops:
+				p = l.vert.co
+				ox = OCCHIO_X if p.x > 0.0 else -OCCHIO_X
+				oz = c.z + OCCHIO_Z_SU
+				l[uv].uv = (0.5 + (p.x - ox) / (2.0 * IRIDE_R),
+					0.5 - (p.z - oz) / (2.0 * IRIDE_R))
+		else:
+			for l in f.loops:
+				l[uv].uv = (0.5, 0.5)
+
+
+# ---------------------------------------------------------------------------
 # 'A cassetta d''e ferre: tubi, sfere, cupole
 # ---------------------------------------------------------------------------
 
@@ -181,6 +291,8 @@ class Pupo:
 		self.bm = bmesh.new()
 		self.dl = self.bm.verts.layers.deform.verify()
 		self.arm = arm
+		# (0.66) Le forme (blend shape): nome → {BMVert: posizione}.
+		self.forme = {}
 
 	# -- vertici e pesi ----------------------------------------------------
 	def vert(self, co, pesi):
@@ -374,14 +486,32 @@ class Pupo:
 				(2, 6, 7, 3), (0, 4, 6, 2), (1, 3, 7, 5)):
 			self.faccia([vs[i] for i in quad], mat, False)
 
+	# -- forme -------------------------------------------------------------
+	def forma(self, nome, spostati):
+		"""**'E forme** (0.66): una blend shape. `spostati` = {BMVert:
+		Vector} con la posizione dei vertici che si muovono; gli altri
+		restano dove sono. Le palpebre ne hanno una, `chiudi`, e il gioco
+		la usa per sbattere gli occhi."""
+		self.forme.setdefault(nome, {}).update(spostati)
+
 	# -- chiusura ----------------------------------------------------------
 	def chiudi(self):
 		for nome, colore, ruvido in MATERIALI:
 			self.me.materials.append(bpy.data.materials[nome])
 		self.bm.normal_update()
+		uv_per_materiale(self.bm)
+		self.bm.verts.index_update()
+		forme = {n: {v.index: co.copy() for v, co in d.items()}
+			for n, d in self.forme.items()}
 		self.bm.to_mesh(self.me)
 		self.bm.free()
 		self.me.update()
+		if forme:
+			self.ob.shape_key_add(name="Basis", from_mix=False)
+			for n, d in forme.items():
+				k = self.ob.shape_key_add(name=n, from_mix=False)
+				for i, co in d.items():
+					k.data[i].co = co
 		self.ob.parent = self.arm
 		m = self.ob.modifiers.new("Armature", 'ARMATURE')
 		m.object = self.arm
@@ -933,7 +1063,8 @@ def esporta(corpi):
 		export_animation_mode='ACTIONS',
 		export_yup=True,
 		export_skins=True,
-		export_morph=False,
+		export_morph=True,
+		export_morph_normal=False,
 		export_materials='EXPORT',
 	)
 	tri = sum(sum(max(1, len(p.vertices) - 2) for p in o.data.polygons)
@@ -943,39 +1074,80 @@ def esporta(corpi):
 		len(corpi), tri // max(1, len(corpi))))
 
 
+def _tri(o):
+	return sum(max(1, len(p.vertices) - 2) for p in o.data.polygons)
+
+
 def main():
+	global USCITA
+	argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
+	if argv:
+		USCITA = os.path.abspath(argv[0])
+	os.makedirs(os.path.dirname(USCITA), exist_ok=True)
 	arm = carica()
 	print("  scheletro: %d osse · %d animazioni" % (
 		len(arm.data.bones), len(bpy.data.actions)))
 	for nome, colore, ruvido in MATERIALI:
 		_mat(nome, colore, ruvido)
 
+	# **'A capa e 'o cuorpo, ognuno 'a casa soja** (0.66). Se i due moduli
+	# ci sono, i pezzi li fanno loro; se no, il pupo della 0.49. Con
+	# `PUPO_VECCHIO=testa` (o `corpo`) nell'ambiente uno dei due si salta:
+	# serve a provare un modulo mentre l'altro è ancora in cantiere.
+	vecchi = os.environ.get("PUPO_VECCHIO", "").split(",")
+	T = K = None
+	if "testa" not in vecchi:
+		try:
+			import pupo_testa as T
+		except ImportError:
+			T = None
+	if "corpo" not in vecchi:
+		try:
+			import pupo_corpo as K
+		except ImportError:
+			K = None
+
 	# **Capille e baffe stanno 'a parte.** Il gioco chiede da sempre
 	# `bald` e `moustache`, e finché tutto stava in una mesh sola l'unico
 	# modo di "togliere" i capelli era **tingerli color pelle** — cioè un
 	# pelato con una calotta di carne in testa, e le sopracciglia sparite
 	# assieme. Due oggetti in più e il gioco li cancella davvero.
+	if T is not None:
+		fatti_testa = T.pezzi()
+	else:
+		fatti_testa = [("testa", lambda gg: testa(gg, {})),
+			("capelli", capelli), ("baffi", baffi)]
+	if K is not None:
+		fatti_soli = K.pezzi()
+	else:
+		fatti_soli = [("banda_rossa", banda_rossa)]
 	pezzi = []
-	for nome, fn in (("testa", lambda gg: testa(gg, {})),
-			("capelli", capelli), ("baffi", baffi),
-			("banda_rossa", banda_rossa)):
+	for nome, fn in list(fatti_testa) + list(fatti_soli):
 		g = Pupo(nome, arm)
 		fn(g)
 		pezzi.append(g.chiudi())
 
+	corporature = getattr(K, "CORPORATURE", CORPORATURE) if K else CORPORATURE
 	corpi = []
-	for nome, corp in CORPORATURE.items():
-		ob = costruisci(arm, "corpo_" + nome, corp)
+	for nome, corp in corporature.items():
+		if K is not None:
+			g = Pupo("corpo_" + nome, arm)
+			K.corpo(g, corp)
+			ob = g.chiudi()
+			for famiglia, fn in K.extra():
+				gx = Pupo("%s_%s" % (famiglia, nome), arm)
+				fn(gx, corp)
+				pezzi.append(gx.chiudi())
+		else:
+			ob = costruisci(arm, "corpo_" + nome, corp)
 		corpi.append(ob)
 		lo = min(v.co.z for v in ob.data.vertices)
 		hi = max(v.co.z for v in ob.data.vertices)
 		lar = max(abs(v.co.x) for v in ob.data.vertices) * 2.0
 		print("    %-10s %5d tri · alto %.3f (%.3f→%.3f) · spalle %.3f" % (
-			nome, sum(max(1, len(p.vertices) - 2) for p in ob.data.polygons),
-			hi - lo, lo, hi, lar))
-	extra = sum(sum(max(1, len(p.vertices) - 2) for p in o.data.polygons)
-		for o in pezzi)
-	print("    testa+capelli+baffi+banda %d tri" % extra)
+			nome, _tri(ob), hi - lo, lo, hi, lar))
+	for o in sorted(pezzi, key=lambda o: o.name):
+		print("    %-26s %5d tri" % (o.name, _tri(o)))
 	esporta(corpi)
 
 

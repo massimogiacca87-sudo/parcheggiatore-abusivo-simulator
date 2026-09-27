@@ -553,9 +553,71 @@ func lascia_osso(osso: String) -> void:
 	_puntate.erase(str(OSSA.get(osso, osso)))
 
 
+# ---------------------------------------------------------------------------
+# **'E pparpetole** (0.66)
+# ---------------------------------------------------------------------------
+#
+# Il pupo nuovo ha le palpebre, e le palpebre hanno una forma in più nel
+# file (`chiudi`, una blend shape): 0 aperte come le vuole la faccia, 1
+# chiuse. Una persona sbatte gli occhi ogni tre-quattro secondi, e uno che
+# non lo fa mai — a un metro e mezzo, mentre ti parla — sembra un
+# manichino anche se muove tutto il resto. Chi sta a terra li tiene chiusi.
+# Sugli altri corpi (e sul pupo vecchio) le palpebre non ci sono e qui non
+# succede niente.
+const AMMICCA_OGNI := Vector2(2.2, 5.5)
+const AMMICCA_DURA := 0.14
+var _palpebre: Array = []          # [MeshInstance3D, indice della forma]
+var _ammicca_fra: float = -1.0
+var _ammicca_t: float = 0.0
+var _chiuse_ora: float = 0.0
+
+
+func _trova_palpebre() -> void:
+	_palpebre.clear()
+	if _scheletro == null:
+		return
+	for c in _scheletro.get_children():
+		var mi := c as MeshInstance3D
+		if mi == null or mi.mesh == null or not str(mi.name).begins_with("palpebre"):
+			continue
+		var k: int = mi.find_blend_shape_by_name("chiudi")
+		if k >= 0:
+			_palpebre.append([mi, k])
+	_ammicca_fra = randf_range(0.3, AMMICCA_OGNI.y)
+
+
+func _passo_palpebre(delta: float) -> void:
+	if _ammicca_fra < 0.0:
+		_trova_palpebre()
+	if _palpebre.is_empty():
+		return
+	var chiuse: float = 0.0
+	if _steso:
+		chiuse = 1.0
+	else:
+		_ammicca_fra -= delta
+		if _ammicca_fra <= 0.0:
+			_ammicca_t = AMMICCA_DURA
+			_ammicca_fra = randf_range(AMMICCA_OGNI.x, AMMICCA_OGNI.y)
+		if _ammicca_t > 0.0:
+			_ammicca_t -= delta
+			# Giù svelte, su un filo più piano: un triangolo storto.
+			var f: float = 1.0 - clampf(_ammicca_t / AMMICCA_DURA, 0.0, 1.0)
+			chiuse = f / 0.4 if f < 0.4 else 1.0 - (f - 0.4) / 0.6
+	# Si scrive solo quando cambia: il resto del tempo sono aperte.
+	if is_equal_approx(chiuse, _chiuse_ora):
+		return
+	_chiuse_ora = chiuse
+	for p in _palpebre:
+		var mi: MeshInstance3D = p[0]
+		if is_instance_valid(mi):
+			mi.set_blend_shape_value(int(p[1]), chiuse)
+
+
 func _process(delta: float) -> void:
 	_misura_passo(delta)
 	_passo_parlata(delta)
+	_passo_palpebre(delta)
 	if _scheletro == null:
 		return
 	for nome in _tenute:

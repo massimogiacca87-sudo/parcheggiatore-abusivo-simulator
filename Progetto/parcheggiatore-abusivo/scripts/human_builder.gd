@@ -52,6 +52,48 @@ const HAIR_COLORS := [
 	Color(0.74, 0.72, 0.70),
 ]
 
+## **'E facce d''o pupo nuovo** (0.66).
+##
+## Fino alla 0.65 il pupo aveva una faccia sola: due palle bianche, due
+## stecchette per sopracciglia e una per bocca, e una calotta di capelli
+## uguale per tutti — uomini, donne, guaglioni e nonne. Da vicino erano
+## tutti fratelli. Il pupo nuovo porta dentro al file **tanti pezzi quanti
+## sono i modi di avere una faccia a Napoli**, e ognuno si accende come i
+## baffi: si tiene quello scelto, gli altri si buttano prima che il corpo
+## entri in scena (non costano niente a schermo).
+##
+## I pezzi di geometria (oggetti nel file, `<pezzo>_<variante>`):
+const CAPELLI := ["corti", "gellati", "ricci", "sfumati", "stempiati",
+	"signora", "tuppo", "lunghi"]
+const PALPEBRE := ["sveglie", "stanche", "arraggiate", "furbe"]
+const SOPRACCIGLIA := ["dritte", "arraggiate", "preoccupate", "scettiche",
+	"sottili"]
+const NASI := ["piccolo", "grosso", "aquilino"]
+## I pezzi dipinti (strati della faccia, `assets/textures/pupo/`): la
+## bocca, la barba e le rughe si disegnano sulla pelle dallo shader
+## `pupo_faccia.gdshader`. `""` = niente.
+const BOCCHE := ["dritta", "cazzimma", "sorriso", "storta", "preoccupata",
+	"rossetto"]
+const BARBE := ["", "sfatta", "pizzetto", "barba", "basette"]
+const RUGHE := ["", "stanco", "vecchio", "vecchia", "arraggiato"]
+## I pezzi che dipendono dalla corporatura (il colletto del panzone non
+## entra sul sicco): nel file si chiamano `<pezzo>_<corporatura>`, e si
+## accendono con `opts[<pezzo>] = true`.
+const EXTRA_CORPO := ["colletto", "cintura", "catenina"]
+## Gli occhi: quasi tutti scuri, come in via Toledo.
+const OCCHI := [
+	Color(0.20, 0.12, 0.07), Color(0.20, 0.12, 0.07), Color(0.28, 0.17, 0.09),
+	Color(0.28, 0.17, 0.09), Color(0.36, 0.28, 0.14), Color(0.26, 0.34, 0.20),
+	Color(0.30, 0.40, 0.50),
+]
+const TEX_PUPO := "res://assets/textures/pupo/"
+const SHADER_FACCIA := "res://assets/shaders/pupo_faccia.gdshader"
+
+## Il caso delle facce ha il suo dado: il gioco non semina il caso globale,
+## ma chi costruisce la città sì usa i suoi, e una faccia in più non deve
+## spostare niente a nessuno.
+static var _dado_facce: RandomNumberGenerator = null
+
 ## Le ossa a cui il gioco appende roba. A sinistra il nome che usa il
 ## gioco, a destra quello vero dello scheletro Unreal.
 ## **`arms` so' 'e mmane, no 'e spalle.** Dalla 0.48 in poi `parts["arms"]`
@@ -89,10 +131,12 @@ static func build(shirt_color: Color, pants_color: Color, model_name: String = "
 		opts["skin"] = SKIN_TONES[randi() % SKIN_TONES.size()]
 	if not opts.has("hair"):
 		opts["hair"] = HAIR_COLORS[randi() % HAIR_COLORS.size()]
+	var femmina: bool = _quale_corpo(opts) == "corpo_femmina"
 	if not opts.has("bald"):
-		opts["bald"] = randf() < 0.18
+		opts["bald"] = randf() < 0.18 and not femmina
 	if not opts.has("moustache"):
-		opts["moustache"] = randf() < 0.32
+		opts["moustache"] = randf() < 0.32 and not femmina
+	_scegli_faccia(opts, femmina)
 
 	if _scena == null:
 		if not ResourceLoader.exists(PUPO):
@@ -794,13 +838,86 @@ static func _quale_corpo(opts: Dictionary) -> String:
 	return "corpo_normale"
 
 
+## **Chi tene che faccia** (0.66). Riempie le opzioni della faccia che chi
+## costruisce il personaggio non ha detto. Chi le dice (i personaggi della
+## storia: 'o Rre, Borrelli, 'a signora d''o lotto) le tiene; per gli altri
+## si pesca, con le probabilità di una strada di Napoli: tanti occhi
+## scuri, tanti capelli corti o ingellati, un po' di barba sfatta, e i
+## capelli bianchi che portano le rughe.
+static func _scegli_faccia(opts: Dictionary, femmina: bool) -> void:
+	if _dado_facce == null:
+		_dado_facce = RandomNumberGenerator.new()
+		_dado_facce.randomize()
+	var d := _dado_facce
+	var capelli_col := Color(opts.get("hair", Color(0.16, 0.11, 0.08)))
+	var bianco: bool = capelli_col.s < 0.25 and capelli_col.v > 0.40
+	if not opts.has("capelli"):
+		if femmina:
+			opts["capelli"] = _pesca(d, ["tuppo", "signora"], [50, 50]) if bianco \
+				else _pesca(d, ["lunghi", "signora", "tuppo"], [45, 35, 20])
+		else:
+			opts["capelli"] = _pesca(d, ["stempiati", "corti", "gellati"], [45, 35, 20]) \
+				if bianco else _pesca(d, ["corti", "gellati", "ricci", "sfumati"],
+				[35, 20, 20, 25])
+	if not opts.has("palpebre"):
+		opts["palpebre"] = _pesca(d, ["sveglie", "stanche", "furbe", "arraggiate"],
+			[35, 35, 15, 15])
+	if not opts.has("sopracciglia"):
+		opts["sopracciglia"] = "sottili" if femmina and d.randf() < 0.7 else \
+			_pesca(d, ["dritte", "preoccupate", "arraggiate", "scettiche"],
+			[45, 15, 20, 20])
+	if not opts.has("naso"):
+		opts["naso"] = _pesca(d, ["piccolo", "grosso", "aquilino"],
+			[75, 10, 15] if femmina else [35, 35, 30])
+	if not opts.has("bocca"):
+		opts["bocca"] = _pesca(d, ["dritta", "sorriso", "rossetto", "preoccupata"],
+			[35, 25, 30, 10]) if femmina else _pesca(d, ["dritta", "cazzimma",
+			"sorriso", "storta", "preoccupata"], [40, 20, 15, 15, 10])
+	if not opts.has("barba"):
+		opts["barba"] = "" if femmina else _pesca(d, ["", "sfatta", "pizzetto",
+			"barba", "basette"], [45, 30, 10, 10, 5])
+	if not opts.has("rughe"):
+		if bianco:
+			opts["rughe"] = "vecchia" if femmina else "vecchio"
+		else:
+			opts["rughe"] = _pesca(d, ["", "stanco", "arraggiato"], [70, 22, 8])
+	if not opts.has("occhi"):
+		opts["occhi"] = OCCHI[d.randi() % OCCHI.size()]
+
+
+static func _pesca(d: RandomNumberGenerator, cosa: Array, pesi: Array) -> String:
+	var tot := 0.0
+	for p in pesi:
+		tot += float(p)
+	var r: float = d.randf() * tot
+	for i in range(cosa.size()):
+		r -= float(pesi[i])
+		if r <= 0.0:
+			return str(cosa[i])
+	return str(cosa[-1])
+
+
 ## Accende un corpo solo e butta gli altri, più capelli e baffi secondo le
 ## opzioni. Le mesh non stanno ancora nell'albero, quindi `free()` è
 ## immediato e sicuro.
+##
+## **Dalla 0.66** anche i pezzi della faccia: di ogni famiglia
+## (`capelli_*`, `palpebre_*`, `sopracciglia_*`, `naso_*`) resta solo quello
+## scelto, e i pezzi della corporatura (`colletto_panzone`,
+## `cintura_magro`…) restano solo se chiesti e solo per il corpo giusto. Il
+## pupo vecchio, che ha un `capelli` solo e nessuno di questi pezzi, passa
+## di qua come prima.
 static func _scegli_pezzi(modello: Node3D, opts: Dictionary) -> void:
 	var voluto := _quale_corpo(opts)
+	var corporatura: String = voluto.trim_prefix("corpo_")
 	var pelato := bool(opts.get("bald", false))
 	var baffi := bool(opts.get("moustache", false))
+	var scelti := {
+		"capelli": str(opts.get("capelli", "corti")),
+		"palpebre": str(opts.get("palpebre", "sveglie")),
+		"sopracciglia": str(opts.get("sopracciglia", "dritte")),
+		"naso": str(opts.get("naso", "piccolo")),
+	}
 	# **`senza_testa` serve ô giocatore, e sulo a isso.**
 	# In prima persona la telecamera sta dentro al cranio. Prima il cranio
 	# si provava a nascondere da fuori con `_hide_above()`, che spegne i
@@ -817,12 +934,22 @@ static func _scegli_pezzi(modello: Node3D, opts: Dictionary) -> void:
 		var m: MeshInstance3D = mi
 		var n: String = str(m.name)
 		var butta := false
+		var famiglia: String = n.get_slice("_", 0)
+		var variante: String = n.substr(famiglia.length() + 1)
 		if n.begins_with("corpo_"):
 			butta = (n != voluto)
 		elif n.begins_with("testa"):
 			butta = senza_testa
-		elif n.begins_with("capelli"):
+		elif n == "capelli":
 			butta = pelato or senza_testa
+		elif famiglia == "capelli":
+			butta = pelato or senza_testa or variante != scelti["capelli"]
+		elif scelti.has(famiglia):
+			butta = senza_testa or variante != scelti[famiglia]
+		elif EXTRA_CORPO.has(famiglia):
+			butta = variante != corporatura or not bool(opts.get(famiglia, false))
+		elif n == "gonna":
+			butta = not bool(opts.get("gonna", false))
 		elif n.begins_with("baffi"):
 			butta = (not baffi) or senza_testa
 		elif n.begins_with("banda_rossa"):
@@ -840,12 +967,26 @@ static func _scegli_pezzi(modello: Node3D, opts: Dictionary) -> void:
 ## stessa mesh possono avere camicie diverse senza duplicare niente.
 static func _vesti(modello: Node3D, camicia: Color, pantaloni: Color,
 		opts: Dictionary) -> void:
+	var pelle := Color(opts.get("skin", Color(0.86, 0.68, 0.54)))
+	var capelli := Color(opts.get("hair", Color(0.16, 0.11, 0.08)))
+	# **'A gonna e 'e cazette** (0.66): chi porta la gonna ha la gonna del
+	# colore dei pantaloni, e sotto le calze (i tubi dei pantaloni, che
+	# sotto al ginocchio restano scoperti): velate color pelle, o nere per
+	# chi va vestita di scuro.
+	var gonna := bool(opts.get("gonna", false))
+	var calze: Color = pantaloni
+	if gonna:
+		calze = Color(opts.get("calze", pelle.darkened(0.12) if pantaloni.v > 0.25
+			else Color(0.07, 0.07, 0.08)))
 	var colori := {
-		"pelle": Color(opts.get("skin", Color(0.86, 0.68, 0.54))),
+		"pelle": pelle,
+		"faccia": pelle,
 		"camicia": camicia,
-		"pantaloni": pantaloni,
-		"scarpe": Color(0.10, 0.09, 0.09),
-		"capelli": Color(opts.get("hair", Color(0.16, 0.11, 0.08))),
+		"pantaloni": calze,
+		"gonna": pantaloni,
+		"scarpe": Color(opts.get("scarpe", Color(0.10, 0.09, 0.09))),
+		"capelli": capelli,
+		"iride": Color(opts.get("occhi", OCCHI[0])),
 		"banda": Color(opts.get("banda_colore", Color(0.64, 0.09, 0.11))),
 	}
 	# **'O pelato nun se tegne cchiù.** Prima "togliere i capelli" voleva
@@ -854,9 +995,13 @@ static func _vesti(modello: Node3D, camicia: Color, pantaloni: Color,
 	# restava pure **senza faccia**. Adesso i capelli sono un oggetto e si
 	# cancellano (`_scegli_pezzi`), e i tratti hanno il loro materiale.
 	var ruvido := {
-		"pelle": 0.72, "camicia": 0.92, "pantaloni": 0.92,
-		"scarpe": 0.55, "capelli": 0.95, "banda": 0.88,
+		"pelle": 0.72, "faccia": 0.72, "camicia": 0.92, "pantaloni": 0.92,
+		"gonna": 0.92, "scarpe": 0.55, "capelli": 0.95, "banda": 0.88,
+		"iride": 0.30,
 	}
+	# La faccia si fa una volta per persona e si usa su tutte le superfici
+	# `faccia` (sta tutta nella testa, ma non si sa mai).
+	var faccia: Material = null
 	var mesh_list: Array = []
 	_mesh_di(modello, mesh_list)
 	for mi in mesh_list:
@@ -873,8 +1018,80 @@ static func _vesti(modello: Node3D, camicia: Color, pantaloni: Color,
 			var chiave: String = nome.split(".")[0]
 			if not colori.has(chiave):
 				continue
+			if chiave == "faccia":
+				if faccia == null:
+					faccia = _materiale_faccia(pelle, capelli, opts)
+				m.set_surface_override_material(i, faccia)
+				continue
 			var mat := StandardMaterial3D.new()
 			mat.albedo_color = colori[chiave]
 			mat.roughness = float(ruvido.get(chiave, 0.9))
 			mat.metallic = 0.0
+			# **'A stoffa e 'e ciocche** (0.66): la tinta la decide il
+			# gioco, la trama sta in una texture grigia che la moltiplica.
+			var trama: Texture2D = _trama(chiave)
+			if trama != null:
+				mat.albedo_texture = trama
 			m.set_surface_override_material(i, mat)
+
+
+## Le texture grigie che danno la trama alla tinta: la stoffa della
+## camicia, quella dei pantaloni, le ciocche dei capelli, l'iride. Mancano?
+## Si tinge a colore pieno come prima.
+const TRAME := {
+	"camicia": "stoffa_camicia.png", "gonna": "stoffa_camicia.png",
+	"pantaloni": "stoffa_cazune.png", "capelli": "ciocche.png",
+	"iride": "iride.png",
+}
+static var _trame: Dictionary = {}
+
+
+static func _trama(chiave: String) -> Texture2D:
+	if not TRAME.has(chiave):
+		return null
+	return _tex_pupo(str(TRAME[chiave]))
+
+
+static func _tex_pupo(file: String) -> Texture2D:
+	if file == "":
+		return null
+	if not _trame.has(file):
+		var p: String = TEX_PUPO + file
+		_trame[file] = load(p) if ResourceLoader.exists(p) else null
+	return _trame[file]
+
+
+static var _shader_faccia: Shader = null
+
+
+## **'A faccia dipinta** (0.66): la pelle della testa con sopra la bocca,
+## la barba e le rughe scelte, disegnate dallo shader `pupo_faccia`. Senza
+## shader (o su un pupo vecchio, che non ha la superficie `faccia`) si
+## torna alla pelle liscia.
+static func _materiale_faccia(pelle: Color, capelli: Color,
+		opts: Dictionary) -> Material:
+	if _shader_faccia == null and ResourceLoader.exists(SHADER_FACCIA):
+		_shader_faccia = load(SHADER_FACCIA)
+	if _shader_faccia == null:
+		var liscia := StandardMaterial3D.new()
+		liscia.albedo_color = pelle
+		liscia.roughness = 0.72
+		return liscia
+	var mat := ShaderMaterial.new()
+	mat.shader = _shader_faccia
+	mat.set_shader_parameter("pelle", pelle)
+	mat.set_shader_parameter("peli", capelli)
+	var bocca: Texture2D = _tex_pupo("bocca_%s.png" % str(opts.get("bocca", "dritta")))
+	var barba: String = str(opts.get("barba", ""))
+	var rughe: String = str(opts.get("rughe", ""))
+	if bocca != null:
+		mat.set_shader_parameter("tex_bocca", bocca)
+	if barba != "":
+		var t: Texture2D = _tex_pupo("barba_%s.png" % barba)
+		if t != null:
+			mat.set_shader_parameter("tex_barba", t)
+	if rughe != "":
+		var t2: Texture2D = _tex_pupo("rughe_%s.png" % rughe)
+		if t2 != null:
+			mat.set_shader_parameter("tex_rughe", t2)
+	return mat
