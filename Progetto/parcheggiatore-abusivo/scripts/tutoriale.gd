@@ -158,6 +158,21 @@ const PAGINE := [
 		"chiusa": "Col fierro in mano lo vedi, e vedi il colpo: la crocetta dice che hai preso.",
 	},
 	{
+		"titolo": "IL RE E LE STRISCE BLU",
+		"sopra": "Dalla 0.64: uno che ti mette alla prova, e il Comune che ti ruba la piazza.",
+		"righe": [
+			["'O Rre d''e Parcheggi", "Dal terzo giorno, in una piazza tua: corona, mantello rosso, paletta. Ti sfida."],
+			["[E] accetti", "Un minuto, le macchine le chiama lui e arrivano di corsa. Contano solo quelle DENTRO a un posto."],
+			["5 o più", "Ti regala una piazza (o 450 euro, se le hai già tutte)."],
+			["3 o 4", "Ti dà un guaglione che lavora per te (o 60 euro)."],
+			["1 o nessuna", "Ti corre dietro e ti mena. Non ti manda all'ospedale, ma fa male."],
+			["Le strisce blu", "Certe mattine il Comune le pitta in una piazza tua, coi parchimetri."],
+			["Finché c'è un parchimetro", "Il cliente paga la macchinetta e a te niente. Sfasciali: pugni o ferro."],
+			["Le strisce restano blu", "Il cliente fa come se l'avessi messo fuori dalle strisce. Pittura e pennello al Bazar, [E] accanto al posto."],
+		],
+		"chiusa": "La piazza torna tua quando i parchimetri sono tutti a terra e le strisce tutte bianche.",
+	},
+	{
 		"titolo": "DOVE SI PERDONO I SOLDI",
 		"sopra": "Ogni piazza ha il bar e il tabaccaio. In giro ci sono le sale e i tavolini.",
 		"righe": [
