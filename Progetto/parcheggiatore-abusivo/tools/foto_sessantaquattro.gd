@@ -76,6 +76,61 @@ func _ready() -> void:
 					spot.global_position, "pittanno")
 				await _scatta("pittanno")
 
+	if _vuoi("panaro"):
+		# 'O balcone 'e Donna Filumena (0.64): quello vero della città, col
+		# panaro calato.
+		var pan = get_tree().root.find_child("Panaro", true, false)
+		if pan != null:
+			pan.set("_richiesta", pan.RICHIESTE[0])
+			pan.set("_meta_cesto", 0.0)
+			(pan.get("_nonna") as Node3D).visible = true
+			await get_tree().create_timer(7.0).timeout
+			var pp: Vector3 = (pan as Node3D).global_position
+			var fuori: Vector3 = (pan as Node3D).global_transform.basis.z
+			var lato: Vector3 = Vector3(fuori.z, 0, -fuori.x)
+			_cam.fov = 55
+			_scatta_da(pp + fuori * 6.5 + lato * 1.5 + Vector3(0, 1.6, 0),
+				pp + fuori * 0.8 + Vector3(0, 5.0, 0), "panaro")
+			await _scatta("panaro")
+			_cam.fov = 40
+			_scatta_da(pp + fuori * 4.0 + lato * 3.0 + Vector3(0, 7.5, 0),
+				pp + fuori * 0.6 + Vector3(0, 8.6, 0), "panaro_balcone")
+			await _scatta("panaro_balcone")
+			_cam.fov = 60
+
+	if _vuoi("pioggia"):
+		# 'E pozzanghere d''o browser (0.64): solo col renderer Compatibility
+		# (questo script gira con opengl3, cioè come la build web).
+		GameManager.tipo_giornata = "pioggia"
+		var jv = load("res://scripts/jurnata_vista.gd").new()
+		jv.name = "JurnataVistaFoto"
+		get_tree().root.find_child("Citta", true, false).add_child(jv)
+		await get_tree().create_timer(2.0).timeout
+		var pw = jv.find_child("PozzangheraWeb", true, false)
+		print("  pozzanghere web: %s" % ("nisciuna" if pw == null
+			else str((pw as MultiMeshInstance3D).multimesh.instance_count)))
+		_cam.fov = 60
+		if pw != null:
+			var mm: MultiMesh = (pw as MultiMeshInstance3D).multimesh
+			var t0: Transform3D = mm.get_instance_transform(0)
+			print("  prima pozzanghera: %s, visibile %s, dentro %s" % [str(t0.origin),
+				str((pw as Node3D).is_visible_in_tree()), str((pw as Node3D).global_transform.origin)])
+			# Una di quelle della piazza di casa, da un metro e settanta.
+			var t1: Transform3D = mm.get_instance_transform(mm.instance_count / 2)
+			for i in range(mm.instance_count):
+				var o: Vector3 = mm.get_instance_transform(i).origin
+				if o.x > 18.0 and o.x < 44.0 and o.z > 38.0 and o.z < 58.0:
+					t1 = mm.get_instance_transform(i)
+					break
+			_scatta_da(t1.origin + Vector3(0.0, 1.7, 4.5), t1.origin, "pioggia_vicino")
+			await _scatta("pioggia_vicino")
+		_scatta_da(Vector3(31, 2.2, 52), Vector3(31, 0, 36), "pioggia")
+		await _scatta("pioggia")
+		_scatta_da(Vector3(78, 2.0, 30), Vector3(80, 0, 50), "pioggia_corso")
+		await _scatta("pioggia_corso")
+		GameManager.tipo_giornata = "normale"
+		jv.queue_free()
+
 	if _vuoi("sfida"):
 		GameManager.strisce_blu.clear()
 		get_tree().call_group("parking_spots", "metti_blu", false)

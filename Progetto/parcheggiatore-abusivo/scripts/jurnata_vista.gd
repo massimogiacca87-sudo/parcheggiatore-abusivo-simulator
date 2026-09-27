@@ -181,6 +181,191 @@ func _fa_chiovere() -> void:
 	add_child(s)
 
 	GameManager.avvisa_strada("Ha accummenciato a chiòvere.")
+	# (0.64) Nella build web le pozzanghere a riflessi non ci sono (vedi
+	# `pozzanghere.gd`): ci vanno quelle fatte a chiazze.
+	if RenderingServer.get_rendering_device() == null:
+		call_deferred("_pozzanghere_web")
+
+
+# ---------------------------------------------------------------------------
+# 'E POZZANGHERE D''O BROWSER (0.64)
+# ---------------------------------------------------------------------------
+#
+# Le pozzanghere della 0.62 sono uno shader a tutto schermo che riflette la
+# città, e vogliono la profondità della scena: il renderer Compatibility
+# (quello del browser) non gliela dà, e lì non si costruiscono. Senza,
+# nella build web la pioggia cadeva su un selciato asciutto.
+#
+# Il ripiego è quello scritto nella roadmap: **chiazze d'acqua appoggiate
+# per terra**, scure e lucide, con l'orlo sfumato. Riflettono il cielo
+# (il riflesso dell'ambiente il Compatibility ce l'ha), e sono ovali
+# accavallati due o tre alla volta, così non sembrano dischi. Tutte in un
+# MultiMesh solo, un materiale solo: una chiamata di disegno per la città.
+# Sono ferme nel mondo (`top_level`): questo nodo invece segue il giocatore.
+
+const POZZANGHERE_QUANTE: int = 420
+## Nella piazza di casa, dove si passa la giornata, ce ne sono sempre.
+const POZZANGHERE_CASA: int = 26
+
+
+## Dove si può formare una pozzanghera: rettangoli `[x0, z0, x1, z1]` di
+## strada vera, al livello del manto. **Solo strada**: i marciapiedi, il
+## salotto della piazza e le piazze conquistate stanno dodici centimetri
+## più su senza avere un corpo (il raggio non li vede), e un'acqua messa lì
+## sotto non si vede (la prima prova: 340 chiazze, zero a schermo).
+static func _dove_se_bagna() -> Array:
+	var Citta = load("res://scripts/citta_3d.gd")
+	var zone: Array = []
+	for z in Citta.ZONE:
+		zone.append(Rect2(float(z["rect"][0]) - 0.5, float(z["rect"][1]) - 0.5,
+			float(z["rect"][2]) - float(z["rect"][0]) + 1.0,
+			float(z["rect"][3]) - float(z["rect"][1]) + 1.0))
+	var fore: Array = []
+	for s in Citta.STRADE:
+		var x0: float = float(s[0])
+		var z0: float = float(s[1])
+		var x1: float = float(s[2])
+		var z1: float = float(s[3])
+		# Le strade larghe hanno il marciapiede di un metro e quaranta sui
+		# due lati lunghi: l'acqua resta in carreggiata.
+		if minf(x1 - x0, z1 - z0) > 5.5:
+			if z1 - z0 > x1 - x0:
+				x0 += 1.6
+				x1 -= 1.6
+			else:
+				z0 += 1.6
+				z1 -= 1.6
+		fore.append([x0, z0, x1, z1])
+	for s in Citta.SLARGHI:
+		fore.append([float(s[0]), float(s[1]), float(s[2]), float(s[3])])
+	return [fore, zone]
+
+
+func _pozzanghere_web() -> void:
+	# Qualche fotogramma, perché i corpi della città siano nel mondo fisico
+	# (serve il raggio per non metterle sotto a una panchina o a un cassone).
+	for _i in range(3):
+		await get_tree().process_frame
+	var spazio := get_world_3d().direct_space_state
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 64064 + GameManager.giornata
+	var Citta = load("res://scripts/citta_3d.gd")
+	var dati: Array = _dove_se_bagna()
+	var strade: Array = dati[0]
+	var zone: Array = dati[1]
+	var aree: Array = []
+	var tot: float = 0.0
+	for r in strade:
+		var ar: float = maxf(0.0, (float(r[2]) - float(r[0])) * (float(r[3]) - float(r[1])))
+		tot += ar
+		aree.append(tot)
+	# La piazza di casa: l'asfalto fra i marciapiedi, fuori dal salotto.
+	var casa: Array = Citta.ZONE[0]["rect"]
+	var casa_x0: float = float(casa[0]) + 3.4
+	var casa_x1: float = float(casa[2]) - 3.4
+	var casa_z0: float = float(casa[1]) + 3.4
+	var casa_z1: float = float(casa[3]) - 0.5
+	var salotto := Rect2(
+		(float(casa[0]) + float(casa[2])) * 0.5 - 7.4,
+		float(casa[1]) + (float(casa[3]) - float(casa[1])) * 0.45 - 8.1, 14.8, 16.2)
+	var forme: Array = []
+	var fatte := 0
+	var in_casa := 0
+	var tentativi := 0
+	while fatte < POZZANGHERE_QUANTE + POZZANGHERE_CASA and tentativi < 9000:
+		tentativi += 1
+		var x: float
+		var z: float
+		var a_casa: bool = in_casa < POZZANGHERE_CASA
+		if a_casa:
+			x = rng.randf_range(casa_x0, casa_x1)
+			z = rng.randf_range(casa_z0, casa_z1)
+			if salotto.has_point(Vector2(x, z)):
+				continue
+		else:
+			var t: float = rng.randf() * tot
+			var k: int = aree.bsearch(t)
+			var r: Array = strade[mini(k, strade.size() - 1)]
+			x = rng.randf_range(float(r[0]), float(r[2]))
+			z = rng.randf_range(float(r[1]), float(r[3]))
+			var in_zona := false
+			for zr in zone:
+				if (zr as Rect2).has_point(Vector2(x, z)):
+					in_zona = true
+					break
+			if in_zona:
+				continue
+		var p := Vector3(x, 0.0, z)
+		if Citta.dint_ô_palazzo(p, 0.6):
+			continue
+		var base: float = Collina.alzata(x, z)
+		var q := PhysicsRayQueryParameters3D.create(Vector3(x, base + 3.0, z),
+			Vector3(x, base - 1.0, z), 1)
+		var colpo: Dictionary = spazio.intersect_ray(q)
+		if not colpo.is_empty() and (colpo["position"] as Vector3).y > base + 0.06:
+			continue # un gradino, una panchina, un cassone: no
+		# Sopra al manto (0,01), alla canaletta dei vicoli e alle righe
+		# bianche (0,04): se no l'acqua sta sotto e non si vede.
+		var y: float = base + 0.046
+		fatte += 1
+		if a_casa:
+			in_casa += 1
+		# Una pozzanghera = due o tre ovali accavallati, così non è un disco.
+		var grande: float = rng.randf_range(0.6, 1.9)
+		var giro: float = rng.randf_range(0.0, TAU)
+		for k2 in range(2 + int(rng.randf() < 0.4)):
+			var off := Vector3(rng.randf_range(-0.45, 0.45), 0.0,
+				rng.randf_range(-0.45, 0.45)) * grande
+			var bb := Basis(Vector3.UP, giro + rng.randf_range(-0.6, 0.6))
+			bb = bb.scaled(Vector3(grande * rng.randf_range(0.8, 1.3), 1.0,
+				grande * rng.randf_range(0.45, 0.8)))
+			forme.append(Transform3D(bb, Vector3(p.x + off.x, y + 0.002 * k2, p.z + off.z)))
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(1.0, 1.0)
+	mm.mesh = pm
+	mm.instance_count = forme.size()
+	for i in range(forme.size()):
+		mm.set_instance_transform(i, forme[i])
+	var mi := MultiMeshInstance3D.new()
+	mi.name = "PozzangheraWeb"
+	mi.top_level = true
+	mi.multimesh = mm
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.material_override = _acqua_ferma()
+	add_child(mi)
+	mi.global_transform = Transform3D.IDENTITY
+
+
+## L'acqua ferma: scura, lucida, con l'orlo che sfuma nel selciato.
+func _acqua_ferma() -> StandardMaterial3D:
+	var g := Gradient.new()
+	g.set_color(0, Color(1, 1, 1, 1))
+	g.set_color(1, Color(1, 1, 1, 0))
+	g.add_point(0.62, Color(1, 1, 1, 0.92))
+	var t := GradientTexture2D.new()
+	t.gradient = g
+	t.fill = GradientTexture2D.FILL_RADIAL
+	t.fill_from = Vector2(0.5, 0.5)
+	t.fill_to = Vector2(1.0, 0.5)
+	t.width = 128
+	t.height = 128
+	# Scura, con un filo di lucido. **Non a specchio**: con la pioggia il
+	# cielo è bianco, la strada nella foschia è grigio chiaro, e un'acqua
+	# che riflette tutto il cielo di striscio veniva dello stesso colore
+	# della strada — la seconda foto ne mostrava una sola, e sembrava un
+	# riflesso sul selciato. Senza lo specchio delle pozzanghere vere (che
+	# riflettono i palazzi, non il cielo), la cosa che le fa leggere è il
+	# bagnato scuro.
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color(0.03, 0.034, 0.04, 0.84)
+	m.albedo_texture = t
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.roughness = 0.32
+	m.metallic = 0.0
+	m.metallic_specular = 0.28
+	return m
 
 
 func _segui_o_giocatore() -> void:
