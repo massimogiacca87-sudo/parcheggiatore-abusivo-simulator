@@ -3,8 +3,10 @@ extends StaticBody3D
 ##
 ## Arriva con le strisce blu (vedi `strisce_blu.gd`). Finché ne resta uno in
 ## piedi nella piazza, chi posteggia sulle strisce blu paga lui e non te.
-## Si sfascia a cazzotti o col ferro: otto punti, cioè sette pugni a mani
-## nude (e il fiato finisce), tre botte di cric, due di mazza.
+## Si sfascia a cazzotti o col ferro: otto punti, cioè quattro pugni a mani
+## nude (due punti l'uno: col fiato che finisce a sette pugni, tre
+## parchimetri non si sfasciano di fila senza un caffè), due botte di cric,
+## due di mazza.
 ##
 ## **Come si riconosce.** Non è una scatola grigia: è la colonnina che sta
 ## in tutte le strade d'Italia — il palo blu, il corpo grigio col tetto
