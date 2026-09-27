@@ -5634,21 +5634,44 @@ func _vigile_ar_cafe(pos: Vector3, guarda: Vector3) -> void:
 		banda.rotation.z = deg_to_rad(18.0)
 		banda.material_override = Tex.flat(Color(0.94, 0.94, 0.92), 0.6)
 		bones["chest"].add_child(banda)
+	# Il braccio destro piegato, con la tazzina all'altezza del petto.
+	#
+	# (0.64) **Puntato, no tenuto.** Con `hold_bone` il braccio restava
+	# congelato attorno alla posa di riposo del pupo: in foto il vigile aveva
+	# la mano dietro la spalla e la tazzina non si vedeva proprio. Adesso il
+	# braccio si punta (`animator.punta_osso`), e la tazzina sta dritta: è
+	# figlia del vigile, e la mano le presta solo la posizione.
+	var anim = parts.get("anim", null)
+	if anim != null and anim.has_method("punta_osso"):
+		anim.punta_osso("shoulder_r", Vector3(0.16, -0.88, -0.45))
+		anim.punta_osso("elbow_r", Vector3(-0.38, 0.42, -0.82))
 	if bones.has("hand_r"):
-		var tazzina := MeshInstance3D.new()
+		var tazzina := Node3D.new()
+		nodo.add_child(tazzina)
 		var tm := CylinderMesh.new()
 		tm.top_radius = 0.032
 		tm.bottom_radius = 0.024
 		tm.height = 0.05
-		tazzina.mesh = tm
-		tazzina.position = Vector3(0, -0.09, 0)
-		tazzina.material_override = Tex.flat(Color(0.95, 0.95, 0.93), 0.35)
-		bones["hand_r"].add_child(tazzina)
-	# Il braccio destro piegato, con la tazzina all'altezza del petto.
-	var anim = parts.get("anim", null)
-	if anim != null and anim.has_method("hold_bone"):
-		anim.hold_bone("shoulder_r", Vector3(-64.0, 0.0, -18.0), 1.0)
-		anim.hold_bone("elbow_r", Vector3(-96.0, 0.0, 0.0), 1.0)
+		var bianco := Tex.flat(Color(0.95, 0.95, 0.93), 0.35)
+		var t := MeshInstance3D.new()
+		t.mesh = tm
+		t.position = Vector3(0, 0.035, 0)
+		t.material_override = bianco
+		tazzina.add_child(t)
+		var pm := CylinderMesh.new()
+		pm.top_radius = 0.055
+		pm.bottom_radius = 0.05
+		pm.height = 0.008
+		var piattino := MeshInstance3D.new()
+		piattino.mesh = pm
+		piattino.material_override = bianco
+		tazzina.add_child(piattino)
+		var porta := RemoteTransform3D.new()
+		porta.position = Vector3(0, 0.07, 0.03)
+		porta.update_rotation = false
+		porta.update_scale = false
+		bones["hand_r"].add_child(porta)
+		porta.remote_path = porta.get_path_to(tazzina)
 	_lontananza(nodo, 90.0)
 
 

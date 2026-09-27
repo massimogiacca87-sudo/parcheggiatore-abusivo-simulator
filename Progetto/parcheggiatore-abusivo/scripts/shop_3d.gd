@@ -133,13 +133,14 @@ func _build_visual() -> void:
 	zio_root.rotation.y = -PI / 2.0 # guarda verso il cliente (+X locale)
 	add_child(zio_root)
 
-	# Occhiali scuri: 'O Zio non guarda mai nessuno negli occhi
+	# Occhiali scuri: 'O Zio non guarda mai nessuno negli occhi. Davanti
+	# agli occhi (+Z sull'osso della testa): fino alla 0.63 stavano sulla nuca.
 	if zio_parts["head"] != null:
 		var glasses := MeshInstance3D.new()
 		var glasses_mesh := BoxMesh.new()
-		glasses_mesh.size = Vector3(0.26, 0.055, 0.05)
+		glasses_mesh.size = Vector3(0.2, 0.045, 0.03)
 		glasses.mesh = glasses_mesh
-		glasses.position = Vector3(0, 0.16, -0.115)
+		glasses.position = Vector3(0, 0.118, 0.137)
 		glasses.material_override = Tex.flat(Color(0.04, 0.04, 0.05), 0.15, 0.5)
 		zio_parts["head"].add_child(glasses)
 

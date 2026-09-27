@@ -173,8 +173,11 @@ func _build_visual() -> void:
 	_visual_root = Node3D.new()
 	add_child(_visual_root)
 
-	# Camicia bianca sotto, pantaloni scuri.
-	var parts := Human.build(Color(0.95, 0.95, 0.93), Color(0.17, 0.18, 0.22),
+	# (0.64) La giacca di lino è la "maglia" del pupo stesso, e sopra ci
+	# vanno solo lo spacco con la camicia bianca e i revers. Prima era un
+	# cassone di parallelepipedi misurato sul corpo della 0.47, che non c'è
+	# più: largo il doppio del busto, girava attorno al pupo come una scatola.
+	var parts := Human.build(LINO, Color(0.17, 0.18, 0.22),
 		"borrelli", 1.82, {
 			"skin": Color(0.83, 0.66, 0.53),
 			"hair": Color(0.42, 0.40, 0.38), # sale e pepe
@@ -192,213 +195,197 @@ func _build_visual() -> void:
 		return # è stato montato un modello 3D esterno: niente da aggiungere
 
 	_build_face()
-	_build_jacket(parts["root"])
+	_build_jacket(parts)
 	_build_phone()
 
 
-## Occhiali tondi scuri, barba sale e pepe, capelli mossi: i tre tratti che
-## lo rendono riconoscibile senza doverne fare il ritratto.
+const LINO := Color(0.74, 0.75, 0.77)
+
+
+## Occhiali tondi, barba sale e pepe, capelli mossi: i tre tratti che lo
+## rendono riconoscibile senza doverne fare il ritratto.
+##
+## **'Nnanze è +Z.** Sull'osso della testa il davanti è +Z (misurato, vedi
+## `maestro_3d.gd` e `POSA_PUPO`): fino alla 0.63 qui stava tutto a −Z, e
+## Borrelli girava con gli occhiali e la barba **sulla nuca** — la faccia
+## liscia davanti, e dietro un secondo viso. L'ha visto la prima foto da
+## tutti i lati (`tools/foto_modello.gd`), dopo sei versioni.
 func _build_face() -> void:
 	var frame_mat := Tex.flat(Color(0.10, 0.09, 0.10), 0.35)
-	var lens_mat := Tex.flat(Color(0.55, 0.62, 0.70, 0.42), 0.1, 0.5)
+	var lens_mat := Tex.flat(Color(0.55, 0.62, 0.70, 0.35), 0.1, 0.5)
 	lens_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	var beard_mat := Tex.flat(Color(0.44, 0.42, 0.39), 0.95)
-	var hair_mat := Tex.flat(Color(0.40, 0.38, 0.36), 0.95)
+	var beard_mat := Tex.flat(Color(0.47, 0.45, 0.42), 0.95)
+	var hair_mat := Tex.flat(Color(0.42, 0.40, 0.38), 0.95)
 
-	# --- Occhiali: due cerchi spessi e il ponte ---
-	for ex in [-0.058, 0.058]:
-		var rim := MeshInstance3D.new()
+	# --- Occhiali: due cerchi spessi davanti agli occhi, il ponte, le aste ---
+	for ex in [-0.052, 0.052]:
 		var rim_mesh := TorusMesh.new()
-		rim_mesh.inner_radius = 0.034
-		rim_mesh.outer_radius = 0.048
-		rim_mesh.rings = 14
+		rim_mesh.inner_radius = 0.030
+		rim_mesh.outer_radius = 0.041
+		rim_mesh.rings = 16
 		rim_mesh.ring_segments = 8
-		rim.mesh = rim_mesh
-		rim.rotation.x = deg_to_rad(90)
-		rim.position = Vector3(ex, 0.158, -0.118)
-		rim.material_override = frame_mat
-		_head.add_child(rim)
-
-		var lens := MeshInstance3D.new()
+		_pezzo(_head, rim_mesh, Vector3(ex, OCCHI_Y, 0.142), frame_mat,
+			Vector3(deg_to_rad(90), 0, 0))
 		var lens_mesh := CylinderMesh.new()
-		lens_mesh.top_radius = 0.036
-		lens_mesh.bottom_radius = 0.036
-		lens_mesh.height = 0.006
-		lens.mesh = lens_mesh
-		lens.rotation.x = deg_to_rad(90)
-		lens.position = Vector3(ex, 0.158, -0.116)
-		lens.material_override = lens_mat
-		_head.add_child(lens)
-
-		# Astina verso l'orecchio
-		var arm := MeshInstance3D.new()
+		lens_mesh.top_radius = 0.031
+		lens_mesh.bottom_radius = 0.031
+		lens_mesh.height = 0.004
+		_pezzo(_head, lens_mesh, Vector3(ex, OCCHI_Y, 0.140), lens_mat,
+			Vector3(deg_to_rad(90), 0, 0))
+		# L'asta, dal cerchio all'orecchio.
 		var arm_mesh := BoxMesh.new()
-		arm_mesh.size = Vector3(0.012, 0.01, 0.12)
-		arm.mesh = arm_mesh
-		arm.position = Vector3(ex * 1.75, 0.16, -0.05)
-		arm.material_override = frame_mat
-		_head.add_child(arm)
-
-	var bridge := MeshInstance3D.new()
+		arm_mesh.size = Vector3(0.008, 0.008, 0.12)
+		_pezzo(_head, arm_mesh, Vector3(signf(ex) * 0.09, OCCHI_Y + 0.004, 0.08), frame_mat)
 	var bridge_mesh := BoxMesh.new()
-	bridge_mesh.size = Vector3(0.035, 0.011, 0.012)
-	bridge.mesh = bridge_mesh
-	bridge.position = Vector3(0, 0.163, -0.126)
-	bridge.material_override = frame_mat
-	_head.add_child(bridge)
+	bridge_mesh.size = Vector3(0.03, 0.008, 0.008)
+	_pezzo(_head, bridge_mesh, Vector3(0, OCCHI_Y + 0.006, 0.146), frame_mat)
 
-	# --- Barba piena: guance, mento, e i baffi sopra il labbro ---
-	var jaw := MeshInstance3D.new()
+	# --- Barba piena: guance e mascella, il mento, i baffi ---
 	var jaw_mesh := SphereMesh.new()
-	jaw_mesh.radius = 0.118
-	jaw_mesh.height = 0.2
-	jaw.mesh = jaw_mesh
-	jaw.position = Vector3(0, 0.055, -0.012)
-	jaw.scale = Vector3(1.0, 0.85, 1.02)
-	jaw.material_override = beard_mat
-	_head.add_child(jaw)
-
-	var chin := MeshInstance3D.new()
-	var chin_mesh := BoxMesh.new()
-	chin_mesh.size = Vector3(0.13, 0.075, 0.1)
-	chin.mesh = chin_mesh
-	chin.position = Vector3(0, 0.008, -0.075)
-	chin.material_override = beard_mat
-	_head.add_child(chin)
-
-	var lip := MeshInstance3D.new()
+	jaw_mesh.radius = 0.104
+	jaw_mesh.height = 0.208
+	jaw_mesh.radial_segments = 16
+	jaw_mesh.rings = 8
+	_pezzo(_head, jaw_mesh, Vector3(0, 0.036, 0.036), beard_mat, Vector3.ZERO,
+		Vector3(1.0, 0.6, 1.0))
+	var chin_mesh := SphereMesh.new()
+	chin_mesh.radius = 0.05
+	chin_mesh.height = 0.1
+	_pezzo(_head, chin_mesh, Vector3(0, 0.002, 0.098), beard_mat, Vector3.ZERO,
+		Vector3(1.1, 0.75, 0.75))
 	var lip_mesh := BoxMesh.new()
-	lip_mesh.size = Vector3(0.095, 0.024, 0.032)
-	lip.mesh = lip_mesh
-	lip.position = Vector3(0, 0.068, -0.127)
-	lip.material_override = beard_mat
-	_head.add_child(lip)
+	lip_mesh.size = Vector3(0.088, 0.022, 0.03)
+	_pezzo(_head, lip_mesh, Vector3(0, 0.079, 0.126), beard_mat)
 
-	# --- Capelli mossi: qualche ciuffo invece di una calotta liscia ---
-	for i in range(7):
-		var t: float = float(i) / 6.0
-		var tuft := MeshInstance3D.new()
-		var tuft_mesh := SphereMesh.new()
-		tuft_mesh.radius = 0.052
-		tuft_mesh.height = 0.09
-		tuft.mesh = tuft_mesh
-		tuft.position = Vector3(
-			lerpf(-0.1, 0.1, t),
-			0.225 - absf(t - 0.5) * 0.06,
-			0.02 + sin(t * PI) * -0.06)
-		tuft.scale = Vector3(1.0, 0.8, 1.15)
-		tuft.material_override = hair_mat
-		_head.add_child(tuft)
+	# --- Capelli mossi: due file di ciuffi sopra la fronte e in cima ---
+	for fila in [[0.058, 0.212], [-0.012, 0.226]]:
+		for x in [-0.058, 0.0, 0.058]:
+			var tuft_mesh := SphereMesh.new()
+			tuft_mesh.radius = 0.047
+			tuft_mesh.height = 0.094
+			tuft_mesh.radial_segments = 10
+			tuft_mesh.rings = 5
+			_pezzo(_head, tuft_mesh, Vector3(x, fila[1] - absf(x) * 0.25, fila[0]),
+				hair_mat, Vector3.ZERO, Vector3(1.0, 0.62, 1.05))
 
 
-## La giacca di lino chiara a righine, aperta, sopra la camicia bianca.
-## Le misure seguono il busto di human_builder (torace 0,50 largo a y=1,30;
-## pancia a y=1,00; spalle a ±0,31 y=1,42), altrimenti la giacca esce dal
-## corpo e sembra un cartone appoggiato davanti.
-func _build_jacket(body_root: Node3D) -> void:
-	var linen := Tex.flat(Color(0.76, 0.77, 0.78), 0.95)
-	var linen_dark := Tex.flat(Color(0.50, 0.52, 0.55), 0.95)
-
-	const TOP := 1.45      # sotto il colletto
-	const BOTTOM := 0.92   # poco sotto la cintura
-	var h: float = TOP - BOTTOM
-	var mid: float = (TOP + BOTTOM) * 0.5
-
-	# I due davanti, con in mezzo una bella fetta di camicia bianca.
-	# Il pannello va da |x| 0,10 a |x| 0,26: 20 cm di camicia scoperta.
-	const PANEL_W := 0.16
-	const PANEL_CX := 0.18
-	for sx in [-1.0, 1.0]:
-		var front := MeshInstance3D.new()
-		var front_mesh := BoxMesh.new()
-		front_mesh.size = Vector3(PANEL_W, h, 0.045)
-		front.mesh = front_mesh
-		front.position = Vector3(sx * PANEL_CX, mid, -0.15)
-		front.material_override = linen
-		body_root.add_child(front)
-
-		# Le righine SOLO sopra il pannello: prima corrivano da un fianco
-		# all'altro e riempivano di grigio anche lo spacco della camicia.
-		for i in range(4):
-			var stripe := MeshInstance3D.new()
-			var stripe_mesh := BoxMesh.new()
-			stripe_mesh.size = Vector3(0.011, h - 0.02, 0.012)
-			stripe.mesh = stripe_mesh
-			stripe.position = Vector3(
-				sx * PANEL_CX + (-0.054 + i * 0.036), mid, -0.172)
-			stripe.material_override = linen_dark
-			body_root.add_child(stripe)
-
-		# Revers inclinato verso lo spacco
-		var lapel := MeshInstance3D.new()
-		var lapel_mesh := BoxMesh.new()
-		lapel_mesh.size = Vector3(0.085, 0.24, 0.025)
-		lapel.mesh = lapel_mesh
-		lapel.rotation.z = deg_to_rad(sx * 14.0)
-		lapel.position = Vector3(sx * 0.145, TOP - 0.13, -0.176)
-		lapel.material_override = linen_dark
-		body_root.add_child(lapel)
-
-		# Fianco della giacca
-		var side := MeshInstance3D.new()
-		var side_mesh := BoxMesh.new()
-		side_mesh.size = Vector3(0.05, h, 0.3)
-		side.mesh = side_mesh
-		side.position = Vector3(sx * 0.265, mid, -0.015)
-		side.material_override = linen
-		body_root.add_child(side)
-
-	# Schiena
-	var back := MeshInstance3D.new()
-	var back_mesh := BoxMesh.new()
-	back_mesh.size = Vector3(0.53, h, 0.05)
-	back.mesh = back_mesh
-	back.position = Vector3(0, mid, 0.145)
-	back.material_override = linen
-	body_root.add_child(back)
-
-	# Maniche: coprono il braccio dalla spalla al gomito.
-	for shoulder in _arms:
-		var sleeve := MeshInstance3D.new()
-		var sleeve_mesh := BoxMesh.new()
-		sleeve_mesh.size = Vector3(0.145, 0.3, 0.165)
-		sleeve.mesh = sleeve_mesh
-		sleeve.position = Vector3(0, -0.15, 0)
-		sleeve.material_override = linen
-		shoulder.add_child(sleeve)
+## L'altezza degli occhi sull'osso della testa del pupo.
+const OCCHI_Y := 0.117
 
 
-## Il telefonino alzato: è quello che ti fa male, non le mani.
+func _pezzo(padre: Node3D, m: Mesh, pos: Vector3, mat: Material,
+		rot: Vector3 = Vector3.ZERO, scala: Vector3 = Vector3.ONE) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	mi.mesh = m
+	mi.position = pos
+	mi.rotation = rot
+	mi.scale = scala
+	mi.material_override = mat
+	padre.add_child(mi)
+	return mi
+
+
+## La giacca di lino chiara, aperta sulla camicia bianca. Il lino è già il
+## colore del busto del pupo (vedi `_build_visual`): qui sopra, sull'osso
+## del petto, vanno lo spacco bianco della camicia e i due revers, e sugli
+## avambracci le maniche lunghe (il pupo le ha corte).
+func _build_jacket(parts: Dictionary) -> void:
+	var bones: Dictionary = parts.get("bones", {})
+	var linen_dark := Tex.flat(Color(0.52, 0.54, 0.57), 0.95)
+	var camicia := Tex.flat(Color(0.97, 0.97, 0.95), 0.8)
+	var linen := Tex.flat(LINO, 0.95)
+	var petto: Node3D = bones.get("chest", null)
+	if petto != null:
+		var v := BoxMesh.new()
+		v.size = Vector3(0.075, 0.25, 0.02)
+		_pezzo(petto, v, Vector3(0, 0.05, 0.118), camicia)
+		for sx in [-1.0, 1.0]:
+			var revers := BoxMesh.new()
+			revers.size = Vector3(0.042, 0.23, 0.014)
+			_pezzo(petto, revers, Vector3(sx * 0.054, 0.07, 0.126), linen_dark,
+				Vector3(0, 0, deg_to_rad(-sx * 13.0)))
+		# Le righine, solo sui due davanti vicino allo spacco, dove il busto
+		# è quasi piatto (più in là girerebbero nell'aria).
+		for sx in [-1.0, 1.0]:
+			for k in range(2):
+				var riga := BoxMesh.new()
+				riga.size = Vector3(0.005, 0.2, 0.004)
+				_pezzo(petto, riga, Vector3(sx * (0.088 + k * 0.024), 0.0, 0.121 - k * 0.006),
+					linen_dark)
+	# Le maniche lunghe: un osso tutto loro sull'avambraccio.
+	var scheletro := parts.get("scheletro", null) as Skeleton3D
+	if scheletro != null:
+		for osso in ["lowerarm_l", "lowerarm_r"]:
+			if scheletro.find_bone(osso) < 0:
+				continue
+			var att := BoneAttachment3D.new()
+			att.bone_name = osso
+			scheletro.add_child(att)
+			var manica := CylinderMesh.new()
+			manica.top_radius = 0.046
+			manica.bottom_radius = 0.05
+			manica.height = 0.2
+			manica.radial_segments = 10
+			_pezzo(att, manica, Vector3(0, 0.11, 0), linen)
+
+
+## Il telefonino alzato davanti alla faccia: è quello che ti fa male, non le
+## mani. Il braccio sinistro si **punta** (vedi `animator.punta_osso`): il
+## braccio avanti e in giù, l'avambraccio su verso la faccia. Col vecchio
+## `hold_bone` il braccio restava giù, e il telefono con lui.
 func _build_phone() -> void:
-	if _arms.is_empty():
+	if _arms.is_empty() or _arms[0] == null:
 		return
 	_phone = Node3D.new()
-	_phone.position = Vector3(0, -0.36, -0.04)
-	_arms[0].add_child(_phone)
-	# Il braccio che regge il telefono resta alzato per tutta la scena: esce
-	# dall'animazione e va in posa fissa, gomito piegato.
-	if _anim != null:
-		_anim.hold_bone("shoulder_l", Vector3(-72.0, 0.0, 0.0))
-		_anim.hold_bone("elbow_l", Vector3(-46.0, 0.0, 0.0))
+	_phone.position = Vector3(0, 0.07, 0.02)
+	(_arms[0] as Node3D).add_child(_phone)
+	if _anim != null and _anim.has_method("punta_osso"):
+		_anim.punta_osso("shoulder_l", Vector3(0.02, -0.36, -0.93))
+		_anim.punta_osso("elbow_l", Vector3(0.36, 0.58, -0.73))
 
-	var body := MeshInstance3D.new()
 	var body_mesh := BoxMesh.new()
 	body_mesh.size = Vector3(0.075, 0.145, 0.014)
-	body.mesh = body_mesh
-	body.material_override = Tex.flat(Color(0.08, 0.08, 0.09), 0.3, 0.4)
-	_phone.add_child(body)
-
-	var screen := MeshInstance3D.new()
+	_pezzo(_phone, body_mesh, Vector3.ZERO, Tex.flat(Color(0.08, 0.08, 0.09), 0.3, 0.4))
 	var screen_mesh := BoxMesh.new()
 	screen_mesh.size = Vector3(0.062, 0.125, 0.004)
-	screen.mesh = screen_mesh
-	screen.position = Vector3(0, 0, -0.009)
 	var glow := Tex.flat(Color(0.35, 0.75, 1.0), 0.2)
 	glow.emission_enabled = true
 	glow.emission = Color(0.4, 0.8, 1.0)
 	glow.emission_energy_multiplier = 1.4
-	screen.material_override = glow
-	_phone.add_child(screen)
+	_pezzo(_phone, screen_mesh, Vector3(0, 0, -0.009), glow)
+	# Dietro, verso di te: l'obiettivo e la lucetta rossa che registra.
+	var obiettivo := CylinderMesh.new()
+	obiettivo.top_radius = 0.009
+	obiettivo.bottom_radius = 0.009
+	obiettivo.height = 0.006
+	_pezzo(_phone, obiettivo, Vector3(-0.018, 0.052, 0.009),
+		Tex.flat(Color(0.02, 0.02, 0.03), 0.1, 0.6), Vector3(deg_to_rad(90), 0, 0))
+	var rec := SphereMesh.new()
+	rec.radius = 0.006
+	rec.height = 0.012
+	var rosso := Tex.flat(Color(1.0, 0.1, 0.08), 0.3)
+	rosso.emission_enabled = true
+	rosso.emission = Color(1.0, 0.08, 0.05)
+	rosso.emission_energy_multiplier = 3.0
+	_rec = _pezzo(_phone, rec, Vector3(0.022, 0.056, 0.009), rosso)
+
+
+## 'A lucetta del REC lampeggia, e il telefono guarda sempre lui (lo schermo
+## verso la faccia, l'obiettivo verso chi sta riprendendo).
+var _rec: MeshInstance3D = null
+var _rec_t: float = 0.0
+
+
+func _process(delta: float) -> void:
+	if _phone == null or _head == null or not is_instance_valid(_phone):
+		return
+	_rec_t += delta
+	if _rec != null:
+		_rec.visible = fmod(_rec_t, 1.0) < 0.6
+	var occhi: Vector3 = _head.global_transform * Vector3(0, OCCHI_Y, 0.1)
+	var qui: Vector3 = _phone.global_position
+	if qui.distance_to(occhi) > 0.05:
+		_phone.look_at(occhi, Vector3.UP)
 
 
 # ---------------------------------------------------------------------------

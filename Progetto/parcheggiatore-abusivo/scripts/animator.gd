@@ -117,6 +117,9 @@ var _seduto_parla: bool = false
 var _steso: bool = false
 ## Le ossa tenute ferma a mano: nome vero → quaternione.
 var _tenute: Dictionary = {}
+## Le ossa puntate (0.64): nome vero → direzione nel verso del personaggio.
+## Vedi `punta_osso`.
+var _puntate: Dictionary = {}
 
 
 ## **'E clip d''e cuorpe nuove** (0.59). Il pupo usa la tabella `CLIP`;
@@ -526,13 +529,65 @@ func release_bone(osso: String) -> void:
 	_tenute.erase(str(OSSA.get(osso, osso)))
 
 
+## **L'osso puntato** (0.64). `hold_bone` scrive una rotazione *locale*
+## fissa, e sul pupo una rotazione locale fissa è la posa di riposo — a
+## braccia aperte — più quei gradi: il braccio non va dove si pensava (vedi
+## `passante_3d.gd`, e Borrelli col telefonino, che per sei versioni l'ha
+## tenuto contro la coscia). Qui invece si dice **dove deve puntare** l'osso,
+## nel verso del personaggio: avanti è −Z, su è +Y, la sua destra è +X.
+## Ogni fotogramma, dopo l'animazione, l'osso viene girato quel tanto che
+## basta a puntarci, partendo dalla posa che l'animazione gli ha dato: la
+## torsione e tutto il resto restano vivi. Si puntano prima i padri (il
+## braccio) e poi i figli (l'avambraccio), nell'ordine in cui si chiamano.
+##
+## Vale solo per il pupo, dove l'osso corre lungo il suo +Y (misurato:
+## `POSA_PUPO` in `human_builder.gd`). Sugli altri scheletri il nome non si
+## trova e non succede niente.
+func punta_osso(osso: String, direzione: Vector3) -> void:
+	var vero: String = str(OSSA.get(osso, osso))
+	_puntate.erase(vero)
+	_puntate[vero] = direzione.normalized()
+
+
+func lascia_osso(osso: String) -> void:
+	_puntate.erase(str(OSSA.get(osso, osso)))
+
+
 func _process(delta: float) -> void:
 	_misura_passo(delta)
 	_passo_parlata(delta)
-	if _scheletro == null or _tenute.is_empty():
+	if _scheletro == null:
 		return
 	for nome in _tenute:
 		var i: int = _scheletro.find_bone(str(nome))
 		if i < 0:
 			continue
 		_scheletro.set_bone_pose_rotation(i, _tenute[nome])
+	if not _puntate.is_empty():
+		_applica_puntate()
+
+
+func _applica_puntate() -> void:
+	var radice := _parti.get("root", null) as Node3D
+	if radice == null or not radice.is_inside_tree():
+		return
+	# Dal verso del personaggio al verso dello scheletro (che dentro al
+	# pupo sta girato di mezzo giro, e scalato).
+	var verso: Basis = _scheletro.global_transform.basis.inverse() \
+		* radice.global_transform.basis
+	for nome in _puntate:
+		var i: int = _scheletro.find_bone(str(nome))
+		if i < 0:
+			continue
+		var voluta: Vector3 = (verso * (_puntate[nome] as Vector3)).normalized()
+		var glob: Basis = _scheletro.get_bone_global_pose(i).basis.orthonormalized()
+		var ora: Vector3 = glob.y.normalized()
+		if ora.dot(voluta) > 0.99995:
+			continue
+		var girata: Basis = Basis(Quaternion(ora, voluta)) * glob
+		var padre: int = _scheletro.get_bone_parent(i)
+		var pb := Basis()
+		if padre >= 0:
+			pb = _scheletro.get_bone_global_pose(padre).basis.orthonormalized()
+		_scheletro.set_bone_pose_rotation(i,
+			(pb.inverse() * girata).orthonormalized().get_rotation_quaternion())

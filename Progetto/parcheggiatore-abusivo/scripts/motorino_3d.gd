@@ -186,13 +186,15 @@ func _build_rider(z: float, _idx: int) -> void:
 	_visual_root.add_child(body)
 	_riders.append(body)
 
-	# Casco? Manco per sogno. Al massimo gli occhiali da sole.
+	# Casco? Manco per sogno. Al massimo gli occhiali da sole — **davanti**:
+	# sull'osso della testa 'nnanze è +Z (vedi `maestro_3d.gd`), e fino alla
+	# 0.63 stavano a −Z, cioè sulla nuca.
 	if parts["head"] != null and randf() < 0.4:
 		var shades := MeshInstance3D.new()
 		var shades_mesh := BoxMesh.new()
-		shades_mesh.size = Vector3(0.24, 0.05, 0.05)
+		shades_mesh.size = Vector3(0.2, 0.042, 0.03)
 		shades.mesh = shades_mesh
-		shades.position = Vector3(0, 0.16, -0.11)
+		shades.position = Vector3(0, 0.118, 0.135)
 		shades.material_override = Tex.flat(Color(0.04, 0.04, 0.05), 0.15, 0.5)
 		parts["head"].add_child(shades)
 

@@ -125,16 +125,30 @@ func _build_visual() -> void:
 
 ## La borsa sottobraccio: è quella che devi guardare, ed è quella che
 ## sparisce quando ci riesci.
+##
+## (0.64) **'A borsa sta dritta, e 'o braccio se punta.** Prima la borsa era
+## figlia della mano, trentaquattro centimetri "sopra" il polso, e il braccio
+## si teneva con `hold_bone` — che sul pupo congela la posa di riposo: in
+## foto la signora aveva il braccio piegato all'indietro e la borsa che le
+## galleggiava dietro la spalla. Adesso il braccio si **punta** (vedi
+## `animator.punta_osso`) e la borsa è figlia del corpo, dritta: la mano
+## le presta solo la posizione, con un `RemoteTransform3D` a metà
+## avambraccio. Il contenuto della borsa sta tredici centimetri più giù, così
+## i manici passano sopra al braccio e la borsa ci pende sotto.
 func _build_purse(dress: Color) -> void:
 	_purse = Node3D.new()
-	_purse.position = Vector3(0, -0.34, 0.06)
-	_arms[1].add_child(_purse)
-	# Il braccio destro sta sempre un po' piegato attorno alla borsa: esce
-	# dall'oscillazione della camminata e resta in posa.
-	if _anim != null:
-		_anim.hold_bone("shoulder_r", Vector3(-14.0, 0.0, 0.0))
-		_anim.hold_bone("elbow_r", Vector3(-62.0, 0.0, 0.0))
+	_visual_root.add_child(_purse)
+	var porta := RemoteTransform3D.new()
+	porta.position = Vector3(0, -0.13, 0.0)
+	porta.update_rotation = false
+	porta.update_scale = false
+	_arms[1].add_child(porta)
+	porta.remote_path = porta.get_path_to(_purse)
+	_braccio_borsa(false)
 
+	var giu := Node3D.new()
+	giu.position = Vector3(0, -0.15, 0)
+	_purse.add_child(giu)
 	var leather := Tex.flat(dress.darkened(0.55), 0.6)
 	var gold := Tex.flat(Color(0.85, 0.68, 0.25), 0.25, 0.9)
 
@@ -143,7 +157,7 @@ func _build_purse(dress: Color) -> void:
 	body_mesh.size = Vector3(0.24, 0.19, 0.11)
 	body.mesh = body_mesh
 	body.material_override = leather
-	_purse.add_child(body)
+	giu.add_child(body)
 
 	var flap := MeshInstance3D.new()
 	var flap_mesh := BoxMesh.new()
@@ -151,7 +165,7 @@ func _build_purse(dress: Color) -> void:
 	flap.mesh = flap_mesh
 	flap.position = Vector3(0, 0.07, 0)
 	flap.material_override = leather
-	_purse.add_child(flap)
+	giu.add_child(flap)
 
 	var clasp := MeshInstance3D.new()
 	var clasp_mesh := BoxMesh.new()
@@ -159,7 +173,7 @@ func _build_purse(dress: Color) -> void:
 	clasp.mesh = clasp_mesh
 	clasp.position = Vector3(0, 0.035, -0.062)
 	clasp.material_override = gold
-	_purse.add_child(clasp)
+	giu.add_child(clasp)
 
 	# Manico
 	for sx in [-1.0, 1.0]:
@@ -170,7 +184,28 @@ func _build_purse(dress: Color) -> void:
 		strap.position = Vector3(sx * 0.07, 0.15, 0)
 		strap.rotation.z = deg_to_rad(-sx * 14.0)
 		strap.material_override = leather
-		_purse.add_child(strap)
+		giu.add_child(strap)
+
+
+## Senza borsa il braccio torna a dondolare con la camminata.
+func _lascia_braccio() -> void:
+	if _anim != null and _anim.has_method("lascia_osso"):
+		_anim.lascia_osso("shoulder_r")
+		_anim.lascia_osso("elbow_r")
+
+
+## Il braccio della borsa. Normale: il braccio giù lungo il fianco e
+## l'avambraccio avanti, la borsa che ci pende sotto. Stretta: l'avambraccio
+## di traverso davanti al petto, la borsa addosso.
+func _braccio_borsa(stretta: bool) -> void:
+	if _anim == null or not _anim.has_method("punta_osso"):
+		return
+	if stretta:
+		_anim.punta_osso("shoulder_r", Vector3(0.10, -0.80, -0.59))
+		_anim.punta_osso("elbow_r", Vector3(-0.86, 0.30, -0.41))
+	else:
+		_anim.punta_osso("shoulder_r", Vector3(0.10, -0.97, 0.17))
+		_anim.punta_osso("elbow_r", Vector3(-0.12, -0.22, -0.97))
 
 
 # ---------------------------------------------------------------------------
@@ -201,9 +236,7 @@ func _physics_process(delta: float) -> void:
 				# camminata: la signora finiva il giro col braccio
 				# incollato addosso, in barba al prompt che dice "aspetta
 				# ca se n''o scorda".
-				if _anim != null and _anim.has_method("hold_bone"):
-					_anim.hold_bone("shoulder_r", Vector3(-14.0, 0.0, 0.0))
-					_anim.hold_bone("elbow_r", Vector3(-62.0, 0.0, 0.0))
+				_braccio_borsa(false)
 		State.ROBBED:
 			_step_toward(path_to, WALK_SPEED, delta)
 			_chatter(delta)
@@ -243,10 +276,8 @@ func _go_alert() -> void:
 	_alert_left = ALERT_TIME
 	if _bubble:
 		_bubble.say(SAY_ALERT[randi() % SAY_ALERT.size()], 2.0)
-	if _anim != null:
-		# Si stringe la borsa al petto: il braccio destro esce dall'animazione.
-		_anim.hold_bone("shoulder_r", Vector3(-38.0, 0.0, 0.0))
-		_anim.hold_bone("elbow_r", Vector3(-84.0, 0.0, 0.0))
+	# Si stringe la borsa al petto.
+	_braccio_borsa(true)
 
 
 ## Vero se il player è abbastanza dietro di lei da non essere visto. La
@@ -384,6 +415,7 @@ func resolve_pickpocket(success: bool) -> void:
 		if _purse and is_instance_valid(_purse):
 			_purse.queue_free()
 			_purse = null
+		_lascia_braccio()
 	else:
 		_caught()
 
@@ -404,6 +436,7 @@ func _go_down() -> void:
 		GameManager.add_money(purse_value)
 		_purse.queue_free()
 		_purse = null
+	_lascia_braccio()
 	KO.lay_down(_ko, _visual_root, 0.0) # non si rialza: resta lì
 	_state = State.ROBBED
 
@@ -439,3 +472,4 @@ func _caught() -> void:
 	if _purse and is_instance_valid(_purse):
 		_purse.queue_free()
 		_purse = null
+	_lascia_braccio()
