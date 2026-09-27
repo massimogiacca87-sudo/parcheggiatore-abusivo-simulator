@@ -1017,12 +1017,14 @@ static func _vesti(modello: Node3D, camicia: Color, pantaloni: Color,
 	var capelli := Color(opts.get("hair", Color(0.16, 0.11, 0.08)))
 	# **'A gonna e 'e cazette** (0.66): chi porta la gonna ha la gonna del
 	# colore dei pantaloni, e sotto le calze (i tubi dei pantaloni, che
-	# sotto al ginocchio restano scoperti): velate color pelle, o nere per
-	# chi va vestita di scuro.
+	# sotto al ginocchio restano scoperti): velate color pelle sotto una
+	# gonna chiara, nere sotto tutte le altre — che è pure la signora
+	# napoletana, e che in corsa, quando la coscia sfiora l'orlo, non
+	# accende triangoli di pelle sopra la stoffa.
 	var gonna := bool(opts.get("gonna", false))
 	var calze: Color = pantaloni
 	if gonna:
-		calze = Color(opts.get("calze", pelle.darkened(0.12) if pantaloni.v > 0.25
+		calze = Color(opts.get("calze", pelle.darkened(0.12) if pantaloni.v > 0.55
 			else Color(0.07, 0.07, 0.08)))
 	var colori := {
 		"pelle": pelle,
