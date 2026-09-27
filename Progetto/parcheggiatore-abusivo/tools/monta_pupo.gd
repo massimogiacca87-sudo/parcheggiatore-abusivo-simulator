@@ -26,6 +26,10 @@ extends SceneTree
 ## stesso scheletro).
 
 const PUPO := "res://assets/models/pupo.scn"
+## Il riquadro di tutte le pose, nello spazio dello scheletro (metri del
+## file, pupo alto 1,79): ±1,9 attorno ai piedi, da sotto terra a sopra le
+## braccia alzate.
+const INGOMBRO := AABB(Vector3(-1.9, -0.3, -1.9), Vector3(3.8, 2.7, 3.8))
 const VECCHIO := "res://assets/models/pupo_vecchio.scn"
 
 
@@ -85,6 +89,14 @@ func _initialize() -> void:
 				var legame: Transform3D = (da_scena_v * sk_v.get_bone_global_rest(bv)) \
 					.affine_inverse() * riposo_n
 				skin_v.add_named_bind(nome, legame)
+		# **'O pupo 'nterra perdeva 'a capa.** Godot decide se disegnare una
+		# mesh skinnata dal suo riquadro a riposo, cioè in piedi: la testa di
+		# uno disteso sta un metro e mezzo più in là, fuori dal riquadro, e
+		# veniva scartata (restavano i baffi, che per caso ci cadevano
+		# dentro). Un riquadro fisso che contiene tutte le pose delle
+		# quarantatré clip — in piedi, disteso, seduto, a braccia aperte —
+		# vale per tutti i pezzi, e costa niente.
+		m.mesh.custom_aabb = INGOMBRO
 		var copia := MeshInstance3D.new()
 		copia.name = m.name
 		copia.mesh = m.mesh

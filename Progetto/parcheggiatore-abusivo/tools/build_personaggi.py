@@ -217,7 +217,8 @@ def avanti(z, corp):
 #   metri centrata sul centro della testa: u = 0,5 + x/L (x positivo è la
 #   **sinistra del pupo**, cioè la destra di chi lo guarda), v = 0,5 −
 #   (z − TESTA_C.z)/L (la fronte in alto, il mento in basso). Le facce che
-#   non guardano avanti (normale·(−Y) < 0,15) vanno tutte nell'angolo
+#   non guardano avanti (normale·(−Y) < 0,02: da 0,15 la barba finiva di
+#   profilo con uno spigolo dritto) vanno tutte nell'angolo
 #   neutro (0,015, 0,015), che nelle texture è sempre bianco (o nero, per
 #   la barba): così la bocca non si stampa anche sulla nuca.
 # * `camicia`, `pantaloni`, `gonna` — la trama della stoffa, che si ripete:
@@ -251,7 +252,7 @@ def uv_per_materiale(bm):
 			davanti = -f.normal.y
 			for l in f.loops:
 				p = l.vert.co
-				if davanti < 0.15:
+				if davanti < 0.02:
 					l[uv].uv = _uv(0.015, 0.015)
 				else:
 					l[uv].uv = _uv(0.5 + p.x / FACCIA_L,

@@ -1059,6 +1059,9 @@ static func _vesti(modello: Node3D, camicia: Color, pantaloni: Color,
 			mat.albedo_color = colori[chiave]
 			mat.roughness = float(ruvido.get(chiave, 0.9))
 			mat.metallic = 0.0
+			# 'O gel: i capelli tirati all'indietro luccicano.
+			if chiave == "capelli" and str(opts.get("capelli", "")) == "gellati":
+				mat.roughness = 0.42
 			# **'A stoffa e 'e ciocche** (0.66): la tinta la decide il
 			# gioco, la trama sta in una texture grigia che la moltiplica.
 			var trama: Texture2D = _trama(chiave)
