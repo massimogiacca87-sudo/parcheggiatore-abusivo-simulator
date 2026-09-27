@@ -39,6 +39,13 @@ func _ready() -> void:
 		tipo = get_tree().root.find_child("ReParcheggi", true, false) as Node3D
 		tipo.call("_mostra", dove)
 		visual = tipo.get("_visual")
+	elif percorso == "signora_assettata":
+		# 'A signora seduta davanti al basso: la mette RobbaPsx.
+		var citta2 := get_tree().root.find_child("Citta", true, false)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 7
+		preload("res://scripts/robba_psx.gd")._signora_assettata(citta2, dove, PI, rng)
+		tipo = citta2.get_child(citta2.get_child_count() - 1) as Node3D
 	elif percorso == "vigile_cafe":
 		# 'O vigile d''o bar: lo costruisce la città, e si fa costruire qui.
 		var citta := get_tree().root.find_child("Citta", true, false)
@@ -74,8 +81,14 @@ func _ready() -> void:
 	await _foto(nome, "dietro", c + Vector3(0.4, 1.5, 3.6), mezzo)
 	await _foto(nome, "dietro_tre_quarti", c + Vector3(-2.5, 1.6, 2.5), mezzo)
 	_cam.fov = 26
-	await _foto(nome, "faccia", c + Vector3(0.0, 1.8, -1.7), c + Vector3(0, 1.66, 0))
-	await _foto(nome, "faccia_fianco", c + Vector3(1.7, 1.8, -0.3), c + Vector3(0, 1.66, 0))
+	# L'altezza della faccia: 1,66 per chi sta in piedi (FACCIA_Y= per chi
+	# sta seduto o è basso).
+	var fy: float = 1.66
+	if OS.get_environment("FACCIA_Y") != "":
+		fy = float(OS.get_environment("FACCIA_Y"))
+	await _foto(nome, "faccia", c + Vector3(0.0, fy + 0.14, -1.7), c + Vector3(0, fy, 0))
+	await _foto(nome, "faccia_fianco", c + Vector3(1.7, fy + 0.14, -0.3), c + Vector3(0, fy, 0))
+	await _foto(nome, "faccia_dietro", c + Vector3(-0.9, fy + 0.2, 1.5), c + Vector3(0, fy, 0))
 	# E mentre cammina: le braccia e le gambe non devono passare il vestito.
 	_cam.fov = 45
 	var anim = tipo.get("_anim")

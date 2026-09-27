@@ -157,9 +157,10 @@ static func _signora_assettata(c: Node3D, seggia: Vector3, giro: float,
 	var vesti := [Color(0.18, 0.18, 0.22), Color(0.36, 0.20, 0.24),
 		Color(0.22, 0.30, 0.40), Color(0.40, 0.36, 0.30)]
 	var veste: Color = vesti[rng.randi() % vesti.size()]
+	# (0.64) I capelli sono il fazzoletto: vedi `_fazzoletto`.
+	var stoffa: Color = FAZZOLETTI[rng.randi() % FAZZOLETTI.size()]
 	var parti: Dictionary = Human.build(veste, veste.darkened(0.3), "", alta, {
-		"corpo": "femmina", "hair": Color(0.80, 0.79, 0.77).darkened(
-			rng.randf_range(0.0, 0.3)),
+		"corpo": "femmina", "hair": stoffa,
 		"belly": rng.randf_range(0.45, 0.85), "bald": false,
 		"moustache": false})
 	var chi := Node3D.new()
@@ -174,10 +175,70 @@ static func _signora_assettata(c: Node3D, seggia: Vector3, giro: float,
 	var root: Node3D = parti.get("root")
 	if root != null:
 		chi.add_child(root)
+	var testa = parti.get("head", null)
+	if testa != null:
+		_fazzoletto(testa as Node3D, stoffa)
 	var a = parti.get("anim", null)
 	if a != null and a.has_method("sit"):
 		a.sit(false)
 	c._lontananza(chi, 60.0)
+
+
+## **'O fazzoletto 'n capa** (0.64). Col capello grigio e corto, da lontano
+## le signore sedute sembravano vecchi (lo diceva la roadmap dalla 0.60):
+## il fazzoletto scuro annodato sotto al mento le fa leggere subito.
+##
+## Il fazzoletto è **i capelli stessi del pupo**, tinti del colore della
+## stoffa (vedi `_signora_assettata`): una calotta messa sopra alla testa
+## del pupo, che è alta e tonda da cartone animato, veniva fuori una cuffia
+## a punta, e sotto spuntava la frangia bianca. Qui sopra si aggiungono solo
+## le due cose che dicono "fazzoletto" e non "capelli": il nodo sotto al
+## mento, coi due lembi che ci scendono, e la punta del triangolo sulla
+## nuca. (Le due fasce lungo le guance, provate, dalla tempia al mento
+## passavano dentro alla faccia e spuntavano come una barba rossa.)
+## Sull'osso della testa il davanti è +Z (vedi `maestro_3d.gd`).
+const FAZZOLETTI := [Color(0.20, 0.16, 0.28), Color(0.44, 0.12, 0.16),
+	Color(0.14, 0.14, 0.15), Color(0.34, 0.24, 0.14), Color(0.18, 0.28, 0.42)]
+
+
+static func _fazzoletto(testa: Node3D, colore: Color) -> void:
+	var mat := Tex.flat(colore, 0.92)
+	# 'O nodo, sotto al mento.
+	var nm := SphereMesh.new()
+	nm.radius = 0.024
+	nm.height = 0.046
+	nm.radial_segments = 10
+	nm.rings = 5
+	var nodo := MeshInstance3D.new()
+	nodo.mesh = nm
+	nodo.material_override = mat
+	nodo.position = Vector3(0, -0.002, 0.07)
+	nodo.scale = Vector3(1.35, 0.85, 1.0)
+	testa.add_child(nodo)
+	# 'E doje cocche d''o nodo, che pendono.
+	for sx in [-1.0, 1.0]:
+		var cm := BoxMesh.new()
+		cm.size = Vector3(0.026, 0.05, 0.01)
+		var cocca := MeshInstance3D.new()
+		cocca.mesh = cm
+		cocca.material_override = mat
+		cocca.position = Vector3(sx * 0.016, -0.03, 0.074)
+		cocca.rotation.z = sx * 0.35
+		testa.add_child(cocca)
+	# 'A punta d''o triangolo, 'ncopp'â noce d''o cuollo.
+	var pm := CylinderMesh.new()
+	pm.top_radius = 0.07
+	pm.bottom_radius = 0.0
+	pm.height = 0.09
+	pm.radial_segments = 3
+	pm.rings = 1
+	var punta := MeshInstance3D.new()
+	punta.mesh = pm
+	punta.material_override = mat
+	punta.position = Vector3(0, 0.02, -0.085)
+	punta.rotation.x = -0.25
+	punta.scale = Vector3(1.0, 1.0, 0.18)
+	testa.add_child(punta)
 
 
 # ---------------------------------------------------------------------------
