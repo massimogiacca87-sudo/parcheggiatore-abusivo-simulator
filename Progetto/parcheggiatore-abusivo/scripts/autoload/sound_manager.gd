@@ -4,7 +4,9 @@ extends Node
 ## riprodotti da un pool di player. La musichetta di quartiere gira in loop
 ## anche nel menu di pausa.
 
-const SOUND_NAMES := ["honk", "bump", "punch", "coin", "kaching", "success",
+const SOUND_NAMES := ["honk", "bump", "coin", "kaching", "success",
+	# ("punch" è uscito dalla lista: i pugni passano tutti da pugno1..6 e
+	# quello sintetico non lo chiamava più nessuno. Il file resta in audio/.)
 	"fail", "whistle", "steal", "pop", "door", "rev", "meow",
 	# 0.61: 'o sparo vero (prima era un pugno a meta' tono) e 'o fruscio.
 	"sparo",
