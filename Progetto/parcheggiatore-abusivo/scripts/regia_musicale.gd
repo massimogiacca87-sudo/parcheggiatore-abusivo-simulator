@@ -87,8 +87,8 @@ func _decidi() -> void:
 	var scelta := _quale()
 	if scelta == _ultimo:
 		return
-	var emergenza: bool = scelta in ["boss", "caccia"] \
-		or _ultimo in ["boss", "caccia"]
+	var emergenza: bool = scelta in ["boss", "caccia", "sfida"] \
+		or _ultimo in ["boss", "caccia", "sfida"]
 	if not emergenza and _messo_da < PERMANENZA:
 		return
 	_ultimo = scelta
@@ -99,6 +99,10 @@ func _decidi() -> void:
 func _quale() -> String:
 	if GameManager.intro_active:
 		return "menu"
+	# 0. **'A sfida d''o Rre** (0.64): un minuto, 'a tarantella e 'o tic tac.
+	# Vince su tutto, pure sulla radiolina: è un cronometro, non un sottofondo.
+	if GameManager.re_sfida_attiva:
+		return "sfida"
 	# **La radiolina comanda, tranne quando c'e' da scappare.**
 	# Se il giocatore ha scelto un brano con la manopola, quello resta —
 	# ma l'inseguimento e il boss se lo riprendono, perche' quella musica

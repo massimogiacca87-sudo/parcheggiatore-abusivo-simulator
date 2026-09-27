@@ -4644,6 +4644,8 @@ func stato_partita() -> Dictionary:
 		# --- 0.64: 'e strisce blu e 'o Rre d''e Parcheggi ----------------
 		"strisce_blu": strisce_blu,
 		"pittura": pittura,
+		"re_prossimo_juorno": re_prossimo_juorno,
+		"re_ultimo_esito": re_ultimo_esito,
 	}
 
 
@@ -4783,6 +4785,8 @@ func applica_stato(d: Dictionary) -> void:
 				"rotti": rotti, "pittati": pittati,
 				"parchimetri": int(e.get("parchimetri", 0))}
 	pittura = int(d.get("pittura", 0))
+	re_prossimo_juorno = int(d.get("re_prossimo_juorno", RE_PRIMMO_JUORNO))
+	re_ultimo_esito = int(d.get("re_ultimo_esito", -1))
 	lotto_esiti = []
 	lotto_cagnato.emit()
 	save_version = int(d.get("v", SAVE_VER))
@@ -6221,3 +6225,94 @@ const NOMI_PIAZZE := {
 	"piazza": "Sant'Anna", "stadio": "'o Stadio",
 	"mercato": "'a Via d''e Spighe", "cornetteria": "'o Vico d''a Cornetteria",
 }
+
+
+# ---------------------------------------------------------------------------
+# 'O RRE D''E PARCHEGGI (0.64)
+# ---------------------------------------------------------------------------
+#
+# Il capo: *«alla terza giornata viene questo figuro (inventato da zero, con
+# un modello dedicato) che ti sfida: "ah e tu vulisse fà 'o parcheggiatore? E
+# famme verè". Una sfida a tempo, con una musichetta e il tic tac: devi
+# posteggiare più macchine possibile in un minuto. Se ne posteggi almeno 5 ti
+# dà una piazza in omaggio, se ne posteggi almeno 3 vinci un guaglione che
+# lavora per te, se ne posteggi una sola ti insegue e ti picchia.»*
+#
+# Chi è, come si muove e come conta sta in `re_parcheggi_3d.gd`; qui c'è
+# quando viene e cosa ti lascia.
+#
+# **Due, e zero.** Il capo ha detto cinque, tre e una. Con due non vinci
+# niente e non le pigli: se ne va dicendo che torna. Con zero è come con una
+# (anzi peggio). Chi perde o pareggia lo rivede fra tre giorni: una sfida
+# sola per partita, se la vinci; la rivincita se non la vinci.
+
+const RE_PRIMMO_JUORNO: int = 3
+const RE_RIVINCITA_DOPPO: int = 3
+const RE_DURATA: float = 60.0
+const RE_PE_A_PIAZZA: int = 5
+const RE_PE_O_GUAGLIONE: int = 3
+## Se la piazza in omaggio non c'è più (le tieni tutte) o il guaglione non
+## ha dove stare (ce n'è uno in ogni piazza), si paga in contanti.
+const RE_SORDE_SENZA_PIAZZA: int = 450
+const RE_SORDE_SENZA_GUAGLIONE: int = 60
+
+## Il giorno in cui torna (-1 = non torna più: l'hai battuto).
+var re_prossimo_juorno: int = RE_PRIMMO_JUORNO
+## Com'è finita l'ultima volta: -1 mai giocata, altrimenti quante ne hai
+## messe.
+var re_ultimo_esito: int = -1
+## Vero mentre la sfida sta correndo: le piazze lo guardano per fermare il
+## rubinetto normale (i clienti della sfida li manda lui).
+var re_sfida_attiva: bool = false
+## In quale piazza (la rubinetteria normale lì si ferma).
+var re_zona_sfida: String = ""
+
+signal re_sfida_cambiata(attiva: bool)
+
+
+## Viene oggi?
+func re_oggi() -> bool:
+	return re_prossimo_juorno > 0 and giornata >= re_prossimo_juorno
+
+
+## Com'è finita. Torna la riga da dire a schermo, e dà il premio.
+func re_esito(posteggiate: int, dove: String) -> Dictionary:
+	re_ultimo_esito = posteggiate
+	var r := {"premio": "", "zona": "", "soldi": 0, "mena": false}
+	if posteggiate >= RE_PE_A_PIAZZA:
+		re_prossimo_juorno = -1
+		var libera: String = ""
+		for id in ["mercato", "stadio", "cornetteria"]:
+			if not zona_mia(id):
+				libera = id
+				break
+		if libera != "":
+			acquisisci_zona(libera, str(NOMI_PIAZZE.get(libera, libera)), true, 0)
+			r["premio"] = "piazza"
+			r["zona"] = libera
+		else:
+			add_money(RE_SORDE_SENZA_PIAZZA)
+			r["premio"] = "sorde"
+			r["soldi"] = RE_SORDE_SENZA_PIAZZA
+	elif posteggiate >= RE_PE_O_GUAGLIONE:
+		re_prossimo_juorno = -1
+		var dove_va: String = ""
+		if zona_mia(dove) and not ha_dipendente(dove):
+			dove_va = dove
+		else:
+			for id in zone_mie:
+				if not ha_dipendente(str(id)):
+					dove_va = str(id)
+					break
+		if dove_va != "":
+			assumi(dove_va, "Sasà 'o Lampo", true)
+			r["premio"] = "guaglione"
+			r["zona"] = dove_va
+		else:
+			add_money(RE_SORDE_SENZA_GUAGLIONE)
+			r["premio"] = "sorde"
+			r["soldi"] = RE_SORDE_SENZA_GUAGLIONE
+	else:
+		re_prossimo_juorno = giornata + RE_RIVINCITA_DOPPO
+		r["mena"] = posteggiate <= 1
+	return r

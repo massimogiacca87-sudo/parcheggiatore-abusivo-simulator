@@ -395,6 +395,10 @@ func _ready() -> void:
 	var strisce := preload("res://scripts/strisce_blu.gd").new()
 	strisce.name = "StrisceBlu"
 	add_child(strisce)
+	# (0.64) 'O Rre d''e Parcheggi: sta nascosto finché non tocca a lui.
+	var re := preload("res://scripts/re_parcheggi_3d.gd").new()
+	re.name = "ReParcheggi"
+	add_child(re)
 	_alza_collina()
 	_build_collina()
 	_flush_batch()

@@ -409,6 +409,9 @@ func _on_timeout() -> void:
 		_scegli_varchi()
 	if GameManager.giornata_scaduta:
 		return
+	# (0.64) Durante 'a sfida d''o Rre, in questa piazza 'e machine 'e manna lui.
+	if GameManager.re_sfida_attiva and GameManager.re_zona_sfida == zona_id:
+		return
 	if not GameManager.zona_mia(zona_id) or not GameManager.shift_active:
 		# Appena comprata, la piazza deve mettersi a rendere SUBITO. Se il
 		# giro a vuoto ricaricasse i trenta secondi pieni, chi ha appena
@@ -512,6 +515,9 @@ func _spawn() -> Node:
 		return null
 	var car = CarScene.new()
 	car.zona_id = zona_id
+	if GameManager.re_sfida_attiva and GameManager.re_zona_sfida == zona_id:
+		car.sfida = true
+		car.forced_personality = "normale"
 	add_child(car)
 	car.setup(_entrata, posto, _uscita, [], [])
 	return car
@@ -537,6 +543,19 @@ func _punto_preso(p: Vector3) -> bool:
 				Vector2(p.x, p.z)) < 1.0:
 			return true
 	return false
+
+
+## **'A sfida d''o Rre** (0.64): lui chiama le macchine, e arrivano di corsa.
+## Torna la macchina, o null se la coda è piena.
+func sfida_manna_machina() -> Node:
+	if not _misurato:
+		_misurato = true
+		_spegni_posti_murati()
+		_scegli_varchi()
+	var car = _spawn()
+	if car != null:
+		car.veloce = 2.0
+	return car
 
 
 # ---------------------------------------------------------------------------

@@ -305,6 +305,12 @@ var parked_abusive: bool = false
 ## e a te non dà niente. Vedi `_controlla_striscia_blu`.
 var pavato_parchimetro: bool = false
 var striscia_blu: bool = false
+## **'E machine d''o Rre** (0.64): le chiama lui per la sfida. Arrivano di
+## corsa (`veloce`), aspettano senza spazientirsi, non pagano, e appena
+## posteggiate se ne vanno per lasciare il posto alla prossima.
+var sfida: bool = false
+var veloce: float = 1.0
+var _sfida_via: float = -1.0
 ## Vero se un vigile le ha appiccicato la multa sul parabrezza.
 var has_multa: bool = false
 var _multa_node: Node3D = null
@@ -1146,7 +1152,7 @@ func _physics_process(delta: float) -> void:
 	match state:
 		State.ARRIVING:
 			var meta_in: Vector3 = _prossima_tappa(_via_in, waiting_point)
-			_guida_verso(meta_in, DRIVE_SPEED, delta)
+			_guida_verso(meta_in, DRIVE_SPEED * veloce, delta)
 			_face_toward(meta_in)
 			if global_position.distance_to(waiting_point) < 0.8 \
 					and _tappa > _via_in.size():
@@ -1185,8 +1191,13 @@ func _physics_process(delta: float) -> void:
 			else:
 				_process_directing(delta)
 		State.PARKED:
-			_check_multa(delta)
-			_aspetta_ô_padrone(delta)
+			if sfida:
+				_sfida_via -= delta
+				if _sfida_via <= 0.0:
+					_depart()
+			else:
+				_check_multa(delta)
+				_aspetta_ô_padrone(delta)
 		State.RUBATA:
 			_guida_player(delta)
 		State.LEAVING:
@@ -1290,6 +1301,8 @@ func _face_toward(target: Vector3) -> void:
 ## parcheggiatore sta **in questa piazza**, e mai se il guaglione ha già
 ## detto «arrivo».
 func _pazienza_conta() -> bool:
+	if sfida:
+		return false
 	if _guagliuno_arriva > 0.0:
 		return false
 	if not GameManager.in_servizio:
@@ -1930,6 +1943,9 @@ func _try_park_abusive() -> void:
 	GameManager.directing_ended.emit(minigame_score, false)
 	GameManager.auto_posteggiata.emit(self, false)
 	SoundManager.play("pop", -4.0, 0.8)
+	if sfida:
+		_sfida_via = 1.6
+		return
 	_spawn_driver()
 
 
@@ -2698,6 +2714,10 @@ func _finish_parking() -> void:
 	GameManager.cool_down(9.0 if visto else 4.0)
 	_controlla_striscia_blu()
 	GameManager.auto_posteggiata.emit(self, true)
+	if sfida:
+		_sfida_via = 1.6
+		_say(SAY_SFIDA_GRAZIE[randi() % SAY_SFIDA_GRAZIE.size()])
+		return
 	_spawn_driver()
 
 
@@ -2724,6 +2744,27 @@ func _controlla_striscia_blu() -> void:
 		minigame_score = minf(minigame_score, 0.45)
 		_multa_cd = MULTA_CHECK_EVERY
 		_say(SAY_STRISCIA_BLU_ROTTO[randi() % SAY_STRISCIA_BLU_ROTTO.size()])
+
+
+const SAY_SFIDA_GRAZIE := ["Bravo! Mo' me ne vaco.", "Grazie, guagliò: 'o Rre m'aspetta.",
+	"Chesto è mestiere!", "Ja', 'a prossima!"]
+
+
+## Fine della sfida: chi non è stato posteggiato se ne va senza fare storie
+## (e senza contare come cliente perso: non era un cliente).
+func sfida_se_ne_va() -> void:
+	if state > State.DIRECTING and state != State.PARKED:
+		return
+	if state == State.PARKED:
+		_sfida_via = minf(_sfida_via, 0.2)
+		return
+	if state == State.DIRECTING:
+		_assist_active = false
+		GameManager.directing_ended.emit(0.0, true)
+	_release_spot()
+	collision_mask = 0
+	_tappa = 1
+	state = State.LEAVING
 
 
 const SAY_STRISCIA_BLU := [

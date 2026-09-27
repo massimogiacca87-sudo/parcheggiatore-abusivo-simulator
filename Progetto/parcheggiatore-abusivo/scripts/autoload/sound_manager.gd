@@ -85,6 +85,9 @@ const BRANI := {
 	# soltanto quando succede qualcosa (la processione, 'a partita) o
 	# quando lo scegli tu sulla radiolina.
 	"tarantella": "res://audio/tarantella.ogg",
+	# (0.64) 'A sfida d''o Rre d''e Parcheggi: 'na tarantella a 160, fatta a
+	# codice (`tools/genera_suoni_064.py`), col tic tac sopra.
+	"sfida": "res://audio/musica/sfida.ogg",
 }
 
 var _streams: Dictionary = {}

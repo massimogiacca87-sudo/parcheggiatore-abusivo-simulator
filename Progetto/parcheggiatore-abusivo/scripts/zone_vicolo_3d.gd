@@ -2718,6 +2718,10 @@ func _borrelli_subito() -> void:
 func _check_boss() -> void:
 	if GameManager.boss_spawned or not GameManager.shift_active:
 		return
+	# (0.64) Mentre 'o Rre fa 'a sfida, Borrelli aspetta: due boss insieme
+	# so' 'na rissa, no 'nu juoco.
+	if GameManager.re_sfida_attiva:
+		return
 	if _boss_fra < 0.0:
 		return # la notte non e' ancora calata
 	_boss_fra -= get_physics_process_delta_time()
@@ -3015,6 +3019,9 @@ func _on_spawn_timeout() -> void:
 	# che tornare a casa sia una decisione facile invece di un sacrificio.
 	if GameManager.giornata_scaduta:
 		return
+	# (0.64) Durante 'a sfida d''o Rre, ccà 'e machine 'e manna lui.
+	if GameManager.re_sfida_attiva and GameManager.re_zona_sfida == "piazza":
+		return
 	# **Il rubinetto si chiude quando esci dalla piazza.**
 	#
 	# Non è solo per non disturbare: se le auto continuassero ad arrivare
@@ -3057,6 +3064,10 @@ func _spawn_car() -> Node:
 	# vedono le piante, sentono la radio e di notte trovano le luminarie.
 	# Quelli delle altre piazze no — li' non c'e' niente da vedere.
 	car.piazza_curata = true
+	if GameManager.re_sfida_attiva and GameManager.re_zona_sfida == "piazza":
+		car.sfida = true
+		car.forced_personality = "normale"
+		car.veloce = 2.0
 	var queue_point: Vector3 = _punto_coda_libero()
 	if queue_point == Vector3.INF:
 		# Nessun punto buono: la coda è piena, o chi aspetta fuori tappa
@@ -3122,6 +3133,11 @@ static func _distanza_segmento(p: Vector3, a: Vector3, b: Vector3) -> float:
 	var l2: float = ab.length_squared()
 	var t: float = 0.0 if l2 < 0.0001 else clampf(ap.dot(ab) / l2, 0.0, 1.0)
 	return (ap - ab * t).length()
+
+
+## **'A sfida d''o Rre** (0.64): lui chiama, e 'a machina arriva di corsa.
+func sfida_manna_machina() -> Node:
+	return _spawn_car()
 
 
 ## Vero se stiamo girando su Forward+ (Vulkan). In GL Compatibility — cioè
