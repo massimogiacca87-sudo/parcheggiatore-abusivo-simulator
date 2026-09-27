@@ -201,6 +201,10 @@ func _costruisci_porta() -> void:
 	var ciclo := get_tree().get_first_node_in_group("ciclo_giorno")
 	if ciclo != null and ciclo.has_method("aggiungi_notturno"):
 		ciclo.aggiungi_notturno(lum)
+	# (0.65) Cacciato 'e casa: i cartoni e il biglietto sulla porta.
+	if GameManager.cacciato_e_casa:
+		_cartune(p)
+		lum.light_energy = 0.0
 
 
 func _panni_stesi(sotto: Node3D) -> void:
@@ -1160,6 +1164,10 @@ func _moglie_e_criature(r: Node3D) -> void:
 		c.bolla = b2
 		_criature.append(c)
 
+	# (0.65) Donna Cuncetta, quando c'è: assettata ncopp''o lietto tuio.
+	if GameManager.suocera_in_casa and not GameManager.cacciato_e_casa:
+		_suocera(r)
+
 	# 'O pallone e 'e machinelle per terra: quello con cui giocano. Il
 	# pallone è quello vero del pacchetto (0.59); la sfera bianca resta se
 	# il modello manca. Le machinelle stanno in `_robba_nova`.
@@ -1176,6 +1184,73 @@ func _moglie_e_criature(r: Node3D) -> void:
 	pall.material_override = Tex.flat(Color(0.92, 0.90, 0.86), 0.7)
 	pall.position = Vector3(0.9, 0.11, -1.42)
 	r.add_child(pall)
+
+
+## **Donna Cuncetta** (0.65, quarto gradino della scala dei guai): si
+## siede sul bordo del **tuo** letto, verso la stanza. Il letto sta a
+## (LARG/2 − 1,1, −PROF/2 + 1,35), largo 1,5 lungo x: il bordo verso la
+## stanza è a x − 0,75.
+func _suocera(r: Node3D) -> void:
+	var c := StaticBody3D.new()
+	c.name = "Suocera"
+	c.position = Vector3(LARG * 0.5 - 1.1 - 0.62, 0.0, -PROF * 0.5 + 1.6)
+	c.rotation.y = PI * 0.5
+	c.collision_layer = LAYER_CAR
+	c.collision_mask = 0
+	c.set_script(preload("res://scripts/suocera_3d.gd"))
+	r.add_child(c)
+	var cs := CollisionShape3D.new()
+	var cap := CapsuleShape3D.new()
+	cap.radius = 0.30
+	cap.height = 1.2
+	cs.shape = cap
+	cs.position = Vector3(0, 0.7, 0)
+	c.add_child(cs)
+	# Vestita di nero, capelli bianchi, la pancia della nonna.
+	var parti: Dictionary = Human.build(
+		Color(0.10, 0.10, 0.12), Color(0.14, 0.13, 0.15), "", 1.56,
+		{"skin": Color(0.84, 0.68, 0.56), "hair": Color(0.86, 0.85, 0.82),
+		 "corpo": "femmina", "belly": 0.7, "bald": false,
+		 "moustache": false})
+	c.add_child(parti["root"])
+	# Seduta sul bordo del letto: il materasso sta a 0,62, una sedia a 0,45.
+	(parti["root"] as Node3D).position.y = 0.16
+	c.parti = parti
+	var bolla := SpeechBubbleScript.new()
+	bolla.position = Vector3(0, 1.72, 0)
+	c.add_child(bolla)
+	c.bolla = bolla
+
+
+## **'E cartune** (0.65, quinto gradino): quando Nunzia t'ha cacciato, fuori
+## dalla porta ci sono i cartoni dove dormi, e sulla porta il biglietto.
+## Niente corpo solido: stanno nella striscia di novanta centimetri fra il
+## muro e le ruote (vedi `PORTA_FORE`), e lì non si deve inciampare.
+func _cartune(p: Node3D) -> void:
+	var carta := Tex.flat(Color(0.62, 0.48, 0.30), 0.98)
+	var carta2 := Tex.flat(Color(0.55, 0.42, 0.26), 0.98)
+	# Dalla parte −X della porta: dall'altra c'è già la roba del basso
+	# (la lavatrice, le cassette), e i cartoni ci finivano sotto.
+	_box(p, Vector3(1.9, 0.025, 0.58), Vector3(-1.85, 0.015, 0.36), carta)
+	var b2 := _box(p, Vector3(0.9, 0.02, 0.55), Vector3(-2.3, 0.035, 0.34), carta2)
+	b2.rotation.y = 0.12
+	# 'O cuscino: 'nu sacchetto d''a munnezza chino 'e panne.
+	var sac := _box(p, Vector3(0.42, 0.14, 0.30), Vector3(-1.05, 0.08, 0.36),
+		Tex.flat(Color(0.10, 0.10, 0.11), 0.4))
+	sac.rotation.y = -0.2
+	var big := Label3D.new()
+	big.text = "'A CHIAVE L'AGGIO CAGNATA.\n'E SSORDE SOTTO 'A PORTA.\n— N."
+	big.font_size = 44
+	big.pixel_size = 0.0022
+	big.modulate = Color(0.10, 0.08, 0.08)
+	big.outline_size = 0
+	big.position = Vector3(0.0, 1.45, 0.02)
+	big.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+	var fondo := _box(p, Vector3(0.94, 0.36, 0.01), Vector3(0.0, 1.45, 0.01),
+		Tex.flat(Color(0.95, 0.93, 0.86), 0.9))
+	fondo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	big.position.z = 0.02
+	p.add_child(big)
 
 
 # ---------------------------------------------------------------------------
@@ -1208,6 +1283,9 @@ func punto_porta() -> Vector3:
 ## uscendo dalla porta.
 func entra(player: Node3D) -> void:
 	if GameManager.dentro_casa or player == null:
+		return
+	# (0.65) Cacciato 'e casa: 'a porta nun s'arape.
+	if GameManager.cacciato_e_casa:
 		return
 	_ritorno = player.global_position
 	_ritorno_rot = player.rotation.y
@@ -1276,6 +1354,16 @@ func _su_rientro_forzato(causa: String) -> void:
 	var pl := get_tree().get_first_node_in_group("player")
 	if pl == null:
 		return
+	# (0.65) Se Nunzia t'ha cacciato, t'hanno lassato 'a fore 'a porta.
+	if GameManager.cacciato_e_casa:
+		pl.global_position = punto_porta() + Vector3(0, 0.4, 0)
+		pl.rotation.y = 0.0
+		if pl.has_method("azzera_moto"):
+			pl.azzera_moto()
+		GameManager.event_started.emit(
+			"T'hanno lassato 'a fore 'a porta 'e casa. Nunzia nun ha araputo. "
+			+ "[E] ncopp''a porta: passa 'e sorde sotto 'a porta, o duorme ncopp''e cartune.")
+		return
 	if not GameManager.dentro_casa:
 		entra(pl)
 	var testo := "T'hanno purtato 'a casa."
@@ -1307,6 +1395,14 @@ func pannello() -> CanvasLayer:
 
 func apri_consegna() -> void:
 	pannello().apri_consegna()
+
+
+## (0.65) 'A consegna 'a fore 'a porta chiusa: si passa sotto 'a porta, e
+## da llà se po' pure i' a durmì ncopp''e cartune.
+func apri_fore() -> void:
+	if GameManager.ora_ritiro < 0.0:
+		GameManager.ora_ritiro = GameManager.ore_passate()
+	pannello().apri_fore()
 
 
 # ---------------------------------------------------------------------------

@@ -35,7 +35,17 @@ func get_interact_prompt(_da: Vector3) -> String:
 		var sb: String = GameManager.strisce_blu_biglietto()
 		if sb != "":
 			big += "   ·   %s" % sb
+		# (0.65) E 'a scala d''e guaie, si ce staje ncoppa.
+		if GameManager.giorni_debbito > 0:
+			big += "   ·   DEBBITO: %d juorne 'e %d" % [GameManager.giorni_debbito,
+				GameManager.GRADINO_GAME_OVER]
 		return "'A porta — [E] esce fore%s" % big
+	# (0.65) **'A porta chiusa.** Al quinto gradino della scala dei guai
+	# Nunzia ha cambiato la serratura: non si entra. Si passano i soldi
+	# sotto la porta, e si dorme sui cartoni.
+	if GameManager.cacciato_e_casa:
+		var deve: int = GameManager.spese_dovute()
+		return "'A porta è chiusa — [E] passa 'e sorde sotto 'a porta (ce vonno €%d) o duorme ncopp''e cartune" % deve
 	if GameManager.giornata_scaduta:
 		return "'A casa toia — [E] trase (so' 'e %s, t'aspettano)" \
 			% GameManager.orologio()
@@ -51,7 +61,9 @@ func player_interact() -> void:
 	var pl := get_tree().get_first_node_in_group("player")
 	if pl == null:
 		return
-	if verso_dentro:
+	if verso_dentro and GameManager.cacciato_e_casa:
+		vascio.apri_fore()
+	elif verso_dentro:
 		vascio.entra(pl)
 	else:
 		vascio.esci(pl)

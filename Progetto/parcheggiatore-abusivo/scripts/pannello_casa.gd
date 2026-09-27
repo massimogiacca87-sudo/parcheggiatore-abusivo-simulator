@@ -26,6 +26,23 @@ var _lista: Label
 var _sacca: Label
 var _bottoni: VBoxContainer
 var _aperto: bool = false
+## (0.65) Vero quando si parla da fuori, con la porta chiusa (Nunzia t'ha
+## cacciato 'e casa: quinto gradino della scala dei guai).
+var _fore: bool = false
+
+## Quello che dice Nunzia dietro alla porta chiusa.
+const DA_DINTO := [
+	"Nun arapo. Passa 'e sorde sotto 'a porta e vattenne.",
+	"'E criature dormono. Nun fa' rummore e passa 'e sorde.",
+	"Mammà dice ca si nun paghe, nun trase. E mammà tene ragione.",
+	"'O ssaje comme se trase? Cu 'e ssorde. Solo cu 'e ssorde.",
+	"Aggio cagnato 'a serratura, e pure 'o numero 'e telefono. 'E sorde, però, 'e piglio.",
+]
+const DOPPO_PASSATE := [
+	"(Da dint''a porta:) Aggio contato. Nun abbasta, ma è nu principio.",
+	"(Da dint''a porta:) Mammà, 'e sorde! No, nun è 'o postino. È isso.",
+	"(Da dint''a porta:) 'O vvide ca quanno vuo' 'e ttruove?",
+]
 
 
 func _ready() -> void:
@@ -114,6 +131,7 @@ func _process(_d: float) -> void:
 # ---------------------------------------------------------------------------
 
 func apri_consegna() -> void:
+	_fore = false
 	_aperto = true
 	visible = true
 	get_tree().paused = true
@@ -121,8 +139,25 @@ func apri_consegna() -> void:
 	_aggiorna()
 
 
+## (0.65) 'A porta chiusa: la consegna da fuori.
+func apri_fore() -> void:
+	_fore = true
+	_aperto = true
+	visible = true
+	get_tree().paused = true
+	GameManager.piglia_o_mouse(false)
+	_frase_fore = "« %s »" % str(DA_DINTO[randi() % DA_DINTO.size()])
+	_aggiorna()
+
+
+var _frase_fore: String = ""
+
+
 func _aggiorna() -> void:
 	var gm := GameManager
+	if _fore:
+		_mostra_fore()
+		return
 	# Se è tardi e non le hai ancora dato le sue, la prima cosa che vuole è
 	# quella: la consegna delle bollette viene dopo.
 	if gm.extra_richiesto <= 0 and not gm.extra_dato \
@@ -176,7 +211,51 @@ func _mostra_consegna() -> void:
 	_bottone("Vabbuo', mo' vengo  [ESC]", chiudi)
 
 
+func _mostra_fore() -> void:
+	var gm := GameManager
+	_titolo.text = "'A PORTA CHIUSA — 'e %s" % gm.orologio()
+	_frase.text = _frase_fore
+	var righe: Array = []
+	righe.append("Juorne 'e debbito: %d 'e %d. %s" % [gm.giorni_debbito,
+		gm.GRADINO_GAME_OVER, "Si paghe tutto, t'arape." if gm.spese_dovute() > 0
+		else "Hê pavato tutto: stanotte duorme fore, ma dimane matina t'arape."])
+	righe.append("")
+	for s in gm._ordine_spese():
+		var segno := "!!" if bool(s["grave"]) else " ·"
+		righe.append("%s  %-30s €%d" % [segno, str(s["nome"]), int(s["importo"])])
+	var dovuto: int = gm.spese_dovute()
+	if dovuto > 0:
+		righe.append("")
+		righe.append("   IN TUTTO: €%d" % dovuto)
+	_lista.text = "\n".join(righe)
+	_sacca.text = "In sacca tiene €%d.   Passato sotto 'a porta oggi: €%d." \
+		% [gm.money, gm.consegnato_oggi]
+	_svuota_bottoni()
+	if dovuto > 0 and gm.money >= dovuto:
+		_bottone("Passa sotto 'a porta tutto chello ca ce vo'  (€%d)" % dovuto,
+			func(): _consegna(dovuto))
+	if gm.money > 0 and dovuto > 0:
+		_bottone("Passa sotto 'a porta tutto chello ca tiene  (€%d)" % gm.money,
+			func(): _consegna(gm.money))
+	for taglio in [20, 10]:
+		if gm.money >= taglio and dovuto > 0:
+			_bottone("Passa €%d" % taglio, func(): _consegna(taglio))
+	_bottone("Duorme ncopp''e cartune  (va' a durmì)", _dorme_fore)
+	_bottone("Vattenne  [ESC]", chiudi)
+
+
+func _dorme_fore() -> void:
+	chiudi()
+	SoundManager.play("sbadiglio", -4.0)
+	GameManager.dorme_fore()
+
+
 func _consegna(quanto: int) -> void:
+	if _fore:
+		GameManager.consegna_a_moglie(quanto)
+		_frase_fore = "« %s »" % str(DOPPO_PASSATE[randi() % DOPPO_PASSATE.size()])
+		_aggiorna()
+		return
 	var r: Dictionary = GameManager.consegna_a_moglie(quanto)
 	var pezzi: Array = []
 	for p in r.get("pagate", []):
