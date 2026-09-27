@@ -6,8 +6,9 @@ extends Control
 ## hai anche con la coda dell'occhio, che è tutto quello che serve mentre
 ## stai scappando.
 
-const RAGGIO: float = 13.0
-const PASSO: float = 32.0
+## 0.66: un poco più piccole (13 → 10), come tutta la scheda della giornata.
+const RAGGIO: float = 10.0
+const PASSO: float = 25.0
 
 var quante: int = 0
 var _lampo: float = 0.0

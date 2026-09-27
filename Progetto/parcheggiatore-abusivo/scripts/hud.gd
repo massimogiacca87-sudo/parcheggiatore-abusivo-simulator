@@ -131,6 +131,7 @@ func _ready() -> void:
 	layer = 10
 	# L'HUD deve restare attivo anche a gioco in pausa: gestisce il menu.
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_crea_radice()
 	_build_ui()
 	_disable_mouse_capture_on_all_controls(self)
 	_build_pause_menu() # DOPO il disable: i suoi bottoni devono ricevere i click
@@ -279,11 +280,146 @@ func _process(delta: float) -> void:
 			nemico_panel.visible = false
 
 	_update_pickpocket(delta)
-	_spegni_vuote()
 	_update_servizio()
 	_update_client_pointer()
 	_update_emblem_pointer()
 	_update_bussola_casa()
+	_una_bussola()
+	_aggiorna_schede(delta)
+	_spegni_vuote()
+
+
+# ---------------------------------------------------------------------------
+# Chello ca serve, quanno serve (0.66)
+# ---------------------------------------------------------------------------
+#
+# Il capo: *«ci sono forse troppe informazioni tutte insieme, anche quando
+# non necessarie»*. Fino alla 0.65 a schermo c'erano sempre: tre barre
+# piene (sospetto a zero, HP e fiato al massimo), le sigarette e i caffè,
+# gli stemmi in tasca, il conto della sera con le sue quattro voci e il
+# guaio che scatta, tre bussole in basso e la barra delle armi con «—  'E
+# mmane  —». Ogni cosa era giusta da sola; tutte insieme erano rumore.
+#
+# La regola adesso è una: **una cosa si vede quando è cambiata da poco o
+# quando chiede di fare qualcosa.** La barra degli HP c'è quando non sei
+# sano; il fiato quando ne hai perso; il sospetto quando c'è; le sigarette
+# quando il sospetto sale (fumare lo fa scendere), il caffè quando il fiato
+# scende; le voci del conto dentro al vascio; il guaio di stasera di sera o
+# quando sei già in debito. Quando una cosa cambia si accende per qualche
+# secondo e poi si rimette da parte.
+
+## Quanti secondi resta accesa una cosa appena cambiata.
+const ACCESA_DOPO_CAMBIO: float = 4.0
+
+var _prima_sosp: float = -1.0
+var _prima_hp: float = -1.0
+var _prima_sciato: float = -1.0
+var _t_sosp: float = 0.0
+var _t_hp: float = 0.0
+var _t_sciato: float = 0.0
+var _t_cig: float = 0.0
+var _t_stemmi: float = 0.0
+var _t_mano: float = 0.0
+var _t_pavato: float = 0.0
+var _t_dopo_stemma: float = 0.0
+var _stemmi_prima: int = -1
+var _testo_stemmi: String = ""
+var _testo_stemmi_sempre: bool = false
+var _pavato_prima: bool = true
+var _passo_testi: float = 0.0
+
+
+func _aggiorna_schede(delta: float) -> void:
+	_t_sosp = maxf(0.0, _t_sosp - delta)
+	_t_hp = maxf(0.0, _t_hp - delta)
+	_t_sciato = maxf(0.0, _t_sciato - delta)
+	_t_cig = maxf(0.0, _t_cig - delta)
+	_t_stemmi = maxf(0.0, _t_stemmi - delta)
+	_t_mano = maxf(0.0, _t_mano - delta)
+	_t_pavato = maxf(0.0, _t_pavato - delta)
+	_t_dopo_stemma = maxf(0.0, _t_dopo_stemma - delta)
+
+	# Le barre: accese se non sono «a riposo», o se sono appena cambiate.
+	if heat_bar != null:
+		if absf(heat_bar.value - _prima_sosp) > 0.05 and _prima_sosp >= 0.0:
+			_t_sosp = ACCESA_DOPO_CAMBIO
+		_prima_sosp = heat_bar.value
+		if _riga_sospetto != null:
+			_riga_sospetto.visible = heat_bar.value > 0.5 or _t_sosp > 0.0 \
+				or _stelle > 0
+	if health_bar != null:
+		if absf(health_bar.value - _prima_hp) > 0.05 and _prima_hp >= 0.0:
+			_t_hp = ACCESA_DOPO_CAMBIO
+		_prima_hp = health_bar.value
+		var riga_hp: Control = health_bar.get_parent().get_parent() as Control
+		if riga_hp != null:
+			riga_hp.visible = health_bar.value < health_bar.max_value - 0.5 \
+				or _t_hp > 0.0
+		if health_caption != null:
+			health_caption.visible = health_bar.value \
+				<= health_bar.max_value * 0.3
+	if sciato_bar != null:
+		if absf(sciato_bar.value - _prima_sciato) > 0.05 and _prima_sciato >= 0.0:
+			_t_sciato = ACCESA_DOPO_CAMBIO * 0.75
+		_prima_sciato = sciato_bar.value
+		var riga_sc: Control = sciato_bar.get_parent().get_parent() as Control
+		if riga_sc != null:
+			riga_sc.visible = sciato_bar.value < sciato_bar.max_value - 0.5 \
+				or _t_sciato > 0.0
+
+	# Lo stemma appena rubato: per qualche secondo niente bussola degli
+	# stemmi (se no la freccia salta subito sulla macchina accanto, e pare
+	# che la scritta di prima sia rimasta lì).
+	var stemmi: int = GameManager.emblem_count()
+	if _stemmi_prima >= 0 and stemmi > _stemmi_prima:
+		_t_dopo_stemma = 8.0
+	_stemmi_prima = stemmi
+
+	# La mano: dopo un cambio tutte e tre le caselle; con un fierro in pugno
+	# resta solo quella di mezzo; a mani nude non c'è.
+	if mano_ui != null:
+		var armato: bool = GameManager.ARMI.has(GameManager.arma_in_mano)
+		mano_ui.visible = _t_mano > 0.0 or armato
+		var tutte: bool = _t_mano > 0.0
+		for i in range(mano_ui.get_child_count()):
+			if i != 1:
+				(mano_ui.get_child(i) as Control).visible = tutte
+		mano_ui.modulate.a = 1.0 if armato else clampf(_t_mano / 0.5, 0.0, 1.0)
+
+	# Le scritte si riscrivono cinque volte al secondo, non a ogni frame.
+	_passo_testi -= delta
+	if _passo_testi > 0.0:
+		return
+	_passo_testi = 0.2
+	_scrivi_cig()
+	if emblem_counter_label != null:
+		emblem_counter_label.text = _testo_stemmi \
+			if (_testo_stemmi_sempre or _t_stemmi > 0.0) else ""
+
+
+func _scrivi_cig() -> void:
+	if cig_label == null:
+		return
+	var pezzi: Array = []
+	var sosp: float = heat_bar.value if heat_bar != null else 0.0
+	var fiato: float = GameManager.sciato / maxf(GameManager.SCIATO_MAX, 1.0)
+	if GameManager.cigarettes > 0 and (_t_cig > 0.0 or sosp > 35.0):
+		pezzi.append("Sigarette: %d  [X] fuma" % GameManager.cigarettes)
+	if GameManager.caffe > 0 and (_t_cig > 0.0 or fiato < 0.45):
+		pezzi.append("Caffè: %d  [R] bevi" % GameManager.caffe)
+	var t: String = Pad.traduci(" · ".join(pezzi))
+	if cig_label.text != t:
+		cig_label.text = t
+
+
+## In basso al centro una bussola sola: prima casa (quando è ora), poi il
+## cliente, poi lo stemma.
+func _una_bussola() -> void:
+	if casa_pointer != null and casa_pointer.text != "":
+		client_pointer.text = ""
+		emblem_pointer.text = ""
+	elif client_pointer != null and client_pointer.text != "":
+		emblem_pointer.text = ""
 
 
 ## La targhetta fissa in alto a destra. Quando sei fuori servizio dice anche
@@ -322,7 +458,7 @@ func _update_servizio() -> void:
 		servizio_label.text = "○ fuori servizio"
 		return
 	var d: float = _player_ref.global_position.distance_to(casa)
-	servizio_label.text = "○ fuori servizio — 'a piazza toia %s, %d m" % [
+	servizio_label.text = "○ fore servizio · 'a piazza %s, %d m" % [
 		_direction_hint(casa), int(round(d))]
 
 
@@ -558,15 +694,14 @@ func _update_emblem_pointer() -> void:
 		if d < best_dist:
 			best_dist = d
 			best = car
-	if best == null:
+	# 0.66: da vicino non dice più «guarda 'a machina e premi [G]»: quella
+	# frase restava a schermo anche dopo aver rubato lo stemma (bastava
+	# un'altra macchina con lo stemma lì vicino), e da vicino la riga sotto
+	# al mirino lo dice già quando guardi la macchina. E per qualche secondo
+	# dopo un furto la bussola sta zitta; e oltre i 25 metri pure.
+	if best == null or best_dist < 6.0 or best_dist > 25.0 \
+			or _t_dopo_stemma > 0.0:
 		emblem_pointer.text = ""
-		return
-	if best_dist < 4.0:
-		# Da vicino lo dice già la riga dei comandi sotto al mirino, se la
-		# stai guardando; se no, un promemoria corto.
-		var riga_piena: bool = prompt_label != null and prompt_label.visible
-		emblem_pointer.text = "" if riga_piena else \
-			Pad.traduci("★  guarda 'a machina e premi [G] pe' svità 'o stemma")
 		return
 	emblem_pointer.text = "★  stemma da fottere %s — %d m" % [
 		_direction_hint(best.global_position), int(round(best_dist))]
@@ -608,7 +743,7 @@ func _build_pickpocket_ui() -> void:
 	style.shadow_color = Color(0, 0, 0, 0.55)
 	style.shadow_size = 14
 	pick_panel.add_theme_stylebox_override("panel", style)
-	add_child(pick_panel)
+	_radice.add_child(pick_panel)
 
 	var title := Label.new()
 	title.position = Vector2(20, 10)
@@ -865,13 +1000,16 @@ func _build_ui() -> void:
 	var scheda := PanelContainer.new()
 	scheda.name = "SchedaParcheggiatore"
 	scheda.add_theme_stylebox_override("panel", US.scheda())
-	scheda.position = Vector2(14, 12)
-	scheda.custom_minimum_size = Vector2(286, 0)
+	# 0.66: da 286 a 212, e le barre senza didascalia (vedi `_riga_barra`).
+	# Senza larghezza minima: quando le barre sono spente la scheda si
+	# stringe attorno ai soldi (la larghezza la danno le barre stesse).
+	scheda.position = Vector2(12, 10)
+	scheda.custom_minimum_size = Vector2(0, 0)
 	scheda.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(scheda)
+	_radice.add_child(scheda)
 	_scheda_sx = scheda
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 5)
+	col.add_theme_constant_override("separation", 4)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	scheda.add_child(col)
 
@@ -879,8 +1017,8 @@ func _build_ui() -> void:
 	riga_soldi.add_theme_constant_override("separation", 8)
 	riga_soldi.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(riga_soldi)
-	riga_soldi.add_child(US.figura("euro", 24, US.ORO))
-	money_label = _make_label(Vector2.ZERO, "0", 26)
+	riga_soldi.add_child(US.figura("euro", 20, US.ORO))
+	money_label = _make_label(Vector2.ZERO, "0", 22)
 	money_label.add_theme_font_override("font", US.font_titolo())
 	money_label.add_theme_color_override("font_color", US.ORO_CHIARO)
 	riga_soldi.add_child(money_label)
@@ -911,7 +1049,7 @@ func _build_ui() -> void:
 	# Le righe che cambiano: stemmi, commissione, sigarette, la consegna.
 	# Dentro a una colonna sua, così quelle vuote non lasciano buchi.
 	_righe_sx = VBoxContainer.new()
-	_righe_sx.add_theme_constant_override("separation", 2)
+	_righe_sx.add_theme_constant_override("separation", 1)
 	_righe_sx.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(_righe_sx)
 	emblem_counter_label = _riga_testo(_righe_sx, Color(1.0, 0.85, 0.3))
@@ -931,7 +1069,7 @@ func _build_ui() -> void:
 	ver.add_theme_constant_override("outline_size", 4)
 	ver.text = VERSIONE
 	ver.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(ver)
+	_radice.add_child(ver)
 
 	# Velo rosso quando le prendi: sopra tutto, ma trasparente.
 	hurt_flash = ColorRect.new()
@@ -946,12 +1084,13 @@ func _build_ui() -> void:
 	destra.add_theme_stylebox_override("panel", US.scheda())
 	destra.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	destra.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	destra.offset_left = -14.0 - 300.0
-	destra.offset_right = -14.0
-	destra.offset_top = 12.0
-	destra.custom_minimum_size = Vector2(300, 0)
+	# 0.66: da 300 a 214.
+	destra.offset_left = -12.0 - 214.0
+	destra.offset_right = -12.0
+	destra.offset_top = 10.0
+	destra.custom_minimum_size = Vector2(214, 0)
 	destra.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(destra)
+	_radice.add_child(destra)
 	_scheda_dx = destra
 	var cd := VBoxContainer.new()
 	cd.add_theme_constant_override("separation", 2)
@@ -963,21 +1102,22 @@ func _build_ui() -> void:
 	riga_ora.add_theme_constant_override("separation", 8)
 	riga_ora.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cd.add_child(riga_ora)
-	riga_ora.add_child(US.figura("orologio", 20, US.TESTO_2))
-	timer_label = _make_label(Vector2.ZERO, "12:00", 26)
+	riga_ora.add_child(US.figura("orologio", 17, US.TESTO_2))
+	timer_label = _make_label(Vector2.ZERO, "12:00", 22)
 	timer_label.add_theme_font_override("font", US.font_titolo())
 	timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	riga_ora.add_child(timer_label)
 
 	# **'O juorno** e **'a fascia** (0.51): due righe, e il colore della
 	# fascia dice da solo com'è l'ora.
-	giorno_label = _riga_destra(cd, 14, Color(0.86, 0.84, 0.74))
-	fascia_label = _riga_destra(cd, 14, Color(1, 1, 1))
+	giorno_label = _riga_destra(cd, 12, Color(0.86, 0.84, 0.74))
+	fascia_label = _riga_destra(cd, 12, Color(1, 1, 1))
 	fascia_label.add_theme_font_override("font", US.font_grassetto())
-	servizio_label = _riga_destra(cd, 15, Color(1, 1, 1))
+	servizio_label = _riga_destra(cd, 12, Color(1, 1, 1))
 	servizio_label.add_theme_font_override("font", US.font_grassetto())
 	servizio_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	zona_label = _riga_destra(cd, 15, Color(1, 1, 1))
+	zona_label = _riga_destra(cd, 12, Color(1, 1, 1))
+	zona_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 	# **'O conto d''a sera, sempe 'nnanze a ll'uocchie.** Un filo sopra, per
 	# staccarlo dall'ora: è un'altra cosa.
@@ -987,14 +1127,15 @@ func _build_ui() -> void:
 		US.box(Color(1, 1, 1, 0.10), Color(0, 0, 0, 0), 0, 0, 0.0, 0.0))
 	filo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cd.add_child(filo)
-	conto_label = _riga_destra(cd, 16, Color(1.0, 0.78, 0.42))
+	_filo_conto = filo
+	conto_label = _riga_destra(cd, 14, Color(1.0, 0.78, 0.42))
 	conto_label.add_theme_font_override("font", US.font_grassetto())
 	# (0.65) Sotto al conto, 'a scala d''e guaie: una minaccia che non si
 	# vede non minaccia nessuno.
-	debbito_label = _riga_destra(cd, 13, Color(1.0, 0.50, 0.42))
+	debbito_label = _riga_destra(cd, 11, Color(1.0, 0.50, 0.42))
 	debbito_label.add_theme_font_override("font", US.font_grassetto())
 	debbito_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	conto_voci = _riga_destra(cd, 12, Color(0.86, 0.80, 0.72))
+	conto_voci = _riga_destra(cd, 11, Color(0.86, 0.80, 0.72))
 	conto_voci.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 	# --- In cima al centro: gli annunci ------------------------------------
@@ -1005,18 +1146,18 @@ func _build_ui() -> void:
 	var alto := VBoxContainer.new()
 	alto.name = "Annunci"
 	alto.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	alto.offset_left = 330.0
-	alto.offset_right = -330.0
-	alto.offset_top = 118.0
+	alto.offset_left = 240.0
+	alto.offset_right = -240.0
+	alto.offset_top = 64.0
 	alto.add_theme_constant_override("separation", 6)
 	alto.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(alto)
-	servizio_banner = _make_label(Vector2.ZERO, "", 28)
+	_radice.add_child(alto)
+	servizio_banner = _make_label(Vector2.ZERO, "", 22)
 	servizio_banner.add_theme_font_override("font", US.font_titolo())
 	servizio_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	servizio_banner.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	alto.add_child(servizio_banner)
-	servizio_sub = _make_label(Vector2.ZERO, "", 17)
+	servizio_sub = _make_label(Vector2.ZERO, "", 14)
 	servizio_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	servizio_sub.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	US.a_pillola(servizio_sub)
@@ -1024,9 +1165,9 @@ func _build_ui() -> void:
 
 	# Il cartello sta fuori dalla pila: è largo fino a `BANNER_MAX` e deve
 	# poter essere più largo della colonna in mezzo alle due schede.
-	event_banner = _make_label(Vector2(0, 0), "", 28)
+	event_banner = _make_label(Vector2(0, 0), "", 22)
 	event_banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	event_banner.position = Vector2(-BANNER_MAX * 0.5, 196)
+	event_banner.position = Vector2(-BANNER_MAX * 0.5, BANNER_Y)
 	event_banner.size = Vector2(BANNER_MAX, 76)
 	event_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	event_banner.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -1035,7 +1176,7 @@ func _build_ui() -> void:
 	event_banner.modulate = Color(1.0, 0.6, 0.2)
 	event_banner.add_theme_font_override("font", US.font_grassetto())
 	US.a_pillola(event_banner, Color(1, 1, 1, 0.16), 0.78)
-	add_child(event_banner)
+	_radice.add_child(event_banner)
 
 	# **«Clicca pe' piglià 'o mouse»** (0.56b): solo sul browser.
 	mouse_hint = _make_label(Vector2(0, 0), "", 20)
@@ -1045,7 +1186,7 @@ func _build_ui() -> void:
 	mouse_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	mouse_hint.modulate = Color(1.0, 0.88, 0.42)
 	mouse_hint.visible = false
-	add_child(mouse_hint)
+	_radice.add_child(mouse_hint)
 
 	# **'O cruscotto** (0.57): si vede solo quando guidi una rubata.
 	cruscotto = _make_label(Vector2(0, 0), "", 20)
@@ -1056,7 +1197,7 @@ func _build_ui() -> void:
 	cruscotto.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	cruscotto.modulate = Color(1.0, 0.86, 0.46)
 	cruscotto.visible = false
-	add_child(cruscotto)
+	_radice.add_child(cruscotto)
 
 	cruscotto_freccia = _make_label(Vector2(0, 0), "", 40)
 	cruscotto_freccia.set_anchors_preset(Control.PRESET_CENTER)
@@ -1065,13 +1206,13 @@ func _build_ui() -> void:
 	cruscotto_freccia.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	cruscotto_freccia.modulate = Color(1.0, 0.72, 0.26)
 	cruscotto_freccia.visible = false
-	add_child(cruscotto_freccia)
+	_radice.add_child(cruscotto_freccia)
 
 	# La targa della strada: in basso a sinistra, come le targhe di marmo
 	# dei vicoli (bianca, lettere scure, cornice).
-	strada_label = _make_label(Vector2(16, 0), "", 16)
+	strada_label = _make_label(Vector2(16, 0), "", 14)
 	strada_label.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	strada_label.position = Vector2(16, -52)
+	strada_label.position = Vector2(14, -44)
 	strada_label.add_theme_font_override("font", US.font_grassetto())
 	strada_label.add_theme_color_override("font_color", Color(0.16, 0.13, 0.10))
 	strada_label.add_theme_constant_override("outline_size", 0)
@@ -1080,7 +1221,7 @@ func _build_ui() -> void:
 	marmo.shadow_color = Color(0, 0, 0, 0.35)
 	marmo.shadow_size = 4
 	strada_label.add_theme_stylebox_override("normal", marmo)
-	add_child(strada_label)
+	_radice.add_child(strada_label)
 
 	crosshair = Control.new()
 	crosshair.set_anchors_preset(Control.PRESET_CENTER)
@@ -1093,7 +1234,7 @@ func _build_ui() -> void:
 		US.box(Color(1, 1, 1, 0.9), Color(0, 0, 0, 0.55), 1, 3, 0.0, 0.0))
 	anello.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	crosshair.add_child(anello)
-	add_child(crosshair)
+	_radice.add_child(crosshair)
 	# **'A crocetta** (0.61): quattro trattini obliqui attorno al mirino,
 	# per un decimo di secondo, quando un colpo arriva addosso a qualcuno.
 	_segno = Control.new()
@@ -1109,7 +1250,7 @@ func _build_ui() -> void:
 		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_segno.add_child(tr)
 	_segno.modulate.a = 0.0
-	add_child(_segno)
+	_radice.add_child(_segno)
 
 	# --- Sotto al mirino: 'a riga d''e comandi -----------------------------
 	# Una colonna larga quanto lo schermo, che parte sessanta pixel sotto al
@@ -1123,7 +1264,7 @@ func _build_ui() -> void:
 	sotto_mirino.offset_top = 44.0
 	sotto_mirino.offset_bottom = 44.0
 	sotto_mirino.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(sotto_mirino)
+	_radice.add_child(sotto_mirino)
 	prompt_label = preload("res://scripts/riga_comandi.gd").new()
 	prompt_label.name = "RigaComandi"
 	sotto_mirino.add_child(prompt_label)
@@ -1135,21 +1276,22 @@ func _build_ui() -> void:
 	_pila_bassa.anchor_right = 1.0
 	_pila_bassa.anchor_top = 1.0
 	_pila_bassa.anchor_bottom = 1.0
-	_pila_bassa.offset_left = 240.0
-	_pila_bassa.offset_right = -240.0
-	_pila_bassa.offset_top = -16.0
-	_pila_bassa.offset_bottom = -16.0
+	_pila_bassa.offset_left = 200.0
+	_pila_bassa.offset_right = -200.0
+	_pila_bassa.offset_top = -12.0
+	_pila_bassa.offset_bottom = -12.0
 	_pila_bassa.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_pila_bassa.alignment = BoxContainer.ALIGNMENT_END
-	_pila_bassa.add_theme_constant_override("separation", 6)
+	_pila_bassa.add_theme_constant_override("separation", 5)
 	_pila_bassa.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_pila_bassa)
+	_radice.add_child(_pila_bassa)
 
 	# La freccia verso casa sta SOPRA quella del cliente: quando sono le
 	# quattro del mattino è l'unica informazione che conta.
-	casa_pointer = _pillola_bassa(18, Color(1.0, 0.72, 0.34))
-	client_pointer = _pillola_bassa(17, Color(1.0, 0.9, 0.45))
-	emblem_pointer = _pillola_bassa(15, Color(1.0, 0.82, 0.28))
+	# 0.66: ne resta accesa una sola alla volta (vedi `_una_bussola`).
+	casa_pointer = _pillola_bassa(15, Color(1.0, 0.72, 0.34))
+	client_pointer = _pillola_bassa(14, Color(1.0, 0.9, 0.45))
+	emblem_pointer = _pillola_bassa(13, Color(1.0, 0.82, 0.28))
 
 	_build_directing_ui()
 	_build_inventory_ui()
@@ -1176,16 +1318,104 @@ func _build_ui() -> void:
 	cornice.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	cornice.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	cornice.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	cornice.offset_left = -14.0 - 198.0
-	cornice.offset_right = -14.0
-	cornice.offset_top = -30.0 - 198.0
-	cornice.offset_bottom = -30.0
+	# 0.66: da 198 a 150.
+	cornice.offset_left = -12.0 - LATO_MINIMAPPA
+	cornice.offset_right = -12.0
+	cornice.offset_top = -24.0 - LATO_MINIMAPPA
+	cornice.offset_bottom = -24.0
 	cornice.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cornice.add_child(_minimappa)
-	add_child(cornice)
+	_radice.add_child(cornice)
 	_cornice_minimappa = cornice
 	_aggancia_minimappa.call_deferred()
 	_build_summary_ui()
+
+
+# ---------------------------------------------------------------------------
+# 'A grandezza d''o HUD (0.66)
+# ---------------------------------------------------------------------------
+#
+# Il capo: *«La UI è troppo grande, occupa troppo spazio sullo schermo»*.
+#
+# Il progetto disegna l'interfaccia su una tela di 1152×648 e la **stira**
+# sulla finestra (`canvas_items`): a 1440p ogni pixel dell'HUD diventava
+# 2,2 pixel veri, e la scheda di sinistra da 286 era larga 635 pixel sul
+# monitor del capo. Stirare va bene per i menu; per l'HUD di un gioco no:
+# su uno schermo più grande uno vuole vedere **più gioco**, non le stesse
+# scritte più grosse.
+#
+# Adesso quasi tutto l'HUD sta dentro a una radice (`_radice`) che si
+# rimpicciolisce di `_k`: così in pixel veri l'interfaccia cresce con lo
+# schermo, ma meno di lui (×1,0 a 720p, ×1,3 a 1080p, ×1,55 a 1440p). E
+# c'è la manopola nel menu di pausa («HUD: Piccerillo / Normale / Gruosso»),
+# che si ricorda in `user://interfaccia.cfg`.
+#
+# I figli della radice si ancorano a lei come prima si ancoravano allo
+# schermo: la radice è grande quanto lo schermo diviso `_k`. Fuori dalla
+# radice restano la pausa, gli slot, il riepilogo, la galera e la chiantina
+# grande: sono pagine intere, non HUD.
+
+var _radice: Control
+var _k: float = 1.0
+var _scala_utente: int = 1
+const SCALE_UTENTE := [0.85, 1.0, 1.18]
+const NOMI_SCALA := ["Piccerillo", "Normale", "Gruosso"]
+const FILE_INTERFACCIA := "user://interfaccia.cfg"
+
+
+func _crea_radice() -> void:
+	_radice = Control.new()
+	_radice.name = "RadiceHUD"
+	_radice.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_radice)
+	var cfg := ConfigFile.new()
+	if cfg.load(FILE_INTERFACCIA) == OK:
+		_scala_utente = clampi(int(cfg.get_value("hud", "scala", 1)), 0,
+			SCALE_UTENTE.size() - 1)
+	_adatta_scala()
+	get_tree().root.size_changed.connect(_adatta_scala)
+
+
+## Quanto è grande la tela dell'HUD (le coordinate dei figli della radice).
+func _vista() -> Vector2:
+	if _radice != null:
+		return _radice.size
+	return get_viewport().get_visible_rect().size
+
+
+## `_k` = quanto si rimpicciolisce l'HUD rispetto alla tela stirata.
+func _adatta_scala() -> void:
+	if _radice == null:
+		return
+	var tela: Vector2 = get_viewport().get_visible_rect().size
+	var vera: Vector2 = Vector2(get_tree().root.size)
+	if vera.x <= 0.0 or vera.y <= 0.0 or tela.y <= 0.0:
+		vera = tela
+	# Di quanto la finestra stira la tela (come fa `canvas_items`, «keep»).
+	var stira: float = minf(vera.x / tela.x, vera.y / tela.y)
+	# Quanto deve crescere l'HUD in pixel veri: 1 fino a 720p, poi piano.
+	var cresce: float = 1.0 + maxf(vera.y - 720.0, 0.0) * 0.00078
+	_k = clampf(cresce / maxf(stira, 0.01) * float(SCALE_UTENTE[_scala_utente]),
+		0.45, 1.3)
+	_radice.position = Vector2.ZERO
+	_radice.scale = Vector2(_k, _k)
+	_radice.size = tela / _k
+	if event_banner != null:
+		_banner_ultimo = ""
+
+
+func _nome_scala() -> String:
+	return str(NOMI_SCALA[_scala_utente])
+
+
+func _gira_scala(b: Button) -> void:
+	_scala_utente = (_scala_utente + 1) % SCALE_UTENTE.size()
+	var cfg := ConfigFile.new()
+	cfg.load(FILE_INTERFACCIA)
+	cfg.set_value("hud", "scala", _scala_utente)
+	cfg.save(FILE_INTERFACCIA)
+	_adatta_scala()
+	b.text = "HUD: " + _nome_scala()
 
 
 # ---------------------------------------------------------------------------
@@ -1193,7 +1423,12 @@ func _build_ui() -> void:
 # ---------------------------------------------------------------------------
 
 ## La larghezza massima del cartello degli eventi (vedi `prova_cartielle`).
-const BANNER_MAX: float = 1100.0
+## 0.66: da 1100 a 660, e comunque mai più largo dello spazio fra le due
+## schede (`_adatta_banner`): prima copriva la scheda della giornata.
+const BANNER_MAX: float = 660.0
+const BANNER_Y: float = 134.0
+const LATO_MINIMAPPA: float = 150.0
+var _filo_conto: Control
 
 var _scheda_sx: PanelContainer
 var _scheda_dx: PanelContainer
@@ -1211,29 +1446,33 @@ func _riga_barra(dove: Control, icona: String, dida: String, colore: Color,
 		massimo: float = 100.0) -> Dictionary:
 	const US := preload("res://scripts/ui_stile.gd")
 	var r := HBoxContainer.new()
-	r.add_theme_constant_override("separation", 8)
+	r.add_theme_constant_override("separation", 7)
 	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	dove.add_child(r)
-	r.add_child(US.figura(icona, 18, colore.lerp(Color(1, 1, 1), 0.25)))
+	r.add_child(US.figura(icona, 14, colore.lerp(Color(1, 1, 1), 0.25)))
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 1)
+	v.add_theme_constant_override("separation", 0)
+	v.custom_minimum_size = Vector2(166, 0)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	r.add_child(v)
-	var l := _make_label(Vector2.ZERO, dida, 12)
+	# 0.66: la didascalia c'è ma si vede solo quando dice qualcosa di più
+	# dell'icona («HP — STAI MALE», 'o pacco): vedi `_aggiorna_schede`.
+	var l := _make_label(Vector2.ZERO, dida, 10)
 	l.add_theme_font_override("font", US.font_grassetto())
 	l.modulate = Color(0.86, 0.86, 0.88)
+	l.visible = false
 	v.add_child(l)
-	var b := US.barra(colore, 9.0, massimo)
+	var b := US.barra(colore, 7.0, massimo)
 	v.add_child(b)
 	return {"riga": r, "dida": l, "barra": b}
 
 
 func _riga_testo(dove: Control, colore: Color) -> Label:
-	var l := _make_label(Vector2.ZERO, "", 13)
+	var l := _make_label(Vector2.ZERO, "", 11)
 	l.modulate = colore
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.custom_minimum_size = Vector2(262, 0)
+	l.custom_minimum_size = Vector2(188, 0)
 	l.visible = false
 	dove.add_child(l)
 	return l
@@ -1243,7 +1482,7 @@ func _riga_destra(dove: Control, corpo: int, colore: Color) -> Label:
 	var l := _make_label(Vector2.ZERO, "", corpo)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	l.modulate = colore
-	l.custom_minimum_size = Vector2(276, 0)
+	l.custom_minimum_size = Vector2(190, 0)
 	dove.add_child(l)
 	return l
 
@@ -1310,11 +1549,19 @@ func _adatta_banner() -> void:
 	var corpo: int = event_banner.get_theme_font_size("font_size")
 	var w: float = f.get_string_size(event_banner.text, HORIZONTAL_ALIGNMENT_LEFT,
 		-1, corpo).x + 44.0
-	w = clampf(w, 160.0, BANNER_MAX)
+	# 0.66: mai sopra alle due schede (prima era largo fino a 1100 su una
+	# tela di 1152, e copriva il conto della sera).
+	var vista: Vector2 = _vista()
+	var bordo: float = 16.0
+	if _scheda_sx != null:
+		bordo = maxf(bordo, _scheda_sx.position.x + _scheda_sx.size.x + 12.0)
+	if _scheda_dx != null:
+		bordo = maxf(bordo, vista.x - _scheda_dx.position.x + 12.0)
+	w = clampf(w, 160.0, minf(BANNER_MAX, vista.x - 2.0 * bordo))
 	event_banner.offset_left = -w * 0.5
 	event_banner.offset_right = w * 0.5
-	event_banner.offset_top = 196.0
-	event_banner.offset_bottom = 196.0 + 40.0
+	event_banner.offset_top = BANNER_Y
+	event_banner.offset_bottom = BANNER_Y + 34.0
 	event_banner.pivot_offset = Vector2(w * 0.5, 20)
 
 
@@ -1326,7 +1573,7 @@ func _build_boss_ui() -> void:
 	boss_panel.position = Vector2(-190, 8)
 	boss_panel.size = Vector2(380, 58)
 	boss_panel.visible = false
-	add_child(boss_panel)
+	_radice.add_child(boss_panel)
 
 	var title := Label.new()
 	title.position = Vector2(10, 4)
@@ -1388,7 +1635,7 @@ func _build_freccia_ui() -> void:
 	freccia_ui.size = Vector2(2, 2)
 	freccia_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	freccia_ui.set_script(preload("res://scripts/freccia_minaccia.gd"))
-	add_child(freccia_ui)
+	_radice.add_child(freccia_ui)
 
 
 func _on_minaccia(posizione: Vector3) -> void:
@@ -1425,7 +1672,7 @@ func _build_mano_ui() -> void:
 	if _pila_bassa != null:
 		_pila_bassa.add_child(mano_ui)
 	else:
-		add_child(mano_ui)
+		_radice.add_child(mano_ui)
 	for i in range(3):
 		# **Le caselle si allargano sul testo, non il contrario.**
 		#
@@ -1438,13 +1685,13 @@ func _build_mano_ui() -> void:
 		var casella := PanelContainer.new()
 		var sb := UiStile.box(Color(0.05, 0.055, 0.075, 0.82 if i == 1 else 0.5),
 			Color(UiStile.ORO.r, UiStile.ORO.g, UiStile.ORO.b, 0.95) if i == 1
-			else Color(1, 1, 1, 0.14), 2 if i == 1 else 1, 10, 14.0, 6.0)
+			else Color(1, 1, 1, 0.14), 2 if i == 1 else 1, 9, 11.0, 4.0)
 		casella.add_theme_stylebox_override("panel", sb)
 		casella.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var et := Label.new()
 		et.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		et.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		et.add_theme_font_size_override("font_size", 15 if i == 1 else 12)
+		et.add_theme_font_size_override("font_size", 13 if i == 1 else 11)
 		if i == 1:
 			et.add_theme_font_override("font", UiStile.font_grassetto())
 		et.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
@@ -1458,6 +1705,7 @@ func _build_mano_ui() -> void:
 
 
 func _aggiorna_mano(_id: String) -> void:
+	_t_mano = 2.5
 	if _mano_etichette.size() < 3:
 		return
 	var mie: Array = GameManager.roba_in_mano()
@@ -1490,7 +1738,7 @@ func _build_stelle_ui() -> void:
 	stelle_ui = Control.new()
 	# 0.62: dentro alla scheda della giornata, sotto all'ora; la scheda
 	# le fa posto da sola quando compaiono.
-	stelle_ui.custom_minimum_size = Vector2(160, 32)
+	stelle_ui.custom_minimum_size = Vector2(130, 26)
 	stelle_ui.size_flags_horizontal = Control.SIZE_SHRINK_END
 	stelle_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	stelle_ui.set_script(preload("res://scripts/stelle.gd"))
@@ -1499,7 +1747,7 @@ func _build_stelle_ui() -> void:
 		(_scheda_dx.get_child(0) as VBoxContainer).add_child(stelle_ui)
 		(_scheda_dx.get_child(0) as VBoxContainer).move_child(stelle_ui, 1)
 	else:
-		add_child(stelle_ui)
+		_radice.add_child(stelle_ui)
 
 
 func _on_stelle_cambiate(quante: int) -> void:
@@ -1525,7 +1773,7 @@ func _build_presa_ui() -> void:
 	presa_panel.size = Vector2(420, 74)
 	presa_panel.visible = false
 	presa_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(presa_panel)
+	_radice.add_child(presa_panel)
 
 	presa_hint = Label.new()
 	presa_hint.position = Vector2(10, 6)
@@ -1598,7 +1846,7 @@ func _build_nemico_ui() -> void:
 	nemico_panel.size = Vector2(280, 42)
 	nemico_panel.visible = false
 	nemico_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(nemico_panel)
+	_radice.add_child(nemico_panel)
 
 	nemico_nome = Label.new()
 	nemico_nome.position = Vector2(8, 3)
@@ -1656,7 +1904,7 @@ func _build_dialogue_ui() -> void:
 	style.shadow_color = Color(0, 0, 0, 0.55)
 	style.shadow_size = 14
 	dialogue_panel.add_theme_stylebox_override("panel", style)
-	add_child(dialogue_panel)
+	_radice.add_child(dialogue_panel)
 
 	var title := Label.new()
 	title.position = Vector2(14, 10)
@@ -1757,7 +2005,7 @@ func _build_shop_ui() -> void:
 	shop_panel.visible = false
 	shop_panel.add_theme_stylebox_override("panel",
 		_stile_pannello(Color(0.55, 0.47, 0.3)))
-	add_child(shop_panel)
+	_radice.add_child(shop_panel)
 
 	shop_title = Label.new()
 	shop_title.position = Vector2(12, 10)
@@ -1838,8 +2086,8 @@ func _metti_negozio(alto_griglia: float) -> void:
 	var scheda_ok: bool = _scheda_sx != null and is_instance_valid(_scheda_sx)
 	var cima: float = SHOP_TOP
 	if scheda_ok and _scheda_sx.visible:
-		cima = _scheda_sx.get_global_rect().end.y + 10.0
-	var vista: float = get_viewport().get_visible_rect().size.y
+		cima = _scheda_sx.position.y + _scheda_sx.size.y + 10.0
+	var vista: float = _vista().y
 	shop_label.position.y = 42.0 + alto_griglia + 8.0
 	var righe: int = maxi(1, shop_label.get_line_count())
 	var alto_testo: float = float(righe) * float(shop_label.get_line_height()) + 6.0
@@ -2013,7 +2261,7 @@ func _build_inventory_ui() -> void:
 	inventory_panel.visible = false
 	inventory_panel.add_theme_stylebox_override("panel",
 		_stile_pannello(Color(0.55, 0.47, 0.3)))
-	add_child(inventory_panel)
+	_radice.add_child(inventory_panel)
 
 	var title := Label.new()
 	title.position = Vector2(12, 8)
@@ -2055,7 +2303,7 @@ func _build_foto_ui() -> void:
 	_foto_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_foto_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_foto_root.visible = false
-	add_child(_foto_root)
+	_radice.add_child(_foto_root)
 
 	_foto_flash = ColorRect.new()
 	_foto_flash.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -2146,7 +2394,7 @@ func _on_manifesto_fotografato(id: String, titolo: String,
 	# Gli angoli si stringono: è quello che fa leggere il gesto come uno
 	# scatto e non come un popup.
 	_foto_root.scale = Vector2(1.12, 1.12)
-	_foto_root.pivot_offset = Vector2(get_viewport().get_visible_rect().size) / 2.0
+	_foto_root.pivot_offset = _vista() / 2.0
 	var t2 := create_tween()
 	t2.tween_property(_foto_root, "scale", Vector2.ONE, 0.22) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -2199,8 +2447,9 @@ func _build_pause_menu() -> void:
 	# 0.62: più largo e più alto, bottoni da 44, la versione in fondo
 	# (prima stava a 336 — sotto a "Esci dal gioco").
 	# 0.62: ancora più alto, per il bottone del filtro dello schermo.
-	pause_panel.position = Vector2(-200, -288)
-	pause_panel.size = Vector2(400, 576)
+	# 0.66: e un bottone ancora, per la grandezza dell'HUD.
+	pause_panel.position = Vector2(-200, -314)
+	pause_panel.size = Vector2(400, 628)
 	pause_panel.visible = false
 	pause_panel.add_theme_stylebox_override("panel",
 		_stile_pannello(Color(0.6, 0.52, 0.34)))
@@ -2272,15 +2521,23 @@ func _build_pause_menu() -> void:
 	filtro_btn.pressed.connect(_gira_filtro.bind(filtro_btn))
 	pause_panel.add_child(filtro_btn)
 
+	# **'A grandezza d''o HUD** (0.66): vedi `_adatta_scala`.
+	var scala_btn := Button.new()
+	scala_btn.position = Vector2(60, 452)
+	scala_btn.size = Vector2(280, 44)
+	scala_btn.text = "HUD: " + _nome_scala()
+	scala_btn.pressed.connect(_gira_scala.bind(scala_btn))
+	pause_panel.add_child(scala_btn)
+
 	var quit_btn := Button.new()
-	quit_btn.position = Vector2(60, 452)
+	quit_btn.position = Vector2(60, 504)
 	quit_btn.size = Vector2(280, 44)
 	quit_btn.text = "Esci dal gioco"
 	quit_btn.pressed.connect(func(): get_tree().quit())
 	pause_panel.add_child(quit_btn)
 
 	var hint := Label.new()
-	hint.position = Vector2(10, 504)
+	hint.position = Vector2(10, 556)
 	hint.size = Vector2(380, 22)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", 12)
@@ -2293,7 +2550,7 @@ func _build_pause_menu() -> void:
 	# Il numero di versione, in piccolo. Serve a chi segnala un problema:
 	# "non mi funziona" senza la versione non si puo' nemmeno cercare.
 	var ver := Label.new()
-	ver.position = Vector2(10, 532)
+	ver.position = Vector2(10, 584)
 	ver.size = Vector2(380, 18)
 	ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ver.add_theme_font_size_override("font_size", 10)
@@ -2754,7 +3011,7 @@ func _build_directing_ui() -> void:
 	directing_panel.position = Vector2(-160, 40)
 	directing_panel.size = Vector2(320, 128)
 	directing_panel.visible = false
-	add_child(directing_panel)
+	_radice.add_child(directing_panel)
 
 	directing_title_label = Label.new()
 	directing_title_label.position = Vector2(10, 6)
@@ -2821,25 +3078,30 @@ func _build_directing_ui() -> void:
 	directing_result_label.size = Vector2(400, 40)
 	directing_result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	directing_result_label.visible = false
-	add_child(directing_result_label)
+	_radice.add_child(directing_result_label)
 
 	# Il gesto gridato dal parcheggiatore: grande, giallo, al centro dello schermo.
-	shout_label = _make_label(Vector2(0, 0), "", 38)
+	# 0.66: da 38 a 28.
+	shout_label = _make_label(Vector2(0, 0), "", 28)
 	shout_label.set_anchors_preset(Control.PRESET_CENTER)
-	shout_label.position = Vector2(-300, -140)
-	shout_label.size = Vector2(600, 50)
+	shout_label.position = Vector2(-300, -150)
+	shout_label.size = Vector2(600, 40)
 	shout_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shout_label.modulate = Color(1.0, 0.85, 0.2)
-	add_child(shout_label)
+	_radice.add_child(shout_label)
 
-	# La risposta dell'autista, più piccola, sotto.
-	driver_reply_label = _make_label(Vector2(0, 0), "", 20)
-	driver_reply_label.set_anchors_preset(Control.PRESET_CENTER)
-	driver_reply_label.position = Vector2(-300, -88)
-	driver_reply_label.size = Vector2(600, 30)
+	# La risposta dell'autista (e di chi parla): 0.66, **in basso come un
+	# sottotitolo**, sopra alle bussole. Prima stava a novanta pixel sopra al
+	# mirino, cioè in mezzo a quello che stai guardando, e la frase era già
+	# scritta nel fumetto di chi parla.
+	driver_reply_label = _make_label(Vector2(0, 0), "", 16)
+	driver_reply_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	driver_reply_label.position = Vector2(-330, -118)
+	driver_reply_label.size = Vector2(660, 26)
+	driver_reply_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	driver_reply_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	driver_reply_label.modulate = Color(0.8, 0.9, 1.0)
-	add_child(driver_reply_label)
+	_radice.add_child(driver_reply_label)
 
 
 var summary_replay_btn: Button
@@ -2972,16 +3234,17 @@ func _spawn_money_popup(delta_money: int) -> void:
 	popup.add_theme_color_override("font_color", colore)
 	popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	riga.add_child(popup)
+	riga.scale = Vector2(_k, _k)
 	riga.position = money_label.global_position + Vector2(
-		money_label.size.x + randf_range(14, 40), -4)
+		money_label.size.x + randf_range(14, 40), -4) * _k
 	add_child(riga)
 	# Chi entra sale, chi esce scivola via di lato: scendendo sarebbe finito
 	# sopra alla scritta del sospetto.
 	var tween := create_tween()
 	if entra:
-		tween.tween_property(riga, "position:y", riga.position.y - 40.0, 1.0)
+		tween.tween_property(riga, "position:y", riga.position.y - 40.0 * _k, 1.0)
 	else:
-		tween.tween_property(riga, "position:x", riga.position.x + 60.0, 1.2)
+		tween.tween_property(riga, "position:x", riga.position.x + 60.0 * _k, 1.2)
 	tween.parallel().tween_property(riga, "modulate:a", 0.0, 1.2 if not entra else 1.0)
 	tween.tween_callback(riga.queue_free)
 
@@ -2992,10 +3255,10 @@ func _spawn_money_popup(delta_money: int) -> void:
 ## capo lo stesso, e ci sta: la riga è alta due righe.
 func _corpo_cartiello(n: int) -> int:
 	if n <= 46:
-		return 28
+		return 22
 	if n <= 74:
-		return 24
-	return 21
+		return 19
+	return 17
 
 
 func _on_event_started(text: String) -> void:
@@ -3024,7 +3287,11 @@ func _on_money_dirty(_amount: int) -> void:
 		_refresh_shop()
 
 
+var _cig_prima: int = -1
+
+
 func _on_caffe_changed(_quante: int) -> void:
+	_t_cig = ACCESA_DOPO_CAMBIO + 2.0
 	_on_cigarettes_changed(GameManager.cigarettes)
 	if shop_panel and shop_panel.visible:
 		_refresh_shop()
@@ -3035,12 +3302,12 @@ func _on_caffe_changed(_quante: int) -> void:
 func _on_cigarettes_changed(count: int) -> void:
 	if shop_panel and shop_panel.visible:
 		_refresh_shop()
-	var pezzi: Array = []
-	if count > 0:
-		pezzi.append("Sigarette: %d  [X] fuma" % count)
-	if GameManager.caffe > 0:
-		pezzi.append("Caffè: %d  [R] bevi" % GameManager.caffe)
-	cig_label.text = Pad.traduci(" · ".join(pezzi))
+	# 0.66: si vedono per qualche secondo quando cambiano, poi solo quando
+	# servono (vedi `_scrivi_cig`).
+	if count != _cig_prima:
+		_t_cig = ACCESA_DOPO_CAMBIO + 2.0
+	_cig_prima = count
+	_scrivi_cig()
 
 
 func _refresh_commission() -> void:
@@ -3260,6 +3527,19 @@ func _on_inventory_changed(_emblems: Dictionary) -> void:
 		_refresh_inventory()
 
 
+## (0.66) Il testo si prepara qui e lo mette `_aggiorna_schede`: i soldi in
+## mano ai guagliuni restano sempre (è un giro da fare), gli stemmi e la
+## roba da piazzare solo per qualche secondo dopo che cambiano.
+func _metti_testo_stemmi(t: String) -> void:
+	if t != _testo_stemmi:
+		_t_stemmi = ACCESA_DOPO_CAMBIO + 2.0
+	_testo_stemmi = t
+	_testo_stemmi_sempre = GameManager.cassa_in_giro() > 0
+	if emblem_counter_label != null:
+		emblem_counter_label.text = t \
+			if (_testo_stemmi_sempre or _t_stemmi > 0.0) else ""
+
+
 func _refresh_emblem_counter() -> void:
 	var count := GameManager.emblem_count()
 	var roba := 0
@@ -3273,23 +3553,23 @@ func _refresh_emblem_counter() -> void:
 	# ne dimentica e non capisce perche' guadagna meno del previsto.
 	var in_giro: int = GameManager.cassa_in_giro()
 	if in_giro > 0:
-		emblem_counter_label.text = Pad.traduci(
-			"€%d 'n mano ê guagliune — [M] pe' vedé addò stanno" % in_giro)
+		_metti_testo_stemmi(Pad.traduci(
+			"€%d 'n mano ê guagliune — [M] pe' vedé addò stanno" % in_giro))
 		return
 	# Il promemoria del tasto I usciva solo se avevi degli stemmi: chi
 	# comprava soltanto l'ombrellone non scopriva mai che lo zaino esisteva.
 	if count > 0 and roba > 0:
-		emblem_counter_label.text = Pad.traduci("Stemmi: %d (€%d) · %d cos%s da piazzare — [I] zaino" % [
+		_metti_testo_stemmi(Pad.traduci("Stemmi: %d (€%d) · %d cos%s da piazzare — [I] zaino" % [
 			count, GameManager.emblems_total_value(), roba,
-			("a" if roba == 1 else "e")])
+			("a" if roba == 1 else "e")]))
 	elif count > 0:
-		emblem_counter_label.text = Pad.traduci("Stemmi: %d (€%d) — [I] zaino" % [
-			count, GameManager.emblems_total_value()])
+		_metti_testo_stemmi(Pad.traduci("Stemmi: %d (€%d) — [I] zaino" % [
+			count, GameManager.emblems_total_value()]))
 	elif roba > 0:
-		emblem_counter_label.text = Pad.traduci("%d cos%s da piazzare — [I] zaino" % [
-			roba, ("a" if roba == 1 else "e")])
+		_metti_testo_stemmi(Pad.traduci("%d cos%s da piazzare — [I] zaino" % [
+			roba, ("a" if roba == 1 else "e")]))
 	else:
-		emblem_counter_label.text = ""
+		_metti_testo_stemmi("")
 
 
 ## Lo zaino: la roba comprata, con la sua figura, divisa in due scomparti —
@@ -3426,12 +3706,19 @@ func _aggiorna_conto() -> void:
 	if conto_label == null or not is_instance_valid(conto_label):
 		return
 	var dovuto: int = GameManager.spese_dovute()
+	# (0.66) Il conto della sera sta sempre (è quello che fa la giornata);
+	# «PAVATO» resta qualche secondo e poi se ne va (dentro al vascio resta);
+	# le voci una per una si leggono dentro al vascio, dove si paga.
 	if dovuto <= 0:
-		conto_label.text = "'O conto: PAVATO"
+		if not _pavato_prima:
+			_t_pavato = 5.0
+		_pavato_prima = true
+		conto_label.text = "'O conto: PAVATO" \
+			if (_t_pavato > 0.0 or GameManager.dentro_casa) else ""
 		conto_label.modulate = Color(0.62, 1.0, 0.66)
 		conto_voci.text = ""
-		_aggiorna_debbito()
 	else:
+		_pavato_prima = false
 		conto_label.text = "STASERA CE VONNO  €%d" % dovuto
 		# Da arancione a rosso man mano che la giornata se ne va: alle
 		# undici di sera con settanta euro scoperti il colore lo dice
@@ -3449,7 +3736,11 @@ func _aggiorna_conto() -> void:
 			var rit: int = GameManager.giornata - int(v["giorno"])
 			righe.append("%s €%d%s" % [str(v["nome"]), int(v["importo"]),
 				("  (+%dg)" % rit) if rit > 0 else ""])
-		conto_voci.text = "\n".join(righe)
+		conto_voci.text = "\n".join(righe) if GameManager.dentro_casa else ""
+	conto_label.visible = conto_label.text != ""
+	conto_voci.visible = conto_voci.text != ""
+	if _filo_conto != null:
+		_filo_conto.visible = conto_label.visible
 	_aggiorna_debbito()
 
 	if cumm_label != null and is_instance_valid(cumm_label):
@@ -3482,7 +3773,11 @@ func _aggiorna_debbito() -> void:
 		elif g != "":
 			righe.append("Si nun paghe stasera: %s" % g)
 	debbito_label.text = "\n".join(righe)
-	debbito_label.visible = not righe.is_empty()
+	# (0.66) Il guaio di stasera si legge la sera, o quando il debito c'è
+	# già, o dentro al vascio: alle due del pomeriggio è solo una riga in più.
+	var sera: bool = gm.ore_passate() >= 8.0 or gm.notte or gm.giornata_scaduta
+	debbito_label.visible = not righe.is_empty() \
+		and (n > 0 or gm.dentro_casa or sera)
 	# Più si sale, più diventa rosso.
 	var k: float = clampf(float(n) / float(gm.GRADINO_GAME_OVER - 1), 0.0, 1.0)
 	debbito_label.modulate = Color(1.0, 0.72, 0.46).lerp(Color(1.0, 0.30, 0.26), k)

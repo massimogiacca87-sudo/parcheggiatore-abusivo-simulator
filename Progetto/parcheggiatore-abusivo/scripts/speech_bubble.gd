@@ -68,7 +68,10 @@ const SPEZZA := TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND \
 const PIXEL_SIZE := 0.005
 ## A questa distanza il fumetto sta alla misura sua. Più vicino rimpicciolisce
 ## in proporzione, così quanto occupa a schermo non cambia.
-const DIST_RIF: float = 3.2
+## 0.66: da 3,2 a 4,2 — il fumetto un quarto più piccolo a schermo (il capo:
+## «la UI è troppo grande»; da vicino un fumetto di due righe copriva mezzo
+## vigile).
+const DIST_RIF: float = 4.2
 ## Quanto è largo al massimo, in pixel di layout: per PIXEL_SIZE fa 2,1 metri.
 const LARGH_MAX: float = 420.0
 const CORPO: int = 40

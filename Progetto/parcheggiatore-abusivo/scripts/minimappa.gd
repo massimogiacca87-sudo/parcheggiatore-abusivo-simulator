@@ -16,8 +16,11 @@ const UiStileM := preload("res://scripts/ui_stile.gd")
 
 ## Pixel per metro. A 2,6 un quadrato di 190 pixel fa settantatré metri:
 ## la piazza intera e le traverse attorno.
-const SCALA: float = 2.6
-const LATO: float = 190.0
+## 0.66: 142 invece di 190, e un po' più di città per pixel (2,0 invece di
+## 2,6): si vede quasi lo stesso pezzo di quartiere in una chiantina più
+## piccola.
+const SCALA: float = 2.0
+const LATO: float = 142.0
 
 var _ogni: float = 0.0
 

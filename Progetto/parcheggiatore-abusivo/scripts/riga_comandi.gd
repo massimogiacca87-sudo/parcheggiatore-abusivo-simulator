@@ -18,8 +18,9 @@ extends PanelContainer
 const US := preload("res://scripts/ui_stile.gd")
 
 ## Oltre questa larghezza (in pixel) le azioni vanno una per riga.
-const LARGHEZZA_MAX: float = 1060.0
-const CORPO: int = 17
+const LARGHEZZA_MAX: float = 1100.0
+## 0.66: da 17 a 15 (e l'HUD intero ora si rimpicciolisce con lo schermo).
+const CORPO: int = 15
 
 var text: String = "":
 	set = _metti
@@ -33,7 +34,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_dentro = VBoxContainer.new()
-	_dentro.add_theme_constant_override("separation", 4)
+	_dentro.add_theme_constant_override("separation", 3)
 	_dentro.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_dentro)
 	visible = false
@@ -62,7 +63,13 @@ func _ridisegna() -> void:
 	var f: Font = US.font_testo()
 	var largo: float = f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1,
 		CORPO).x + 30.0 * float(pz.size())
-	var schermo: float = get_viewport_rect().size.x if is_inside_tree() else 1280.0
+	# La larghezza di chi la contiene (la radice dell'HUD, 0.66), non dello
+	# schermo: la radice è scalata e le sue coordinate non sono quelle.
+	var schermo: float = 1280.0
+	if get_parent() is Control:
+		schermo = (get_parent() as Control).size.x
+	elif is_inside_tree():
+		schermo = get_viewport_rect().size.x
 	var una_riga: bool = largo <= minf(schermo - 120.0, LARGHEZZA_MAX)
 	var riga := _riga_nova()
 	for p in pz:
