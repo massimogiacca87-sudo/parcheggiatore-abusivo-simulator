@@ -168,11 +168,16 @@ func _ready() -> void:
 
 
 func _su_nodo_nuovo(n: Node) -> void:
-	if n is BaseButton and not n.has_meta(&"ui_muto"):
+	# "ui_connesso" è il segno che ci siamo già passati: con .bind() il
+	# Callable di mouse_entered è sempre diverso, quindi is_connected() su
+	# quello non è affidabile e un bottone tolto e rimesso nell'albero
+	# (tutta l'UI qui è procedurale) rischiava il doppio fruscio.
+	if n is BaseButton and not n.has_meta(&"ui_muto") and not n.has_meta(&"ui_connesso"):
 		var b := n as BaseButton
+		b.set_meta(&"ui_connesso", true)
 		if not b.pressed.is_connected(_ui_clic):
 			b.pressed.connect(_ui_clic)
-			b.mouse_entered.connect(_ui_sopra.bind(b))
+		b.mouse_entered.connect(_ui_sopra.bind(b))
 
 
 func _ui_clic() -> void:
