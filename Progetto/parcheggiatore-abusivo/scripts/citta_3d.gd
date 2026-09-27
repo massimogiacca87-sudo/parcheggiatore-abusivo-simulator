@@ -391,6 +391,10 @@ func _ready() -> void:
 	# per decidere dove farli nascere.
 	var caccia := preload("res://scripts/caccia.gd").new()
 	add_child(caccia)
+	# (0.64) 'E strisce blu: guarda il GameManager e pianta i parchimetri.
+	var strisce := preload("res://scripts/strisce_blu.gd").new()
+	strisce.name = "StrisceBlu"
+	add_child(strisce)
 	_alza_collina()
 	_build_collina()
 	_flush_batch()

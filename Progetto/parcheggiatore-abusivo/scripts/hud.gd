@@ -1947,11 +1947,31 @@ func _refresh_shop() -> void:
 			"id": id, "posseduto": mio and not (id in GameManager.DECOR_IDS),
 			"etichetta": etichetta,
 		})
+	# **'A pittura janca c''o pennello** (0.64): l'ultima casella del bazar.
+	# Non è un oggetto che si possiede né un decoro da piazzare: è roba che
+	# si consuma, una passata per posto (vedi 'E STRISCE BLU).
+	if _shop_kind == "bazar":
+		voci.append({"id": "pittura", "posseduto": GameManager.pittura > 0,
+			"etichetta": ("×%d · €%d" % [GameManager.pittura, GameManager.PITTURA_COSTO])
+				if GameManager.pittura > 0 else "€%d" % GameManager.PITTURA_COSTO})
 	var alto_griglia: float = _disegna_griglia(_shop_grid, voci, 4, SHOP_LATO, _sel)
 
 	# Sotto la griglia, la scheda della casella scelta.
 	var righe: Array = ["'O portafoglio: €%d" % GameManager.money, ""]
-	if _sel >= 0 and _sel < chiavi.size():
+	if _shop_kind == "bazar" and _sel == chiavi.size():
+		righe.append("Pittura janca c''o pennello")
+		righe.append("'nu barattolo, %d passate: una pe' ogne posto cu 'e strisce blu (fermo accanto, [E])."
+			% GameManager.PITTURA_PASSATE)
+		righe.append("")
+		if GameManager.money < GameManager.PITTURA_COSTO:
+			righe.append("€%d — non te lo puoi permettere." % GameManager.PITTURA_COSTO)
+		elif GameManager.negozio_scelto == "pittura":
+			righe.append("€%d — premi ANCORA %d e te l'accatte." % [
+				GameManager.PITTURA_COSTO, _sel + 1])
+		else:
+			righe.append("€%d — premi %d per guardarlo." % [
+				GameManager.PITTURA_COSTO, _sel + 1])
+	elif _sel >= 0 and _sel < chiavi.size():
 		var id2: String = chiavi[_sel]
 		var info2: Dictionary = GameManager.UPGRADES[id2]
 		righe.append(str(info2["name"]))
@@ -2571,7 +2591,7 @@ func _lista_attiva() -> Array:
 	if shop_panel and shop_panel.visible:
 		match _shop_kind:
 			"zio": return ["negozio", GameManager.TOOL_IDS.size()]
-			"bazar": return ["negozio", GameManager.DECOR_IDS.size()]
+			"bazar": return ["negozio", GameManager.DECOR_IDS.size() + 1]
 	return ["", 0]
 
 
@@ -2598,6 +2618,8 @@ func _scorri_menu(passo: int) -> void:
 			else GameManager.DECOR_IDS
 		if _sel < chiavi.size():
 			GameManager.negozio_scelto = str(chiavi[_sel])
+		elif _shop_kind == "bazar":
+			GameManager.negozio_scelto = "pittura"
 	SoundManager.play("pop", -14.0, 1.3)
 	_ridisegna_pannello(str(info[0]))
 
@@ -3327,6 +3349,16 @@ func _refresh_inventory() -> void:
 	if GameManager.caffe > 0 or GameManager.cigarettes > 0:
 		righe.append("IN TASCA: %d caffè [R] · %d sigarette [X]" % [
 			GameManager.caffe, GameManager.cigarettes])
+	if GameManager.pittura > 0:
+		righe.append("PITTURA JANCA: %d passat%s (sulle strisce blu, [E])" % [
+			GameManager.pittura, "a" if GameManager.pittura == 1 else "e"])
+	# (0.64) 'E strisce blu: addò stanno e quanto manca.
+	for zb in GameManager.strisce_blu:
+		var e: Dictionary = GameManager.strisce_blu[zb]
+		righe.append("STRISCE BLU a %s: parchimetre %d/%d sfasciate, %d poste ripittate" % [
+			str(GameManager.NOMI_PIAZZE.get(zb, zb)),
+			(e.get("rotti", []) as Array).size(), int(e.get("parchimetri", 0)),
+			(e.get("pittati", []) as Array).size()])
 	righe.append("")
 
 	var emblems: Dictionary = GameManager.emblems

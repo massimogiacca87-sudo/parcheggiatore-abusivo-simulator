@@ -30,6 +30,11 @@ func get_interact_prompt(_da: Vector3) -> String:
 		var big := ""
 		if GameManager.e_speciale():
 			big = "   ·   %s" % GameManager.biglietto()
+		# (0.64) E si stanotte 'o Comune ha pittato 'e strisce blu, 'o
+		# biglietto 'o dice.
+		var sb: String = GameManager.strisce_blu_biglietto()
+		if sb != "":
+			big += "   ·   %s" % sb
 		return "'A porta — [E] esce fore%s" % big
 	if GameManager.giornata_scaduta:
 		return "'A casa toia — [E] trase (so' 'e %s, t'aspettano)" \

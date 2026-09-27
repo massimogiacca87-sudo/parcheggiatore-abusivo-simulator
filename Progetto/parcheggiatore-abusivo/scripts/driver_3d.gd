@@ -342,6 +342,19 @@ const SAY_SPESA := [
 ## prove), si ripiega sul vecchio comportamento — cammina verso l'uscita —
 ## così non resta mai piantato.
 func _parte_p_a_spesa() -> void:
+	# **Primma 'o parchimetro** (0.64). Chi ha posteggiato sulle strisce blu
+	# va prima alla macchinetta a pagare, e poi a fare la spesa: è la cosa
+	# che ti fa vedere, senza scritte, perché a te non darà niente.
+	if car != null and is_instance_valid(car) and car.get("pavato_parchimetro") == true \
+			and not _pagato_macchinetta:
+		var pm: Node3D = _parchimetro_vicino()
+		if pm != null:
+			_negozio = pm
+			_punto_negozio = pm.punto_pagamento() if pm.has_method("punto_pagamento") \
+				else pm.global_position
+			_va_ô_parchimetro = true
+			state = State.SPESA
+			return
 	_negozio = _scegli_negozio()
 	if _negozio == null:
 		_punto_negozio = exit_point
@@ -405,6 +418,9 @@ func _va_ô_negozio(delta: float) -> void:
 		_dentro = clampf(durata_spesa * 0.5, SPESA_MIN, SPESA_MAX)
 		state = State.ASPETTA
 		return
+	if _va_ô_parchimetro and global_position.distance_to(meta) < 1.0:
+		_arriva_ô_parchimetro()
+		return
 	if global_position.distance_to(meta) < 0.8:
 		# Quanto resta in bottega = quanto voleva starci in tutto, meno la
 		# camminata di ritorno. Il negozio lontano si mangia il tempo, e
@@ -416,6 +432,58 @@ func _va_ô_negozio(delta: float) -> void:
 		_dentro = clampf(durata_spesa - ritorno, SPESA_MIN, SPESA_MAX)
 		_cammina_da = 0.0
 		state = State.ASPETTA
+
+
+var _va_ô_parchimetro: bool = false
+var _pagato_macchinetta: bool = false
+
+const SAY_PARCHIMETRO := [
+	"Aggio pavato 'o parchimetro! A te che t'aggi' 'a dà?",
+	"'O biglietto 'o tengo, guagliò. Tu nun sî nisciuno.",
+	"Ccà ce stanno 'e strisce blu: aggio già pavato.",
+]
+
+
+## Il parchimetro sano più vicino della sua piazza.
+func _parchimetro_vicino() -> Node3D:
+	var meglio: Node3D = null
+	var d_min: float = 60.0
+	var zona: String = str(car.get("zona_id")) if car != null else ""
+	for pm in get_tree().get_nodes_in_group("parchimetri"):
+		if not (pm is Node3D) or not is_instance_valid(pm):
+			continue
+		if str(pm.get("zona_id")) != zona or pm.get("rotto") == true:
+			continue
+		var d: float = global_position.distance_to((pm as Node3D).global_position)
+		if d < d_min:
+			d_min = d
+			meglio = pm
+	return meglio
+
+
+## Arrivato alla macchinetta. Se nel frattempo l'hai sfasciata, il biglietto
+## non ce l'ha: e allora per lui la macchina è fuori dalle strisce.
+func _arriva_ô_parchimetro() -> void:
+	_va_ô_parchimetro = false
+	_pagato_macchinetta = true
+	_cammina_da = 0.0
+	var pm: Node3D = _negozio
+	if pm != null and is_instance_valid(pm) and pm.get("rotto") != true:
+		_face_toward(pm.global_position)
+		var pl := get_tree().get_first_node_in_group("player") as Node3D
+		if pl != null:
+			var dd: float = global_position.distance_to(pl.global_position)
+			if dd < 30.0:
+				SoundManager.play("moneta2", lerpf(-6.0, -24.0, dd / 30.0))
+		if randf() < 0.5:
+			_say("E vvà, 'o biglietto. Accussì nun me fanno 'a multa.")
+		if pm.has_method("incassa"):
+			pm.incassa()
+	elif car != null and is_instance_valid(car):
+		car.set("pavato_parchimetro", false)
+		car.set("parked_abusive", true)
+		_say("'O parchimetro è scassato! E mo' me fanno 'a multa...")
+	_parte_p_a_spesa()
 
 
 func _dint_ô_negozio(delta: float) -> void:
@@ -1077,7 +1145,11 @@ func player_interact() -> void:
 			_pay(car.payment_amount(), false)
 		else:
 			_refused = true
-			if _e_nuttata():
+			if car.get("pavato_parchimetro") == true:
+				# (0.64) 'E strisce blu: ha pavato 'a macchinetta.
+				_say(SAY_PARCHIMETRO[randi() % SAY_PARCHIMETRO.size()])
+				SoundManager.play("schiocco", -4.0)
+			elif _e_nuttata():
 				_say(SAY_REFUSE_NOTTE[randi() % SAY_REFUSE_NOTTE.size()])
 				SoundManager.play("fail", -7.0, 0.78)
 			elif car.personality == "tirchio":

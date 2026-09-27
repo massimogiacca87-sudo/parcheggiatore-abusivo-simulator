@@ -300,6 +300,11 @@ var _smoke_particles: CPUParticles3D = null
 # --- Parcheggio abusivo ---
 ## Vero se l'auto è stata piazzata fuori dalle strisce col tasto SPAZIO.
 var parked_abusive: bool = false
+## **'E strisce blu** (0.64). Posteggiata sopra a un posto blu mentre in
+## piazza c'è ancora un parchimetro in piedi: il cliente paga la macchinetta
+## e a te non dà niente. Vedi `_controlla_striscia_blu`.
+var pavato_parchimetro: bool = false
+var striscia_blu: bool = false
 ## Vero se un vigile le ha appiccicato la multa sul parabrezza.
 var has_multa: bool = false
 var _multa_node: Node3D = null
@@ -1923,6 +1928,7 @@ func _try_park_abusive() -> void:
 	_parked_time = randf_range(30.0, 42.0)
 	_multa_cd = MULTA_CHECK_EVERY
 	GameManager.directing_ended.emit(minigame_score, false)
+	GameManager.auto_posteggiata.emit(self, false)
 	SoundManager.play("pop", -4.0, 0.8)
 	_spawn_driver()
 
@@ -2581,6 +2587,14 @@ func _finito_dal_guagliuno() -> void:
 	# e chi si ferma da lui ha già deciso di pagare.
 	var chi: Node = _guagliuno_chi
 	_guagliuno_chi = null
+	# (0.64) Pure al guaglione: striscia blu cu 'o parchimetro sano = niente,
+	# striscia blu senza = 'a metà.
+	_controlla_striscia_blu()
+	if pavato_parchimetro:
+		return
+	if striscia_blu and randf() < 0.5:
+		_say("Striscia blu, guagliò: 'a multa m''a piglio io, nun te pavo.")
+		return
 	if randf() >= GameManager.paga_chi_guagliuno(zona, personality):
 		_say("Nun tengo spicce, guagliò.")
 		return
@@ -2682,7 +2696,46 @@ func _finish_parking() -> void:
 			visto = true
 			break
 	GameManager.cool_down(9.0 if visto else 4.0)
+	_controlla_striscia_blu()
+	GameManager.auto_posteggiata.emit(self, true)
 	_spawn_driver()
+
+
+## **Striscia blu o striscia janca?** (0.64) Chiamata a macchina ferma dentro
+## al posto, dal giocatore o dal guaglione. Se il posto è blu:
+##   * c'è ancora un parchimetro sano in piazza → il cliente paga quello, e a
+##     te niente (`pavato_parchimetro`);
+##   * i parchimetri sono tutti rotti → per lui è come stare fuori dalle
+##     strisce: `parked_abusive`, la mancia della bella manovra scende, e il
+##     vigile gli può fare la multa.
+func _controlla_striscia_blu() -> void:
+	striscia_blu = false
+	pavato_parchimetro = false
+	if assigned_spot == null or not is_instance_valid(assigned_spot):
+		return
+	if assigned_spot.get("blu") != true:
+		return
+	striscia_blu = true
+	if GameManager.parchimetri_sani(zona_id) > 0:
+		pavato_parchimetro = true
+		_say(SAY_STRISCIA_BLU[randi() % SAY_STRISCIA_BLU.size()])
+	else:
+		parked_abusive = true
+		minigame_score = minf(minigame_score, 0.45)
+		_multa_cd = MULTA_CHECK_EVERY
+		_say(SAY_STRISCIA_BLU_ROTTO[randi() % SAY_STRISCIA_BLU_ROTTO.size()])
+
+
+const SAY_STRISCIA_BLU := [
+	"Striscia blu? E mo' pavo 'o parchimetro, no a te.",
+	"Uè, ccà ce sta 'o parchimetro. Tu che vuò?",
+	"'O Comune ha miso 'e strisce blu: pavo a llore.",
+]
+const SAY_STRISCIA_BLU_ROTTO := [
+	"'O parchimetro è rutto... e si me fanno 'a multa 'a pave tu?",
+	"Striscia blu e niente macchinetta: ccà me fanno 'a multa!",
+	"Chesta nun è 'na striscia bbona, guagliò.",
+]
 
 
 ## L'autista scende dall'auto e si avvia verso l'uscita: è il momento di
@@ -2723,6 +2776,10 @@ func _abort_directing() -> void:
 # ---------------------------------------------------------------------------
 
 func payment_chance() -> float:
+	# (0.64) Ha pavato 'o parchimetro: a te nun te dà niente, si nun è a
+	# cazzotti (`punches_needed` resta com'era).
+	if pavato_parchimetro:
+		return 0.0
 	var info: Dictionary = CAR_TYPES[car_type]
 	var chance: float = 0.55 + minigame_score * 0.3 + info["pay_mod"]
 	if personality == "tirchio":

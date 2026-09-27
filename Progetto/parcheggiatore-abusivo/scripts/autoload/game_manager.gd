@@ -2524,6 +2524,8 @@ func _scegli_giornata() -> void:
 ## Prepara le spese di oggi. Si chiama a inizio giornata.
 func prepara_giornata() -> void:
 	_scegli_giornata()
+	# (0.64) Stanotte 'o Comune ha pittato 'e strisce blu? Vedi 'E STRISCE BLU.
+	_forse_strisce_blu()
 	# **'E nummere 'e stasera se tirano mo'.** Vedi `_prepara_estrazione`:
 	# senza questa riga 'a Signora nun po' nduvinà niente, pecché 'o
 	# futuro nun sta ancora scritto.
@@ -4639,6 +4641,9 @@ func stato_partita() -> Dictionary:
 		"signora_detto": signora_detto,
 		# --- 'A gente d''a piazza ----------------------------------------
 		"rapporti": rapporti,
+		# --- 0.64: 'e strisce blu e 'o Rre d''e Parcheggi ----------------
+		"strisce_blu": strisce_blu,
+		"pittura": pittura,
 	}
 
 
@@ -4759,6 +4764,25 @@ func applica_stato(d: Dictionary) -> void:
 		}
 	lotto_giocato_tutto = int(d.get("lotto_giocato_tutto", 0))
 	lotto_vinto_tutto = int(d.get("lotto_vinto_tutto", 0))
+	# (0.64) 'E strisce blu: 'o JSON torna 'e nummere cu 'a virgola, e
+	# `indice in lista` cu 3.0 e 3 nun se trovano.
+	strisce_blu = {}
+	var sb = d.get("strisce_blu", {})
+	if typeof(sb) == TYPE_DICTIONARY:
+		for z in sb:
+			var e = sb[z]
+			if typeof(e) != TYPE_DICTIONARY:
+				continue
+			var rotti: Array = []
+			for x in e.get("rotti", []):
+				rotti.append(int(x))
+			var pittati: Array = []
+			for x in e.get("pittati", []):
+				pittati.append(int(x))
+			strisce_blu[str(z)] = {"dal": int(e.get("dal", giornata)),
+				"rotti": rotti, "pittati": pittati,
+				"parchimetri": int(e.get("parchimetri", 0))}
+	pittura = int(d.get("pittura", 0))
 	lotto_esiti = []
 	lotto_cagnato.emit()
 	save_version = int(d.get("v", SAVE_VER))
@@ -6022,3 +6046,178 @@ func scasso_fallito(quanto: float = 1.0) -> void:
 	crimine(PUNTI_PER_STELLA * quanto)
 	report_risky_action(18.0 * quanto)
 	SoundManager.play("fail", -3.0, 0.82)
+
+
+# ---------------------------------------------------------------------------
+# 'E STRISCE BLU (0.64)
+# ---------------------------------------------------------------------------
+#
+# Il capo: *«certe mattine c'è la possibilità di svegliarti e trovare strisce
+# blu nella tua piazza (o in un'altra delle tue piazze) con tanto di
+# parchimetri. Dovrai rompere tutti i parchimetri, e se non dipingi le
+# strisce blu di bianco (pittura e pennello al bazar) tutti i clienti
+# continueranno a non volerti pagare o a considerare come se li hai fatti
+# parcheggiare fuori dalle strisce.»*
+#
+# Ogni posto di una piazza con le strisce blu sta in uno di tre stati:
+#
+#   * **blu, e in piazza c'è ancora un parchimetro in piedi**: il cliente
+#     paga la macchinetta e a te non dà niente («aggio pavato 'o
+#     parchimetro»). Solo a cazzotti.
+#   * **blu, e i parchimetri sono tutti rotti**: per il cliente quello non è
+#     un posto, è come se l'avessi messo fuori dalle strisce — paga meno, e
+#     il vigile gli può fare la multa.
+#   * **ripittato di bianco**: torna un posto tuo.
+#
+# La piazza torna tua quando sono rotti **tutti** i parchimetri **e**
+# ripittati **tutti** i posti. Lo stato sta nel salvataggio: il Comune non
+# torna a riparare di notte, e tu non devi rifare il lavoro fatto ieri.
+#
+# Chi costruisce e guarda è `strisce_blu.gd` (un nodo della città); qui ci
+# sono solo i conti.
+
+## Dal secondo giorno, una mattina su cinque (e mai due piazze insieme).
+const STRISCE_BLU_DAL_JUORNO: int = 2
+const STRISCE_BLU_PROB: float = 0.2
+## 'O barattolo 'e pittura janca c''o pennello: sei passate, una a posto.
+const PITTURA_PASSATE: int = 6
+const PITTURA_COSTO: int = 12
+## Quanto ci vuole a ripittare un posto (secondi fermo col pennello).
+const PITTURA_TEMPO: float = 2.4
+## Quanto c'è dentro a un parchimetro quando lo sfasci.
+const PARCHIMETRO_MONETE_MIN: int = 2
+const PARCHIMETRO_MONETE_MAX: int = 7
+
+## zona -> {"dal": giornata, "rotti": [indici], "pittati": [indici posti],
+##          "parchimetri": quanti ne ha messi il Comune}
+var strisce_blu: Dictionary = {}
+## Quante passate di pittura tieni in sacca.
+var pittura: int = 0
+
+signal strisce_blu_cambiate(zona: String)
+## Una macchina s'è fermata: dentro a un posto (`dint_e_strisce`) o dove
+## capitava (F). Lo guarda la sfida del Rre (0.64).
+signal auto_posteggiata(car: Node, dint_e_strisce: bool)
+signal pittura_cambiata(passate: int)
+
+
+func strisce_blu_in(zona: String) -> bool:
+	return strisce_blu.has(zona)
+
+
+## Il posto numero `indice` di questa piazza è ancora blu?
+func posto_blu(zona: String, indice: int) -> bool:
+	if not strisce_blu.has(zona):
+		return false
+	return not (indice in strisce_blu[zona].get("pittati", []))
+
+
+func parchimetro_rotto(zona: String, i: int) -> bool:
+	if not strisce_blu.has(zona):
+		return true
+	return i in strisce_blu[zona].get("rotti", [])
+
+
+## Quanti parchimetri stanno ancora in piedi in questa piazza.
+func parchimetri_sani(zona: String) -> int:
+	if not strisce_blu.has(zona):
+		return 0
+	var e: Dictionary = strisce_blu[zona]
+	return maxi(0, int(e.get("parchimetri", 0)) - (e.get("rotti", []) as Array).size())
+
+
+## La città dice quanti parchimetri ha piantato il Comune (una volta, quando
+## li costruisce).
+func conta_parchimetri(zona: String, quanti: int) -> void:
+	if strisce_blu.has(zona):
+		strisce_blu[zona]["parchimetri"] = quanti
+
+
+func rompi_parchimetro(zona: String, i: int) -> void:
+	if not strisce_blu.has(zona):
+		return
+	var r: Array = strisce_blu[zona]["rotti"]
+	if not (i in r):
+		r.append(i)
+	strisce_blu_cambiate.emit(zona)
+
+
+## Una passata di pittura sul posto: torna vero se l'ha fatta davvero.
+func pitta_posto(zona: String, indice: int) -> bool:
+	if not strisce_blu.has(zona) or pittura <= 0:
+		return false
+	var p: Array = strisce_blu[zona]["pittati"]
+	if indice in p:
+		return false
+	p.append(indice)
+	pittura -= 1
+	pittura_cambiata.emit(pittura)
+	strisce_blu_cambiate.emit(zona)
+	return true
+
+
+## Tutto rotto e tutto ripittato: 'a piazza è turnata 'a toia.
+func strisce_blu_fernute(zona: String) -> void:
+	if not strisce_blu.has(zona):
+		return
+	strisce_blu.erase(zona)
+	strisce_blu_cambiate.emit(zona)
+	avvisa_strada("'E strisce so' janche n'ata vota, 'e parchimetre so' scassate: 'a piazza è turnata 'a toia!")
+	SoundManager.play("ui_sblocco", -4.0)
+
+
+## Si compra al bazar: un barattolo, sei passate.
+func accatta_pittura() -> bool:
+	if not paga(PITTURA_COSTO):
+		return false
+	pittura += PITTURA_PASSATE
+	pittura_cambiata.emit(pittura)
+	return true
+
+
+## **'A matina se tira 'o dado** (lo chiama `prepara_giornata`). Mai il primo
+## giorno, mai due piazze insieme, e solo nelle piazze tue. `forza` serve
+## alle prove.
+func _forse_strisce_blu(forza: String = "") -> String:
+	if forza == "":
+		if giornata < STRISCE_BLU_DAL_JUORNO or not strisce_blu.is_empty():
+			return ""
+		if randf() >= STRISCE_BLU_PROB:
+			return ""
+	var zona: String = forza
+	if zona == "":
+		zona = str(zone_mie[randi() % zone_mie.size()])
+	if not zone_mie.has(zona):
+		return ""
+	strisce_blu[zona] = {"dal": giornata, "rotti": [], "pittati": [], "parchimetri": 0}
+	strisce_blu_cambiate.emit(zona)
+	# Si dice a giornata avviata: alla sveglia l'interfaccia ha altro da fare.
+	if is_inside_tree():
+		get_tree().create_timer(6.0).timeout.connect(_avvisa_strisce_blu.bind(zona))
+	return zona
+
+
+func _avvisa_strisce_blu(zona: String) -> void:
+	if not strisce_blu_in(zona):
+		return
+	avvisa_strada("STANOTTE 'O COMUNE HA PITTATO 'E STRISCE BLU A %s! Sfascia 'e parchimetre e ripitta 'e strisce 'e janco (pittura ô Bazar)."
+		% str(NOMI_PIAZZE.get(zona, zona)).to_upper())
+	SoundManager.play("fischio_vigile", -6.0, 0.9)
+
+
+## La riga del biglietto sulla porta, se stanotte il Comune ha lavorato.
+func strisce_blu_biglietto() -> String:
+	if strisce_blu.is_empty():
+		return ""
+	var z: String = str(strisce_blu.keys()[0])
+	var nome: String = str(NOMI_PIAZZE.get(z, z))
+	if int(strisce_blu[z].get("dal", 0)) == giornata:
+		return "Stanotte 'o Comune ha pittato 'e strisce blu a %s, cu 'e parchimetre!" % nome
+	return "A %s ce stanno ancora 'e strisce blu." % nome
+
+
+## I nomi delle piazze come li dice la gente (le stesse della città).
+const NOMI_PIAZZE := {
+	"piazza": "Sant'Anna", "stadio": "'o Stadio",
+	"mercato": "'a Via d''e Spighe", "cornetteria": "'o Vico d''a Cornetteria",
+}

@@ -30,7 +30,10 @@ const SOUND_NAMES := ["honk", "bump", "punch", "coin", "kaching", "success",
 	# `tools/prepara_esterni.py`: vedi `assets/esterni/audio/CREDITI_freesound.txt`)
 	"chiavi1", "chiavi2", "chiavi_porta", "clacson_mito1", "clacson_mito2",
 	"clacson_lungo2", "spiccioli2", "monete3", "monete_mano",
-	"folla_arrabbiata", "motorino_passa", "vespa_motore"]
+	"folla_arrabbiata", "motorino_passa", "vespa_motore",
+	# --- 0.64: 'o pennello, 'o tic tac d''a sfida (fatti a codice da
+	# `tools/genera_suoni_064.py`) ---
+	"pennellata", "tic", "tac", "gong_sfida"]
 
 ## **'E variante** (0.62). Chi chiede uno di questi suoni ne riceve uno a
 ## caso della sua lista: il clacson di chi arriva in piazza è a volte il

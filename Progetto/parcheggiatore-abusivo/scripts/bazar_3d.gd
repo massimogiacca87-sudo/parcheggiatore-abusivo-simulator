@@ -41,13 +41,41 @@ func _physics_process(_delta: float) -> void:
 		if Input.is_action_just_pressed("buy_%d" % (i + 1)):
 			_try_buy(str(GameManager.DECOR_IDS[i]))
 			return
+	# (0.64) L'ultima voce: 'a pittura janca, tasto 7.
+	if Input.is_action_just_pressed("buy_%d" % (GameManager.DECOR_IDS.size() + 1)):
+		_compra_pittura()
 
 
 ## Compra la voce numero `indice` del listino. La usa il joypad.
 func compra_voce(indice: int) -> void:
+	if indice == GameManager.DECOR_IDS.size():
+		_compra_pittura()
+		return
 	if indice < 0 or indice >= GameManager.DECOR_IDS.size():
 		return
 	_try_buy(str(GameManager.DECOR_IDS[indice]))
+
+
+const SAY_PITTURA := ["'O janco d''o Comune, overo: nun se ne va manco cu 'a pioggia.",
+	"Pittura e pennello. Ma che hê 'a pittà, 'e strisce?", "Cchiù janco d''o janco."]
+
+
+## **'A pittura janca c''o pennello** (0.64). Sta qui perché il bazar vende
+## tutto pe' 'a casa, e un barattolo di vernice è tutto pe' 'a casa. Serve a
+## ripittare di bianco le strisce blu del Comune (vedi 'E STRISCE BLU).
+func _compra_pittura() -> void:
+	if not GameManager.scegli_in_negozio("pittura"):
+		SoundManager.play("pop", -12.0, 1.15)
+		_say("Pittura janca c''o pennello, €%d: %d passate, 'nu posto pe' passata."
+			% [GameManager.PITTURA_COSTO, GameManager.PITTURA_PASSATE])
+		return
+	if GameManager.accatta_pittura():
+		SoundManager.play("kaching")
+		_say(SAY_PITTURA[randi() % SAY_PITTURA.size()])
+		GameManager.event_started.emit("Pittura janca: %d passate 'n sacca." % GameManager.pittura)
+	else:
+		SoundManager.play("fail", -8.0, 0.9)
+		_say(SAY_NO_MONEY)
 
 
 func _try_buy(item_id: String) -> void:

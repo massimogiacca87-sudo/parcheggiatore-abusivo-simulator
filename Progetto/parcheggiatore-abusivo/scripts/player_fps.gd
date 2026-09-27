@@ -1811,6 +1811,9 @@ const GRUPPI_BERSAGLIO: Array[StringName] = [
 	&"nuovi_abusivi", &"turisti_spierze", &"panari",
 	# --- Chi t'affida 'e cummissiune e chi 'e riceve (0.62) ---
 	&"committenti",
+	# --- 0.64: 'e strisce blu (i posti da ripittare e i parchimetri da
+	# sfascià) e 'o Rre d''e Parcheggi ---
+	&"strisce_blu", &"parchimetri", &"re_parcheggi",
 ]
 
 ## Quanto si può essere storti col mirino e agganciare lo stesso. Il coseno
