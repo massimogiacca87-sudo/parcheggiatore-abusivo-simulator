@@ -1,13 +1,8 @@
 {
   "nome": "audio_engineer",
   "creato_il": "2026-09-27 16:18",
-  "incarichi": 7,
+  "incarichi": 8,
   "memoria": [
-    {
-      "data": "2026-09-27 16:36",
-      "compito": "AUDIT (solo lettura + un documento, NESSUNA modifica al codice in questo compito).\nAnalizza il codice audio del gioco e scrivi il referto in 'crew_output/AUDIT-AUDIO.md'.\n\nFile da leggere:\n- Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd (477 righe, autoload 'SoundManager')\n- Prog",
-      "esito": "# AUDIT-AUDIO — Parcheggiatore Abusivo Simulator\n\n**Data:** 2026-09-27\n**Autore:** Audio Programmer (GDScript)\n**Tipo di incarico:** Sola lettura. Nessun file .gd è stato toccato.\n**File analizzati:** `sound_manager.gd` (477 righe), `regia_musicale.gd` (187 righe), `motorino_citta.gd` (137 righe), più ~120 chiamate `SoundManager.*` sparse in tutti gli script di `scripts/`.\n\n---\n\n## Riepilogo veloce\n\n- **Nomi fantasma (usati nel codice ma NON presenti in `SOUND_NAMES`):** **nessuno trovato.** Ho passato in rassegna tutte le chiamate `play()`, `play_uno()`, `ui()`, `soldi()`, `pugno()`, `suono_3"
-    },
     {
       "data": "2026-09-27 16:38",
       "compito": "BUGFIX #1 dell'audit (crew_output/AUDIT-AUDIO.md, gravità ALTA) — UNA SOLA COSA.\nFile: Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd\n\nProblema: `ambiente(quanto, fade)` calcola il volume come `AMBIENTE_DB + linear_to_db(quanto)` senza tenere conto della manopola effetti (`_db_eff",
@@ -32,6 +27,11 @@
       "data": "2026-09-27 16:51",
       "compito": "BUGFIX #5 dell'audit (gravità MEDIA) — UNA SOLA COSA.\nFile: Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd, funzione `metti()`.\n\nProblema: quando arriva un secondo `metti()` prima che finisca la dissolvenza (caso emergenze ravvicinate: caccia → boss, fine sfida → caccia, fade 0.9 ",
       "esito": "## Resoconto\n\n**File modificato:** `Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd`, funzione `metti()`.\n\n**Problema (audit #5, gravità MEDIA):** quando un secondo `metti()` arrivava prima che finisse la dissolvenza precedente (es. caccia → boss), il vecchio `_tween` veniva ucciso con `_tween.kill()`. Ma lo stop del player che stava sfumando era programmato come `_tween.chain().tween_callback(_music_b.stop)` **dentro quello stesso tween**: uccidendolo, quella callback non veniva mai eseguita, e il player abbandonato restava a suonare il brano vecchio a volume udibile, sovrap"
+    },
+    {
+      "data": "2026-09-27 16:57",
+      "compito": "BUGFIX #8 dell'audit (gravità BASSA) — UNA SOLA COSA.\nFile: Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd, funzione `_su_nodo_nuovo(n)`.\n\nProblema: la guardia `if not b.pressed.is_connected(_ui_clic)` protegge solo `pressed`; `b.mouse_entered.connect(_ui_sopra.bind(b))` sta dentr",
+      "esito": "## Resoconto\n\n**File modificato:** `Progetto/parcheggiatore-abusivo/scripts/autoload/sound_manager.gd`, funzione `_su_nodo_nuovo(n)`.\n\n**Problema (audit #8, gravità BASSA):** la guardia `if not b.pressed.is_connected(_ui_clic)` proteggeva solo la connessione `pressed`, mentre `b.mouse_entered.connect(_ui_sopra.bind(b))` veniva eseguita senza alcuna guardia propria dentro lo stesso blocco. Con `.bind()` ogni `Callable` creato è un'istanza diversa, quindi `is_connected()` su di esso non è mai vero anche se la connessione logica \"equivalente\" esiste già: un bottone dell'UI procedurale rimosso e r"
     }
   ],
   "ruolo": "Audio Programmer GDScript (Godot 4.3)",
