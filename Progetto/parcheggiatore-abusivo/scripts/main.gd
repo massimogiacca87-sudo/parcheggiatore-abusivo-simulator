@@ -141,6 +141,9 @@ func _ready() -> void:
 	# resto, e senza il quartiere sembra spopolato anche con venti passanti
 	# a schermo. Si abbassa da sola quando si entra dentro casa.
 	SoundManager.ambiente(1.0, 4.0)
+	# E la musica torna "fuori": ricominciare la giornata o la partita
+	# ricarica la scena senza passare da `vascio_3d.esci()`.
+	SoundManager.musica_dentro(false, 0.0)
 
 	if caricamento != null:
 		caricamento.passo(0.9, "Ancora nu momento…")

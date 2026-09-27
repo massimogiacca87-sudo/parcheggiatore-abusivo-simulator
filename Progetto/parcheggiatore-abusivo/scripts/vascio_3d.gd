@@ -1307,6 +1307,7 @@ func entra(player: Node3D) -> void:
 	# chiavi, si esce tirandosi la porta.
 	SoundManager.play("chiavi_porta", -6.0)
 	SoundManager.ambiente(0.22)
+	SoundManager.musica_dentro(true)
 	player.global_position = _dentro_nodo.global_position \
 		+ Vector3(LARG * 0.5 - 1.0, 0.55, PROF * 0.5 - 1.0)
 	player.rotation.y = PI * 0.75
@@ -1325,6 +1326,7 @@ func esci(player: Node3D) -> void:
 	GameManager.casa_entrata.emit(false)
 	SoundManager.play("door")
 	SoundManager.ambiente(1.0)
+	SoundManager.musica_dentro(false)
 	# **Se esce sempe 'a fore 'a porta** (0.56).
 	#
 	# Prima si tornava **dove stavi quando sei entrato** (`_ritorno`), e

@@ -274,7 +274,7 @@ func brano() -> String:
 ## presente del gioco).
 func set_music_volume(db: float) -> void:
 	_volume_base_puro = db
-	_volume_base = db + _db_musica()
+	_volume_base = db + _db_musica() + _musica_dentro_db
 	db = _volume_base
 	if _music and _music.playing:
 		if _tween and _tween.is_valid():
@@ -301,7 +301,38 @@ func music_to_gameplay() -> void:
 
 
 func music_to_menu() -> void:
+	_musica_dentro_db = 0.0 # il menu non sta dentro al vascio
 	set_music_volume(MUSIC_VOLUME_DB + 6.0)
+
+
+## **Dentro casa pure 'a musica se fa cchiù luntana** (proposta di
+## `sound_designer`, sì del capo).
+##
+## Entrando nel vascio il rumore di strada scendeva a 0,22, ma la musica
+## restava identica: il "dentro" si sentiva a metà. Adesso scende anche
+## lei di qualche dB, con la stessa sfumata del tappeto, e risale quando
+## esci. È uno scarto a parte (`_musica_dentro_db`) e non tocca le
+## manopole: la manopola musica continua a valere, e il brano nuovo che
+## parte mentre sei dentro nasce già abbassato (`metti()` usa `_volume_base`).
+const MUSICA_DENTRO_DB: float = -5.0
+var _musica_dentro_db: float = 0.0
+
+
+func musica_dentro(dentro: bool, fade: float = 1.2) -> void:
+	var nuovo: float = MUSICA_DENTRO_DB if dentro else 0.0
+	if is_equal_approx(nuovo, _musica_dentro_db):
+		return
+	_musica_dentro_db = nuovo
+	_volume_base = _volume_base_puro + _db_musica() + _musica_dentro_db
+	if _music == null or not _music.playing:
+		return
+	# Una dissolvenza fra brani già in corso, o nessuna sfumata chiesta:
+	# ci pensa set_music_volume (che sa gestire il tween a metà).
+	if fade <= 0.01 or (_tween and _tween.is_valid()):
+		set_music_volume(_volume_base_puro)
+		return
+	_tween = create_tween()
+	_tween.tween_property(_music, "volume_db", _volume_base, fade)
 	metti("menu", 1.5)
 
 
