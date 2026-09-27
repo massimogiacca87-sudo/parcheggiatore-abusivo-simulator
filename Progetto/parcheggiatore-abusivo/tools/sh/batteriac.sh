@@ -1,15 +1,32 @@
 #!/bin/bash
-# Tutte le prove su una copia (/home/claude/copia2), così il progetto resta
-# libero per le fotografie. Scrive /tmp/batteriac.txt.
-rm -rf /home/claude/copia2 && cp -a /home/claude/parcheggiatore-abusivo /home/claude/copia2 || exit 1
-cd /home/claude/copia2 || exit 1
-: > /tmp/batteriac.txt
+# Tutte le prove su una copia, così il progetto resta libero per le
+# fotografie. Scrive /tmp/batteriac.txt.
+#
+# (0.64) Si può spezzare in due metà che girano insieme sui due processori
+# del contenitore:  PARTE=1 nohup /tmp/batteriac.sh &   PARTE=2 nohup /tmp/batteriac.sh &
+# (ognuna sulla sua copia, /home/claude/copia2_<parte>, e col suo
+# /tmp/batteriac_<parte>.txt). Senza PARTE gira tutto, come prima.
+# prova_dieci_giornate sta fuori: gioca dieci giornate e va lanciata a
+# parte (VELOCE=20 /tmp/runc.sh copiaA prova_dieci_giornate 2400).
+PARTE="${PARTE:-}"
+C=/home/claude/copia2${PARTE:+_$PARTE}
+OUT=/tmp/batteriac${PARTE:+_$PARTE}.txt
+rm -rf $C && cp -a /home/claude/parcheggiatore-abusivo $C || exit 1
+cd $C || exit 1
+: > $OUT
+i=0
 for f in tools/prova_*.gd; do
   p=$(basename $f .gd)
   [ "$p" = "prova_scopa" ] && continue
+  [ "$p" = "prova_dieci_giornate" ] && continue
+  i=$((i + 1))
+  if [ -n "$PARTE" ]; then
+    [ $(( (i + PARTE) % 2 )) -ne 0 ] && continue
+  fi
   t=240
-  case $p in prova_furto|prova_mure|prova_giurnate|prova_signora|prova_lotto|prova_partite|prova_borrelli|prova_guagliune_vere|prova_perzone_nove) t=420;; esac
-  cp project.godot /tmp/pgc2.bak
+  case $p in prova_furto|prova_mure|prova_giurnate|prova_signora|prova_lotto|prova_partite|prova_borrelli|prova_guagliune_vere|prova_perzone_nove|prova_strisce_blu|prova_borrelli_gioca) t=420;; esac
+  case $p in prova_conquista|prova_re_parcheggi) t=720;; esac
+  cp project.godot /tmp/pgc2${PARTE}.bak
   cp tools/$p.gd scripts/_$p.gd
   python3 - "$p" <<'PY'
 import sys, io
@@ -24,13 +41,15 @@ PY
   else
     timeout $t /home/claude/godot4 --headless --path . > /tmp/outb_$p.txt 2>&1
   fi
-  cp /tmp/pgc2.bak project.godot
+  cp /tmp/pgc2${PARTE}.bak project.godot
   rm -f scripts/_$p.gd
   r=$(grep -aE "storte|raggi so' scappate|=== fernuto" /tmp/outb_$p.txt | tail -1)
   e=$(grep -ac "SCRIPT ERROR" /tmp/outb_$p.txt)
-  printf "%-22s %s  [SCRIPT ERROR: %s]\n" "$p" "${r:-(nisciun risultato)}" "$e" >> /tmp/batteriac.txt
+  printf "%-22s %s  [SCRIPT ERROR: %s]\n" "$p" "${r:-(nisciun risultato)}" "$e" >> $OUT
 done
-timeout 200 /home/claude/godot4 --headless --path . --script res://tools/prova_scopa.gd > /tmp/outb_prova_scopa.txt 2>&1
-r=$(grep -aE "storte" /tmp/outb_prova_scopa.txt | tail -1)
-printf "%-22s %s\n" "prova_scopa" "${r:-(nisciun risultato)}" >> /tmp/batteriac.txt
-echo "=== FERNUTA ===" >> /tmp/batteriac.txt
+if [ -z "$PARTE" ] || [ "$PARTE" = "2" ]; then
+  timeout 200 /home/claude/godot4 --headless --path . --script res://tools/prova_scopa.gd > /tmp/outb_prova_scopa.txt 2>&1
+  r=$(grep -aE "storte" /tmp/outb_prova_scopa.txt | tail -1)
+  printf "%-22s %s\n" "prova_scopa" "${r:-(nisciun risultato)}" >> $OUT
+fi
+echo "=== FERNUTA ===" >> $OUT
