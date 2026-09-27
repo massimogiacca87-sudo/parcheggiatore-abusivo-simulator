@@ -497,7 +497,12 @@ func _spawn() -> Node:
 	ordine.sort_custom(func(a, b): return a.distance_to(_entrata) > b.distance_to(_entrata))
 	var ferme: Array = []
 	for c in get_tree().get_nodes_in_group("cars"):
-		if is_instance_valid(c) and str(c.get("zona_id")) == zona_id and int(c.get("state")) == 1:
+		if not is_instance_valid(c) or str(c.get("zona_id")) != zona_id:
+			continue
+		# Chi aspetta in coda, e chi sta posteggiato fuori dalle strisce (F)
+		# dove l'hai lasciato: tappano tutti e due (0.64).
+		var st: int = int(c.get("state"))
+		if st == 1 or (st == 3 and c.get("parked_abusive") == true):
 			ferme.append((c as Node3D).global_position)
 	var posto := Vector3.INF
 	for cand in ordine:

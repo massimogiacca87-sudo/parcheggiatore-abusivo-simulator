@@ -3135,6 +3135,12 @@ func _punto_coda_libero() -> Vector3:
 		if not is_instance_valid(c) or str(c.get("zona_id")) != "piazza":
 			continue
 		var st: int = int(c.get("state"))
+		# Chi sta posteggiato **fuori dalle strisce** (F) sta dove l'hai
+		# lasciato, e tante volte è proprio sulla coda: tappa come chi
+		# aspetta, finché non se ne va (0.64).
+		if st == 3 and c.get("parked_abusive") == true:
+			ferme.append((c as Node3D).global_position)
+			continue
 		if st > 1:
 			continue
 		var w = c.get("waiting_point")

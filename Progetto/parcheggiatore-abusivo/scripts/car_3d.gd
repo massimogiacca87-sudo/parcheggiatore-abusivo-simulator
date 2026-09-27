@@ -1161,8 +1161,15 @@ func _physics_process(delta: float) -> void:
 			var meta_in: Vector3 = _prossima_tappa(_via_in, waiting_point)
 			_guida_verso(meta_in, DRIVE_SPEED * veloce, delta)
 			_face_toward(meta_in)
-			if global_position.distance_to(waiting_point) < 0.8 \
-					and _tappa > _via_in.size():
+			# In piano (0.64). Una macchina che arriva addosso a un'altra
+			# ferma sul suo punto d'attesa ci può finire sopra (misurato:
+			# 1,3 m, sul tetto): a distanza «vera» il punto non si
+			# raggiungeva più, e restava lì, in arrivo, finché non se ne
+			# andava. Che nessuno arrivi su un punto già preso lo decide
+			# `_punto_coda_libero`; questo è il paracadute.
+			var al_punto: Vector3 = global_position - waiting_point
+			al_punto.y = 0.0
+			if al_punto.length() < 0.8 and _tappa > _via_in.size():
 				state = State.WAITING
 				if sfida:
 					collision_mask = 1 | 4
@@ -1266,6 +1273,19 @@ func _guida_verso(target: Vector3, speed: float, delta: float) -> void:
 		_fermo_da += delta
 		if _fermo_da > 2.5:
 			_fermo_da = 0.0
+			# **Quasi arrivata, aspetta addò sta** (0.64). Ferma a due-tre
+			# metri dal punto d'attesa (c'è qualcosa sulla sua riga), prima
+			# saltava tappe che non aveva più, e dopo sette secondi se ne
+			# andava: alla cornetteria tre clienti in cento secondi. È in
+			# coda lo stesso: si mette ad aspettare lì, e la si guida da lì.
+			if state == State.ARRIVING and _tappa > _via_in.size():
+				var manca: Vector3 = waiting_point - global_position
+				manca.y = 0.0
+				if manca.length() < 3.0:
+					waiting_point = Vector3(global_position.x, waiting_point.y,
+						global_position.z)
+					_ultima_pos = global_position
+					return
 			_tappa += 1
 			if _tappa > maxi(_via_in.size(), _via_out.size()) + 2:
 				if state == State.ARRIVING and _nisciuno_guarda():
