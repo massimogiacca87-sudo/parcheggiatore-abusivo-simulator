@@ -865,6 +865,8 @@ func _ready() -> void:
 		if had_save:
 			save_version = SAVE_VER
 			save_game()
+	# (0.65) Com'è una partita nuova: serve a «Ricomincia da capo».
+	_stato_iniziale = stato_partita().duplicate(true)
 
 
 var _slowmo_left: float = 0.0
@@ -996,8 +998,15 @@ func start_shift() -> void:
 	dentro_casa = false
 	prepara_giornata()
 	# Chi non ha mangiato ieri sera comincia la giornata a mezze forze.
-	if _senza_spesa():
+	# (0.65) Prima guardava `_senza_spesa()` **dopo** `prepara_giornata`,
+	# che la spesa di ieri l'aveva già tolta: non scattava mai. Adesso lo
+	# dice `prepara_giornata` stessa (`digiuno_stamatina`).
+	if digiuno_stamatina or _senza_spesa():
 		health = HEALTH_MAX * 0.55
+	# (0.65) E i guai della scala che si pagano ogni mattina.
+	var matina: Array = _matina_d_e_guaie()
+	for riga in matina:
+		event_started.emit(str(riga))
 	health_changed.emit(health)
 	shift_time_changed.emit(shift_time_left)
 	_roll_commission()
@@ -1118,8 +1127,13 @@ func end_shift() -> Dictionary:
 		if boss_parte_juorne == 0:
 			event_started.emit("Cu Donna Carmela simmo appare. 'O mercato è tutto tuoio.")
 
+	# (0.65) 'A scala d''e guaie: si conta stasera, si racconta domani.
+	var guaie: Array = _passo_d_a_scala(scoperto)
 	giornata += 1
 	var fatti := _conseguenze()
+	# I guai della scala vengono prima: sono quelli che cambiano la vita.
+	guaie.append_array(fatti)
+	fatti = guaie
 
 	var summary := {
 		"giornata": giornata - 1,
@@ -1129,6 +1143,10 @@ func end_shift() -> Dictionary:
 		"spese_aperte": spese_elenco,
 		"umore_moglie": umore_moglie,
 		"conseguenze": fatti,
+		"giorni_debbito": giorni_debbito,
+		"prossimo_guaio": prossimo_guaio(),
+		"cacciato": cacciato_e_casa,
+		"partita_fernuta": partita_fernuta,
 		"perso_al_gioco": perso_al_gioco,
 		"vinto_al_gioco": vinto_al_gioco,
 		"extra_richiesto": extra_richiesto,
@@ -1176,6 +1194,10 @@ func end_shift() -> Dictionary:
 	}
 	save_game()
 	shift_ended.emit(summary)
+	if partita_fernuta:
+		var fine := riepilogo_finale()
+		fine["conseguenze"] = fatti
+		partita_persa.emit(fine)
 	return summary
 
 
@@ -2290,24 +2312,35 @@ func consume_cigarette() -> bool:
 ## i primi tre giorni erano un'apnea, e il capo ha chiesto un gioco
 ## *«divertente, non frustrante»*: adesso una giornata fatta bene lascia
 ## da parte una ventina d'euro, una fatta male non ti affoga.
+##
+## **0.65**: tutto su di tre decimi (spesa 14-23, luce 52-72, scola 31-49,
+## fitto 118-152: circa **sessanta euro al giorno** di fisse, settanta con
+## le disgrazie). I numeri della 0.64 dicevano che il bot onesto di
+## `prova_dieci_giornate` chiudeva ogni sera con settanta euro in più: il
+## conto era un pedaggio, non una minaccia. Insieme alla scala dei guai
+## (vedi «'A SCALA D''E GUAIE»), il capo ha chiesto che non pagare costi
+## davvero — *«così si bilancia anche l'economia e il fatto delle auto
+## rubate»*: chi lavora onesto ce la fa ancora, chi gioca, si fa arrestare
+## o spreca comincia a salire la scala, e la macchina da rubare diventa una
+## tentazione vera.
 const SPESE_FISSE := {
 	"spesa": {
-		"nome": "'A spesa", "min": 11, "max": 18, "ogni": 1, "primo": 1,
+		"nome": "'A spesa", "min": 14, "max": 23, "ogni": 1, "primo": 1,
 		"grave": false,
 		"desc": "'O ppane, 'a pasta, quacche ccosa p''e criature.",
 	},
 	"luce": {
-		"nome": "'A luce", "min": 40, "max": 56, "ogni": 4, "primo": 3,
+		"nome": "'A luce", "min": 52, "max": 72, "ogni": 4, "primo": 3,
 		"grave": true,
 		"desc": "Se nun 'a pave, 'a stacca. E po' so' cchiù guaie.",
 	},
 	"scola": {
-		"nome": "'A scola d''e criature", "min": 24, "max": 38, "ogni": 5,
+		"nome": "'A scola d''e criature", "min": 31, "max": 49, "ogni": 5,
 		"primo": 4, "grave": false,
 		"desc": "Libbre, 'o grembiule, 'a gita ca vanno tutte quante.",
 	},
 	"fitto": {
-		"nome": "'O fitto d''a casa", "min": 92, "max": 118, "ogni": 7,
+		"nome": "'O fitto d''a casa", "min": 118, "max": 152, "ogni": 7,
 		"primo": 6, "grave": true,
 		"desc": "'O padrone 'e casa nun tene pacienza. Mai tenuta.",
 	},
@@ -2346,6 +2379,9 @@ var umore_moglie: float = 62.0
 var spese_aperte: Array = []
 ## Quanto le hai consegnato **oggi**.
 var consegnato_oggi: int = 0
+## (0.65) Vero se stamattina si è saltata la cena di ieri (la spesa non
+## pagata): `start_shift` toglie le forze.
+var digiuno_stamatina: bool = false
 ## Quanto hai perso (e vinto) al gioco oggi: lei lo viene a sapere.
 var perso_al_gioco: int = 0
 var vinto_al_gioco: int = 0
@@ -2553,13 +2589,36 @@ func prepara_giornata() -> void:
 	# ogni giorno una spesa non pagata a quella nuova voleva dire che due
 	# giornate storte ti mettevano addosso un debito da cui non si usciva
 	# piu'.
+	#
+	# **(0.65) Ma 'o salumiere nun se scorda.** Il pane di ieri non si
+	# ricompra, però chi l'ha dato a credito lo vuole: la spesa non pagata
+	# diventa **'o cunto d''o salumiere**, metà di quello che era, e si
+	# somma alle sere dopo. È il debito che si accumula giorno dopo giorno,
+	# senza essere la spirale di prima (metà, e una riga sola).
 	var digiuno := false
+	var a_credito: int = 0
 	for s in spese_aperte.duplicate():
 		if str(s.get("tipo", "")) == "spesa" and int(s["giorno"]) < giornata:
+			a_credito += int(ceil(float(s["importo"]) * 0.5))
 			spese_aperte.erase(s)
 			digiuno = true
+	digiuno_stamatina = digiuno
 	if digiuno:
 		umore_giu(5.0)
+	if a_credito > 0:
+		var trovato := false
+		for s in spese_aperte:
+			if str(s.get("tipo", "")) == "salumiere":
+				s["importo"] = int(s["importo"]) + a_credito
+				s["base"] = int(s.get("base", 0)) + a_credito
+				trovato = true
+		if not trovato:
+			spese_aperte.append({
+				"id": "salumiere_%d" % giornata, "tipo": "salumiere",
+				"nome": "'O cunto d''o salumiere", "importo": a_credito,
+				"base": a_credito, "giorno": giornata - 1,
+				"desc": "«Segno 'ncopp''o quaderno, don Ma'. Ma 'o quaderno fernesce.»",
+				"grave": false})
 
 	# **Chi dorme buono se scéta buono.** Il gradino di casa vale un pezzo di
 	# umore ogni mattina: e' il modo in cui una spesa da ventisettemila euro
@@ -2701,6 +2760,8 @@ func consegna_a_moglie(quanto: int) -> Dictionary:
 	# Pagato il riallaccio, la luce torna: la casa si riaccende domani.
 	if luce_staccata and not _spesa_aperta_di("riallaccio"):
 		luce_staccata = false
+	if gas_staccato and not _spesa_aperta_di("gas"):
+		gas_staccato = false
 
 	# Quello che avanza dopo aver pagato tutto lo mette da parte lei, e
 	# l'umore sale: e' l'unico modo di guadagnare umore in fretta.
@@ -3277,15 +3338,7 @@ func _conseguenze() -> Array:
 		match str(s.get("tipo", "")):
 			"luce":
 				fatti.append("Hanno staccato 'a luce. 'A casa sta 'o scuro.")
-				luce_staccata = true
-				spese_aperte.erase(s)
-				var r: int = maxi(30, int(round(float(s["base"]) * 0.55)))
-				spese_aperte.append({
-					"id": "riallaccio_%d" % giornata, "tipo": "riallaccio",
-					"nome": "'O riallaccio d''a luce", "importo": r,
-					"base": r, "giorno": giornata,
-					"desc": "Finche' nun 'o pave, 'a casa resta scura.",
-					"grave": false})
+				_stacca_a_luce()
 			"fitto":
 				fatti.append("'O padrone 'e casa s'è pigliato 'e sorde 'e mano toia.")
 				padrone_arrabbiato = true
@@ -3299,7 +3352,9 @@ func _conseguenze() -> Array:
 				if int(s["importo"]) <= 0:
 					spese_aperte.erase(s)
 	# Se l'umore e' a terra si prende i soldi da sola. E ha ragione lei.
-	if umore_moglie < 25.0 and money > 20:
+	# (0.65) Ma non se t'ha cacciato: da dietro a una porta chiusa, dalla
+	# tua giacca non prende niente (ci pensa già Donna Cuncetta).
+	if umore_moglie < 25.0 and money > 20 and not cacciato_e_casa:
 		var presi: int = mini(money, int(round(float(money) * 0.30)))
 		if presi > 0:
 			money -= presi
@@ -3320,6 +3375,272 @@ func _senza_spesa() -> bool:
 
 var luce_staccata: bool = false
 var padrone_arrabbiato: bool = false
+
+
+# ===========================================================================
+# 'A SCALA D''E GUAIE (0.65) — 'e spese ca nun se pavano
+# ===========================================================================
+#
+# Il capo: *«Giorno dopo giorno, le spese non pagate si accumulano con
+# conseguenze disastrose e esilaranti, fino al game over. Ad esempio dopo un
+# po' tua moglie potrebbe lasciarti e portarsi via i bambini e tenersi la
+# casa. Oppure possono staccarti la corrente a casa. Fino al definitivo game
+# over quando non paghi per una settimana. In questo modo si bilancia anche
+# l'economia e tutto il fatto delle auto rubate.»*
+#
+# **Il problema, in una riga: non pagare non costava abbastanza.** Fino alla
+# 0.64 una sera scoperta era una riga rossa nel riepilogo: la mora col
+# tetto, una luce staccata una volta, il padrone di casa che si prendeva
+# quello che trovava. Si poteva restare indietro per sempre. E se restare
+# indietro non fa paura, rubare una macchina da cento euro non è una
+# tentazione: è un passatempo.
+#
+# **La risposta: una scala, un gradino per sera.** Ogni sera che vai a
+# dormire con qualcosa ancora da pagare è un gradino in più; la sera che
+# paghi tutto, si torna a terra e i guai si ritirano (quasi tutti: la luce e
+# il gas tornano solo pagando il riallaccio). Il settimo gradino è la fine
+# della partita.
+#
+#   1. **'O bigliettino** ncopp''o frigorifero. Un avviso: nient'altro.
+#   2. **'A luce** staccata: la casa al buio, e il riallaccio da pagare.
+#   3. **'O gas** staccato: pasta cruda, e ci si sveglia a tre quarti.
+#   4. **Donna Cuncetta**, 'a mamma 'e Nunzia, «viene a da' 'na mano»: ogni
+#      mattina ti prende dalla tasca per il lotto e le sigarette.
+#   5. **Nunzia se piglia 'e criature e 'a casa**: cambia la serratura, e tu
+#      dormi fuori, sui cartoni davanti alla porta (i soldi si passano
+#      sotto la porta). Chi dorme in strada si sveglia rotto, e qualche
+#      volta senza portafoglio.
+#   6. **L'avvocato**: la lettera, la parcella, e l'ultimo avviso.
+#   7. **Fernuta.** La partita finisce.
+#
+# Tutto è **conteggiato di sera** (`_passo_d_a_scala`, da `end_shift`) e
+# **raccontato la mattina** (le righe finiscono in `_conseguenze`, cioè nel
+# riepilogo e nel biglietto sulla porta). Il gradino si vede sempre
+# nell'HUD, sotto a «STASERA CE VONNO»: una minaccia che non si vede non
+# minaccia nessuno.
+
+## Quante sere di fila si va a dormire con qualcosa da pagare.
+var giorni_debbito: int = 0
+## Il gradino più alto già raccontato in questa scalata: ogni guaio succede
+## una volta sola per scalata, non ogni mattina.
+var gradino_fatto: int = 0
+## I guai accesi.
+var gas_staccato: bool = false
+var suocera_in_casa: bool = false
+var cacciato_e_casa: bool = false
+## Vero se stanotte si è dormito sui cartoni: la mattina se ne paga il conto.
+var nottata_ncopp_e_cartune: bool = false
+## Vero se la partita è finita (il settimo gradino).
+var partita_fernuta: bool = false
+
+const GRADINO_GAME_OVER: int = 7
+
+signal scala_cagnata(gradino: int)
+signal partita_persa(riepilogo: Dictionary)
+
+## Il gradino, come lo racconta il biglietto e come lo annuncia l'HUD la
+## sera prima («dimane: ...»).
+const SCALA := {
+	1: {"nome": "'O bigliettino",
+		"fatto": "Ncopp''o frigorifero ce sta nu bigliettino, scritto cu 'o russetto: «'E SSORDE. STASERA. N.»",
+		"avviso": "'o bigliettino ncopp''o frigorifero"},
+	2: {"nome": "'A luce staccata",
+		"fatto": "Hanno staccato 'a luce. 'E criature fanno 'e compite cu 'a torcia d''o telefonino, e 'a piccerella dice a tutte quante ca 'o pate è nu fantasma.",
+		"avviso": "te staccano 'a luce"},
+	3: {"nome": "'O gas staccato",
+		"fatto": "Hanno staccato pure 'o gas. Stasera pasta cruda cu 'o tonno 'e scatola. Te scite cu 'e ffuorze a tre quarte.",
+		"avviso": "te staccano 'o gas"},
+	4: {"nome": "Donna Cuncetta",
+		"fatto": "Donna Cuncetta, 'a mamma 'e Nunzia, s'è trasferita 'a vuje «pe' da' 'na mano». Dorme dint''o lietto tuio. Tu ncopp''a seggia. E ogni matina se piglia quacche euro p''o lotto.",
+		"avviso": "vene 'a suocera"},
+	5: {"nome": "Nunzia se ne va",
+		"fatto": "Nunzia t'ha cacciato 'e casa. 'E criature stanno cu essa, 'a casa pure: ha cagnato 'a serratura, e Donna Cuncetta fa 'a guardia 'a fenesta. Tu duorme ncopp''e cartune 'a fore 'a porta.",
+		"avviso": "Nunzia se piglia 'e criature e 'a casa"},
+	6: {"nome": "L'avvocato",
+		"fatto": "È arrivata 'na lettera 'e l'avvocato Esposito: separazione cu addebbito. 'A parcella è pure a nomme tuoio. E 'o vigile ha miso 'o «mi piace» â foto nova 'e Nunzia.",
+		"avviso": "arriva l'avvocato — e po' è FERNUTA"},
+}
+
+## Le ultime righe della partita: una a caso.
+const FINALE := [
+	"Nunzia s'è spusata 'o vigile. Chillo ca te faceva 'e multe. Mo' 'e criature 'o chiammano papà, e isso posteggia 'a machina dint''o garage.",
+	"T'hanno truvato addurmuto ncopp''e cartune cu 'a paletta 'n mano. Dice ca dirigive 'e machine pure dint''o suonno.",
+	"Donna Cuncetta s'è pigliata 'o posto tuio 'n piazza. Guadagna 'o doppio. E nun pava manco essa.",
+	"'O padrone 'e casa ha affittato 'o vascio a nu turista americano. 'O chiamma «authentic Neapolitan experience». Pava milleduecento euro 'o mese.",
+]
+
+
+## **'O passo d''a scala**, la sera: si conta se si è pagato tutto. Torna
+## le righe da raccontare la mattina (vedi `_conseguenze`).
+func _passo_d_a_scala(scoperto: int) -> Array:
+	var fatti: Array = []
+	if scoperto <= 0:
+		if giorni_debbito > 0:
+			fatti.append_array(_scala_a_terra())
+		giorni_debbito = 0
+		gradino_fatto = 0
+		scala_cagnata.emit(0)
+		return fatti
+	giorni_debbito += 1
+	# Ogni gradino nuovo si racconta una volta; se si torna giù e si risale,
+	# quelli già accesi (luce, gas) restano accesi finché non si pagano.
+	while gradino_fatto < giorni_debbito and gradino_fatto < GRADINO_GAME_OVER:
+		gradino_fatto += 1
+		fatti.append_array(_gradino(gradino_fatto))
+	scala_cagnata.emit(giorni_debbito)
+	return fatti
+
+
+func _gradino(n: int) -> Array:
+	var fatti: Array = []
+	if SCALA.has(n):
+		fatti.append(str(SCALA[n]["fatto"]))
+	match n:
+		1:
+			umore_giu(4.0)
+		2:
+			if not luce_staccata:
+				_stacca_a_luce()
+		3:
+			gas_staccato = true
+			if not _spesa_aperta_di("gas"):
+				spese_aperte.append({
+					"id": "gas_%d" % giornata, "tipo": "gas",
+					"nome": "'O riallaccio d''o gas", "importo": 38,
+					"base": 38, "giorno": giornata,
+					"desc": "Finché nun 'o pave, se magna friddo.",
+					"grave": false})
+		4:
+			suocera_in_casa = true
+		5:
+			cacciato_e_casa = true
+			umore_moglie = minf(umore_moglie, 12.0)
+		6:
+			if not _spesa_aperta_di("avvocato"):
+				spese_aperte.append({
+					"id": "avvocato_%d" % giornata, "tipo": "avvocato",
+					"nome": "L'avvocato 'e Nunzia", "importo": 90,
+					"base": 90, "giorno": giornata,
+					"desc": "Separazione cu addebbito. 'A parcella 'a pave tu.",
+					"grave": true})
+		7:
+			partita_fernuta = true
+	return fatti
+
+
+## Il distacco della luce, con il riallaccio al posto della bolletta.
+## Lo usano sia la scala (secondo gradino) sia la bolletta scaduta.
+func _stacca_a_luce() -> void:
+	luce_staccata = true
+	var base: int = 40
+	for s in spese_aperte.duplicate():
+		if str(s.get("tipo", "")) == "luce":
+			base = int(s.get("base", s["importo"]))
+			spese_aperte.erase(s)
+	if _spesa_aperta_di("riallaccio"):
+		return
+	var r: int = maxi(30, int(round(float(base) * 0.55)))
+	spese_aperte.append({
+		"id": "riallaccio_%d" % giornata, "tipo": "riallaccio",
+		"nome": "'O riallaccio d''a luce", "importo": r,
+		"base": r, "giorno": giornata,
+		"desc": "Finche' nun 'o pave, 'a casa resta scura.",
+		"grave": false})
+
+
+## Si è pagato tutto: la scala torna a terra, e i guai se ne vanno.
+func _scala_a_terra() -> Array:
+	var fatti: Array = []
+	if cacciato_e_casa:
+		cacciato_e_casa = false
+		umore_moglie = maxf(umore_moglie, 25.0)
+		fatti.append("Nunzia t'ha araputo 'a porta. Nun te parla, ma t'ha lassato 'o piatto dint''o furno. 'E criature t'hanno abbracciato 'e cazone.")
+	if suocera_in_casa:
+		suocera_in_casa = false
+		fatti.append("Donna Cuncetta se n'è turnata a Casoria. S'è purtata 'o telecomando, tre cuscine e 'o ffierro 'a stiro.")
+	if giorni_debbito >= 3:
+		fatti.append("Pe' stasera, niente guaie. 'A scala d''e debbite è turnata a zero.")
+	return fatti
+
+
+## Il gradino che scatta se stasera si va a dormire senza aver pagato tutto.
+func prossimo_guaio() -> String:
+	var n: int = giorni_debbito + 1
+	if n >= GRADINO_GAME_OVER:
+		return "FERNUTA"
+	if n <= gradino_fatto:
+		return ""
+	return str(SCALA.get(n, {}).get("avviso", ""))
+
+
+## **'A matina doppo 'o guaio** (da `start_shift`): i conti che si pagano col
+## corpo e con la tasca, ogni mattina finché il guaio dura.
+func _matina_d_e_guaie() -> Array:
+	var fatti: Array = []
+	if gas_staccato:
+		health = minf(health, HEALTH_MAX * 0.75)
+	if nottata_ncopp_e_cartune:
+		health = minf(health, HEALTH_MAX * 0.6)
+		# Chi dorme in strada, qualche volta, si sveglia leggero.
+		if money >= 10 and randf() < 0.35:
+			var presi: int = maxi(5, int(round(float(money) * 0.2)))
+			money -= presi
+			money_changed.emit(money)
+			fatti.append("Stanotte, ncopp''e cartune, nu mariuolo t'ha alleggerito 'e €%d. Almeno t'ha lassato 'e scarpe." % presi)
+	nottata_ncopp_e_cartune = false
+	if suocera_in_casa and money >= 5:
+		var sua: int = maxi(5, int(round(float(money) * 0.12)))
+		money -= sua
+		money_changed.emit(money)
+		fatti.append("Donna Cuncetta s'è pigliata €%d 'a dint''a giacca. «P''o lotto. Si vinco, 'e ddongo 'e criature.»" % sua)
+	return fatti
+
+
+## **Durmì ncopp''e cartune** (quinto gradino): è come andare a letto, ma
+## fuori dalla porta.
+func dorme_fore() -> Dictionary:
+	nottata_ncopp_e_cartune = true
+	return vai_a_dormire()
+
+
+## La fine: il riepilogo della partita, per la schermata.
+func riepilogo_finale() -> Dictionary:
+	return {
+		"giornate": giornata - 1,
+		"piazze": zone_mie.size(),
+		"soldi": money,
+		"dovuto": spese_dovute(),
+		"finale": str(FINALE[randi() % FINALE.size()]),
+	}
+
+
+## **Ricomincia da capo.** Lo stato di una partita nuova è quello che il
+## GameManager aveva appena acceso (`_stato_iniziale`, preso alla fine di
+## `_ready`); i guai si spengono a mano, perché il salvataggio non li
+## conosce tutti.
+var _stato_iniziale: Dictionary = {}
+
+
+func ricomincia_da_capo() -> void:
+	if not _stato_iniziale.is_empty():
+		applica_stato(_stato_iniziale)
+	giornata = 1
+	money = 0
+	spese_aperte = []
+	umore_moglie = 62.0
+	luce_staccata = false
+	padrone_arrabbiato = false
+	giorni_debbito = 0
+	gradino_fatto = 0
+	gas_staccato = false
+	suocera_in_casa = false
+	cacciato_e_casa = false
+	nottata_ncopp_e_cartune = false
+	partita_fernuta = false
+	sere_tardi = 0
+	dentro_casa = false
+	money_changed.emit(money)
+	famiglia_cambiata.emit()
 
 
 # ===========================================================================
@@ -4622,6 +4943,11 @@ func stato_partita() -> Dictionary:
 		"sere_tardi": sere_tardi,
 		"luce_staccata": luce_staccata,
 		"padrone_arrabbiato": padrone_arrabbiato,
+		"giorni_debbito": giorni_debbito,
+		"gradino_fatto": gradino_fatto,
+		"gas_staccato": gas_staccato,
+		"suocera_in_casa": suocera_in_casa,
+		"cacciato_e_casa": cacciato_e_casa,
 		# --- 'A scopa ----------------------------------------------------
 		"scopa_battuti": scopa_battuti,
 		"casa_id": casa_id,
@@ -4697,10 +5023,17 @@ func applica_stato(d: Dictionary) -> void:
 			"giorno": int(s.get("giorno", 1)),
 			"desc": str(s.get("desc", "")),
 			"grave": bool(s.get("grave", false)),
+			"base": int(s.get("base", s.get("importo", 0))),
 		})
 	sere_tardi = int(d.get("sere_tardi", 0))
 	luce_staccata = bool(d.get("luce_staccata", false))
 	padrone_arrabbiato = bool(d.get("padrone_arrabbiato", false))
+	giorni_debbito = int(d.get("giorni_debbito", 0))
+	gradino_fatto = int(d.get("gradino_fatto", 0))
+	gas_staccato = bool(d.get("gas_staccato", false))
+	suocera_in_casa = bool(d.get("suocera_in_casa", false))
+	cacciato_e_casa = bool(d.get("cacciato_e_casa", false))
+	partita_fernuta = false
 	casa_id = str(d.get("casa_id", "vascio"))
 	lavoretti_fatti = int(d.get("lavoretti_fatti", 0))
 	nomma = clampf(float(d.get("nomma", 0.0)), 0.0, 100.0)
