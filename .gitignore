@@ -32,3 +32,6 @@ designer.py
 /assets/*.jfif
 # demo dell'addon, non servono al gioco
 /Progetto/parcheggiatore-abusivo/addons/proton_scatter/demos/assets/models/
+
+# file di prova con chiavi dentro: mai su GitHub
+*.bak
