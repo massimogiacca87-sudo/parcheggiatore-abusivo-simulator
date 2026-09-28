@@ -22,6 +22,7 @@ extends CharacterBody3D
 ## veda arrivare in fondo alla strada.
 
 const SpeechBubbleScript := preload("res://scripts/speech_bubble.gd")
+const Vigile := preload("res://scripts/vigile_3d.gd")
 const Human := preload("res://scripts/human_builder.gd")
 const Tex := preload("res://scripts/textures.gd")
 
@@ -148,9 +149,13 @@ func _build_visual() -> void:
 
 	var fiamma := MeshInstance3D.new()
 	var fm := BoxMesh.new()
-	fm.size = Vector3(0.075, 0.075, 0.02)
+	fm.size = Vector3(0.036, 0.05, 0.012)
 	fiamma.mesh = fm
-	fiamma.position = Vector3(-0.03, 0.245, -0.145)
+	# (0.66) Davanti a sinistra, no areto: sull'osso della testa il
+	# davanti è +Z (e la sinistra di chi la porta è +X). Stava a −Z, sulla
+	# nuca, e da davanti se ne vedeva uno spigolo rosso sopra al basco.
+	fiamma.position = Vector3(0.055, 0.245, 0.157)
+	fiamma.rotation = Vector3(0, deg_to_rad(18.0), 0.17)
 	fiamma.material_override = Tex.flat(Color(0.85, 0.15, 0.14), 0.4, 0.3)
 	testa.add_child(fiamma)
 
@@ -158,24 +163,27 @@ func _build_visual() -> void:
 	# pupo.glb): pesate sulle ossa delle gambe, quindi si piegano col
 	# ginocchio. Qui restano la bandoliera bianca e il cinturone, che sono
 	# l'altra metà di quello che rende riconoscibile una divisa da lontano.
-	var petto: Node3D = parts["bones"].get("chest", _visual)
+	var petto: Node3D = parts["bones"].get("chest", null)
 	var bianco := Tex.flat(Color(0.94, 0.94, 0.92), 0.6)
-	var tracolla := MeshInstance3D.new()
-	var tm := BoxMesh.new()
-	tm.size = Vector3(0.075, 0.56, 0.30)
-	tracolla.mesh = tm
-	tracolla.position = Vector3(-0.055, -0.09, 0)
-	tracolla.rotation.z = -0.42
-	tracolla.material_override = bianco
-	petto.add_child(tracolla)
-
-	var cinto := MeshInstance3D.new()
-	var cm2 := BoxMesh.new()
-	cm2.size = Vector3(0.34, 0.075, 0.26)
-	cinto.mesh = cm2
-	cinto.position = Vector3(0, -0.30, 0)
-	cinto.material_override = bianco
-	petto.add_child(cinto)
+	# (0.66) La bandoliera era una scatola 7,5 × 56 × 30 cm che passava
+	# attraverso il petto e usciva di profilo; il cinturone una scatola
+	# profonda 26 cm attorno alla vita, che dietro spuntava dalla maglia.
+	# Adesso la bandoliera è quella del vigile allo specchio (dalla spalla
+	# sinistra al fianco destro), una fascia di un centimetro calzata sul
+	# busto nuovo (`Vigile.bandoliera_mesh`); e il cinturone bianco è la
+	# cintura del pupo stesso, tinta di bianco: sta già sul corpo e si
+	# piega con lui.
+	if petto != null:
+		var tracolla := MeshInstance3D.new()
+		tracolla.mesh = Vigile.bandoliera_mesh(true)
+		tracolla.material_override = bianco
+		petto.add_child(tracolla)
+	for m in (parts["root"] as Node).find_children("cintura*", "MeshInstance3D", true, false):
+		var mi := m as MeshInstance3D
+		for i in range(mi.mesh.get_surface_count()):
+			var base: Material = mi.mesh.surface_get_material(i)
+			if base != null and str(base.resource_name).begins_with("cuoio"):
+				mi.set_surface_override_material(i, bianco)
 
 	# 'E gradi ncopp'ê spalle — **e stavolta ncopp'ê spalle overo.**
 	for chiave in ["spalla_l", "spalla_r"]:

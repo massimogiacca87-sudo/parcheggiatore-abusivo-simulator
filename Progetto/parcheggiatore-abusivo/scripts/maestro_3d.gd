@@ -139,31 +139,61 @@ func _build_visual() -> void:
 ## mestiere, e si vede prima che apra bocca.
 ##
 ## Gli assi della testa sono misurati, non indovinati (`tools/prova_manella`):
-## **giù è −Y, 'nnanze è +Z**. Il visierino va davanti, cioè verso +Z — la
-## stessa riga che nella 0.51 era sbagliata e teneva la visiera del vigile
-## appiccicata alla nuca.
+## **giù è −Y, 'nnanze è +Z**. Il visierino va davanti, cioè verso +Z.
+##
+## **(0.66) Calzata ncopp'â capa nova.** Era misurata sulla testa vecchia:
+## col cranio nuovo la visiera arrivava sulle palpebre, e la calotta (più
+## bassa della cima del cranio) si faceva bucare in testa. Adesso il bordo
+## è un'ellisse che abbraccia il cranio (0,9 cm di gioco), inclinata di
+## 12,8° col davanti in su: davanti passa a 16,2 cm sopra l'osso — le
+## sopracciglia arrivano a 15,2 — e dietro scende sulla nuca a 10,8. Con la
+## testa che nella posa di riposo guarda 15,8° in giù, di fronte il bordo
+## sta in piano. La calotta è bassa e piatta come una coppola, un poco
+## tirata in avanti sopra al visierino; il visierino è girato in su di 13°
+## sul bordo (10° a vederlo dritto in faccia).
+const COPPOLA_CENTRO := Vector3(0.0, 0.134, -0.002)
+const COPPOLA_INCLINA := 12.8
+const COPPOLA_A := 0.123
+const COPPOLA_C := 0.126
+const COPPOLA_ALTA := 0.10
+const VISIERINO_SU := 13.0
+const VISIERINO := Vector3(0.17, 0.012, 0.075)
+
+
 func _a_coppola(testa: Node3D) -> void:
 	var panno := Tex.flat(Color(0.30, 0.28, 0.24), 0.86)
+	var coppola := Node3D.new()
+	coppola.name = "Coppola"
+	coppola.position = COPPOLA_CENTRO
+	coppola.rotation.x = -deg_to_rad(COPPOLA_INCLINA)
+	testa.add_child(coppola)
+
 	var calotta := MeshInstance3D.new()
 	var cm := SphereMesh.new()
-	cm.radius = 0.152
-	cm.height = 0.304
-	cm.radial_segments = 14
-	cm.rings = 7
+	cm.radius = 1.0
+	cm.height = 1.0
 	cm.is_hemisphere = true
+	cm.radial_segments = 14
+	cm.rings = 5
 	calotta.mesh = cm
-	calotta.position = Vector3(0, 0.132, 0.006)
-	calotta.scale = Vector3(1.03, 0.52, 1.08)
+	# Tirata in avanti di un centimetro: davanti sporge sul visierino,
+	# dietro resta sulla nuca.
+	calotta.scale = Vector3(COPPOLA_A + 0.006, COPPOLA_ALTA, COPPOLA_C + 0.014)
+	calotta.position = Vector3(0, 0, 0.010)
 	calotta.material_override = panno
-	testa.add_child(calotta)
+	coppola.add_child(calotta)
 
+	# Il bordo di dietro del visierino tocca la calotta agli spigoli (a
+	# ±8,5 cm il bordo sta a z 9,1 cm); il resto sta dentro.
 	var visiera := MeshInstance3D.new()
 	var vm := BoxMesh.new()
-	vm.size = Vector3(0.19, 0.018, 0.10)
+	vm.size = VISIERINO
 	visiera.mesh = vm
-	visiera.position = Vector3(0, 0.128, 0.150)
+	var su := Basis(Vector3.RIGHT, -deg_to_rad(VISIERINO_SU))
+	var attacco := Vector3(0.0, VISIERINO.y * 0.5, 0.091)
+	visiera.transform = Transform3D(su, attacco + su * Vector3(0, 0, VISIERINO.z * 0.5))
 	visiera.material_override = panno
-	testa.add_child(visiera)
+	coppola.add_child(visiera)
 
 
 ## **'A sedia 'e plastica, appuiata 'a llato.**

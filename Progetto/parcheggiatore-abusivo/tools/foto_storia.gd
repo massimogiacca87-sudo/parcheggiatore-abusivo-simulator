@@ -8,9 +8,27 @@ extends Node
 ## Borrelli. È la prova che la testa nuova non fa galleggiare (o sprofondare)
 ## niente di quello che ci sta appeso.
 ##
-## Gira come autoload dentro al gioco vero (vedi `tools/sh/foto.sh`):
-##   Foto="*res://scripts/_foto_storia.gd"
-## Le foto vanno in `FOTO_DIR` (variabile d'ambiente) o in /tmp.
+## Si lancia senza toccare `project.godot` (vedi `tools/lancia_foto.gd`):
+##   godot --path . --rendering-driver opengl3 --resolution 1280x760 \
+##       --script res://tools/lancia_foto.gd -- res://tools/foto_storia.gd
+## Le foto vanno in `FOTO_DIR` (variabile d'ambiente) o in /tmp. Con
+## `FOTO_CHI=vigile,maestro` si fotografano solo quelli.
+##
+## **Comme se fotografa na faccia** (0.66, dopo il giudizio del revisore):
+##
+##   * **Niente fumetti.** Il carabiniere entra gridando «FIERMATE!», e il
+##     fumetto — che si ingrandisce con la distanza per restare leggibile —
+##     copriva la faccia a lui e ai vicini. Si spengono i fumetti e tutte le
+##     scritte 3D, si fermano i cervelli dei personaggi (così non ne aprono
+##     altri) e si aspetta che la gesticolata del parlare finisca.
+##   * **La macchina si mette davanti alla faccia, non davanti al posto.**
+##     Il davanti si legge dall'osso della testa (+Z), quindi il magliaro
+##     che sta girato dietro al suo banco si fotografa lo stesso di faccia.
+##   * **Ad altezza d'occhi, a un metro e trenta**: di fronte, di tre
+##     quarti e di profilo. Mentre se ne fotografa uno gli altri si
+##     nascondono, così la macchina non finisce mai dentro al vicino.
+##   * Per chi porta la bandoliera (vigile, carabiniere) anche il busto,
+##     di fronte e di profilo.
 
 const SCRIPTS := [
 	["vigile", "res://scripts/vigile_3d.gd"],
@@ -24,6 +42,13 @@ const SCRIPTS := [
 	["rivale", "res://scripts/rivale_3d.gd"],
 	["tre_carte", "res://scripts/tre_carte_3d.gd"],
 ]
+## Chi porta roba sul busto: di questi si fotografa pure il petto.
+const COL_BUSTO := ["vigile", "carabiniere"]
+## Gli occhi sull'osso della testa del pupo (centro del bulbo, misurato).
+const OCCHI := Vector3(0.0, 0.101, 0.13)
+const DISTANZA := 1.3
+const PASSO_FILA := 1.3
+const PASSO_FOTO := 3.0
 
 var _dir := "/tmp"
 var _cam: Camera3D = null
@@ -35,6 +60,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_dir = OS.get_environment("FOTO_DIR") if OS.get_environment("FOTO_DIR") != "" else "/tmp"
 	DirAccess.make_dir_recursive_absolute(_dir)
+	var solo: PackedStringArray = OS.get_environment("FOTO_CHI").split(",", false)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var mondo := Node3D.new()
@@ -42,7 +68,7 @@ func _ready() -> void:
 	add_child(mondo)
 	var suolo := MeshInstance3D.new()
 	var pm := PlaneMesh.new()
-	pm.size = Vector2(60, 30)
+	pm.size = Vector2(80, 40)
 	suolo.mesh = pm
 	var sm := StandardMaterial3D.new()
 	sm.albedo_color = Color(0.45, 0.43, 0.40)
@@ -50,7 +76,7 @@ func _ready() -> void:
 	mondo.add_child(suolo)
 	var muro := MeshInstance3D.new()
 	var bm := BoxMesh.new()
-	bm.size = Vector3(40, 6, 0.3)
+	bm.size = Vector3(60, 6, 0.3)
 	muro.mesh = bm
 	var mm := StandardMaterial3D.new()
 	mm.albedo_color = Color(0.78, 0.66, 0.46)
@@ -84,21 +110,55 @@ func _ready() -> void:
 	_cam.fov = 40
 	mondo.add_child(_cam)
 
-	var x := -float(SCRIPTS.size() - 1) * 0.5 * 1.3
+	var tutti: Array = []
 	for s in SCRIPTS:
+		if solo.is_empty() or solo.has(str(s[0])):
+			tutti.append(s)
+	var x := -float(tutti.size() - 1) * 0.5 * PASSO_FILA
+	for s in tutti:
 		var sc: Script = load(str(s[1]))
 		var n: Node3D = sc.new()
 		mondo.add_child(n)
 		n.global_position = Vector3(x, 0.0, 0.0)
 		# Guardano la macchina (che sta a −Z): il davanti di una persona è −Z.
 		n.rotation.y = 0.0
-		# Fermi: niente cervello, l'animazione sì. Il Re e Gennarino
-		# nascono nascosti (compaiono al loro momento): qui si accendono.
-		n.set_physics_process(false)
+		# Fermi subito: niente cervello (che apre fumetti e sposta la gente),
+		# l'animazione sì. Il Re e Gennarino nascono nascosti (compaiono al
+		# loro momento): qui si accendono.
+		_ferma(n)
 		n.visible = true
 		_chi.append([str(s[0]), n])
-		x += 1.3
+		x += PASSO_FILA
+	_zittisci()
 	print("  ", _chi.size(), " cristiane d''a storia")
+
+
+## Niente cervello: né `_process` né `_physics_process`, né timer propri.
+## L'Animator (che è un nodo a parte) continua, ed è quello che si vuole.
+func _ferma(n: Node) -> void:
+	n.set_process(false)
+	n.set_physics_process(false)
+
+
+## **Zitti tutti.** Spegne i fumetti (lo script `speech_bubble.gd`) e ogni
+## `Label3D` (le targhette, il cartone di Gennarino resta: è una Label3D
+## ma è roba sua, non un fumetto — quindi si spengono solo quelle col
+## cartellone sempre girato verso la macchina).
+func _zittisci() -> void:
+	for c in _chi:
+		_zittisci_nodo(c[1])
+
+
+func _zittisci_nodo(n: Node) -> void:
+	for f in n.get_children():
+		var sc: Script = f.get_script() as Script
+		if sc != null and sc.resource_path.ends_with("speech_bubble.gd"):
+			(f as Node3D).visible = false
+			f.process_mode = Node.PROCESS_MODE_DISABLED
+			continue
+		if f is Label3D and (f as Label3D).billboard != BaseMaterial3D.BILLBOARD_DISABLED:
+			(f as Label3D).visible = false
+		_zittisci_nodo(f)
 
 
 func _process(_d: float) -> void:
@@ -128,31 +188,69 @@ func _spegni(n: Node) -> void:
 		_spegni(c)
 
 
+func _testa(n: Node) -> Node3D:
+	var t: Node = n.find_child("att_head", true, false)
+	return t as Node3D
+
+
 func _scatta_tutto() -> void:
-	for _k in range(40):
-		await get_tree().process_frame
-	# Tenerli fermi dove li si è messi (qualcuno si sposta da solo in _ready).
+	# La gesticolata del parlare dura quanto il fumetto (2-3 secondi):
+	# si aspetta che finisca, così nessuno è fotografato a bocca aperta e
+	# braccia per aria.
+	await get_tree().create_timer(3.5).timeout
 	for c in _chi:
 		var n: Node3D = c[1]
-		n.set_physics_process(false)
-		n.set_process(false)
+		_ferma(n)
 		n.visible = true
 		for f in n.get_children():
 			if f is Node3D:
 				(f as Node3D).visible = true
-	var x0: float = -float(SCRIPTS.size() - 1) * 0.5 * 1.3
-	await _foto(Vector3(0, 1.6, -9.5), Vector3(0, 1.0, 0), "storia_fila", 52.0)
+	_zittisci()
+	var larghi: float = float(_chi.size() - 1) * PASSO_FILA
+	await _foto(Vector3(0, 1.6, -maxf(6.0, larghi * 0.95 + 2.0)), Vector3(0, 1.0, 0),
+		"storia_fila", 52.0)
+	# Da lontano, come li vede il giocatore dall'altra parte della piazza.
+	await _foto(Vector3(0, 2.4, -16.0), Vector3(0, 1.1, 0), "storia_lontano", 40.0)
+	# Adesso uno alla volta, larghi, e gli altri nascosti.
+	var x0: float = -float(_chi.size() - 1) * 0.5 * PASSO_FOTO
+	for i in range(_chi.size()):
+		var n: Node3D = _chi[i][1]
+		n.global_position = Vector3(x0 + PASSO_FOTO * i, 0.0, 0.0)
 	for i in range(_chi.size()):
 		var nome: String = _chi[i][0]
 		var n: Node3D = _chi[i][1]
-		n.global_position = Vector3(x0 + 1.3 * i, 0.0, 0.0)
-		# Chi sta dietro a un banco è girato apposta: qui guarda la macchina.
-		n.global_rotation.y = 0.0
-		var cima: float = 1.55
-		await _foto(n.global_position + Vector3(0.35, cima + 0.05, -1.25),
-			n.global_position + Vector3(0.0, cima, 0.0), "storia_" + nome, 40.0)
-		await _foto(n.global_position + Vector3(1.3, cima, -0.2),
-			n.global_position + Vector3(0.0, cima, 0.0), "storia_" + nome + "_profilo", 40.0)
+		for j in range(_chi.size()):
+			(_chi[j][1] as Node3D).visible = (j == i)
+		for _k in range(3):
+			await get_tree().process_frame
+		var testa := _testa(n)
+		var occhi: Vector3
+		var avanti: Vector3
+		if testa != null:
+			var g: Transform3D = testa.global_transform
+			occhi = g * OCCHI
+			avanti = g.basis.z
+		else:
+			occhi = n.global_position + Vector3(0, 1.62, 0)
+			avanti = -n.global_transform.basis.z
+		avanti.y = 0.0
+		if avanti.length() < 0.01:
+			avanti = Vector3(0, 0, -1)
+		avanti = avanti.normalized()
+		# Si guarda un filo sopra agli occhi: dentro all'inquadratura
+		# ci stanno cappello, faccia e colletto.
+		var mira := occhi + Vector3(0, 0.03, 0)
+		await _foto(occhi + avanti * DISTANZA, mira, "storia_" + nome, 30.0)
+		var tre_quarti := avanti.rotated(Vector3.UP, deg_to_rad(40.0))
+		await _foto(occhi + tre_quarti * DISTANZA, mira, "storia_" + nome + "_34", 30.0)
+		var lato := avanti.rotated(Vector3.UP, deg_to_rad(90.0))
+		await _foto(occhi + lato * DISTANZA, mira, "storia_" + nome + "_profilo", 30.0)
+		if COL_BUSTO.has(nome):
+			var petto := occhi + Vector3(0, -0.42, 0)
+			await _foto(petto + avanti * 1.7, petto, "storia_" + nome + "_busto", 36.0)
+			await _foto(petto + lato * 1.7, petto, "storia_" + nome + "_busto_profilo", 36.0)
+			var dietro := avanti.rotated(Vector3.UP, deg_to_rad(180.0))
+			await _foto(petto + dietro * 1.7, petto, "storia_" + nome + "_busto_dietro", 36.0)
 	get_tree().quit()
 
 
@@ -160,6 +258,7 @@ func _foto(da: Vector3, a: Vector3, nome: String, fov: float) -> void:
 	for n in get_tree().root.get_children():
 		if n != self:
 			_spegni(n)
+	_zittisci()
 	_cam.fov = fov
 	_cam.look_at_from_position(da, a, Vector3.UP)
 	_cam.make_current()

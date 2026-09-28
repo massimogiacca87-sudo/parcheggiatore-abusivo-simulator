@@ -338,79 +338,20 @@ func _build_visual() -> void:
 		return
 
 	var head_pivot: Node3D = parts["head"]
+	_casco(head_pivot)
 
-	# **'O casco janco d''o vigile urbano.**
-	#
-	# Il berretto c'era già, ma era **blu scuro sopra a una divisa blu
-	# scura**: a dieci metri il vigile era una sagoma scura come tutte le
-	# altre, e il capo ha ragione a dire che non si riconosce. Il vigile
-	# urbano di Napoli d'estate porta il **casco bianco**, ed è quella
-	# l'unica cosa che si vede da lontano — prima ancora della divisa,
-	# prima della paletta.
-	#
-	# Bianco sopra, fascia blu sotto, visiera nera, stemma dorato: quattro
-	# pezzi, e da in fondo alla piazza si capisce chi è.
-	var cap := MeshInstance3D.new()
-	var cap_mesh := SphereMesh.new()
-	cap_mesh.radius = 0.148
-	cap_mesh.height = 0.296
-	cap_mesh.radial_segments = 16
-	cap_mesh.rings = 8
-	cap_mesh.is_hemisphere = true
-	cap.mesh = cap_mesh
-	cap.position = Vector3(0, 0.140, 0)
-	cap.scale = Vector3(1.02, 0.70, 1.06)
-	cap.material_override = Tex.flat(Color(0.95, 0.95, 0.93), 0.35, 0.15)
-	head_pivot.add_child(cap)
-
-	var fascia := MeshInstance3D.new()
-	var fascia_mesh := CylinderMesh.new()
-	fascia_mesh.top_radius = 0.152
-	fascia_mesh.bottom_radius = 0.154
-	fascia_mesh.height = 0.042
-	fascia_mesh.radial_segments = 16
-	fascia.mesh = fascia_mesh
-	fascia.position = Vector3(0, 0.148, 0)
-	fascia.scale = Vector3(1.0, 1.0, 1.05)
-	fascia.material_override = Tex.flat(Color(0.07, 0.13, 0.34), 0.8)
-	head_pivot.add_child(fascia)
-
-	var visor := MeshInstance3D.new()
-	var visor_mesh := BoxMesh.new()
-	visor_mesh.size = Vector3(0.26, 0.022, 0.13)
-	visor.mesh = visor_mesh
-	# **'A visiera steva areto â capa.**
-	#
-	# Dalla 0.51 il casco del vigile aveva la visiera e lo stemma a
-	# z negativa, e sull'osso `Head` di questo rig **il davanti è +Z**
-	# (misurato in `prova_manella`: +Z → world-forward, 0,97). Cioè per
-	# tre versioni il vigile ha girato la piazza con la visiera sulla
-	# nuca. Non si nota mai perché il vigile lo si vede quasi sempre di
-	# spalle o di tre quarti — e da dietro sembrava giusto.
-	visor.position = Vector3(0, 0.140, 0.158)
-	visor.rotation.x = deg_to_rad(7.0)
-	visor.material_override = Tex.flat(Color(0.05, 0.05, 0.07), 0.4)
-	head_pivot.add_child(visor)
-
-	var badge := MeshInstance3D.new()
-	var badge_mesh := BoxMesh.new()
-	badge_mesh.size = Vector3(0.075, 0.062, 0.02)
-	badge.mesh = badge_mesh
-	badge.position = Vector3(0, 0.172, 0.148)
-	badge.material_override = Tex.flat(Color(0.92, 0.80, 0.26), 0.2, 0.9, 0.4)
-	head_pivot.add_child(badge)
-
-	# Bandoliera bianca a tracolla, appesa al torace: adesso che il busto
+	# 'A bandoliera bianca a tracolla, appesa al torace: adesso che il busto
 	# ruota sul passo, se restasse attaccata alla radice resterebbe indietro.
-	var chest_bone: Node3D = parts["bones"].get("chest", _visual_root)
-	var strap := MeshInstance3D.new()
-	var strap_mesh := BoxMesh.new()
-	strap_mesh.size = Vector3(0.085, 0.58, 0.32)
-	strap.mesh = strap_mesh
-	strap.position = Vector3(0.06, -0.1, 0)
-	strap.rotation.z = 0.45
-	strap.material_override = Tex.flat(Color(0.93, 0.93, 0.9), 0.7)
-	chest_bone.add_child(strap)
+	# (0.66) Era una scatola profonda 32 cm che passava attraverso il petto e
+	# usciva di profilo: adesso è una fascia di un centimetro che gira attorno
+	# al busto nuovo, dalla spalla destra al fianco sinistro (vedi
+	# `bandoliera_mesh`).
+	var chest_bone: Node3D = parts["bones"].get("chest", null)
+	if chest_bone != null:
+		var strap := MeshInstance3D.new()
+		strap.mesh = bandoliera_mesh(false)
+		strap.material_override = Tex.flat(Color(0.93, 0.93, 0.9), 0.7)
+		chest_bone.add_child(strap)
 
 	# **'E mustrine 'ncopp'ê spalle, no 'ncopp'ê mmane.**
 	#
@@ -479,14 +420,225 @@ func _build_visual() -> void:
 	disc.material_override = Tex.flat(Color(0.85, 0.12, 0.12), 0.4, 0.0, 0.3)
 	paddle_root.add_child(disc)
 
-	# Blocchetto delle multe nel taschino
-	var pad := MeshInstance3D.new()
-	var pad_mesh := BoxMesh.new()
-	pad_mesh.size = Vector3(0.11, 0.15, 0.03)
-	pad.mesh = pad_mesh
-	pad.position = Vector3(-0.14, 1.06, -0.14)
-	pad.material_override = Tex.flat(Color(0.93, 0.9, 0.8), 0.9)
-	_visual_root.add_child(pad)
+	# (0.66) Qui c'era un secondo blocchetto, una scatola bianca appesa alla
+	# radice a un metro da terra: col busto nuovo galleggiava 5 cm davanti
+	# alla pancia (si vedeva di profilo). Il blocchetto vero è il modello
+	# `blocchetto_multe` appeso al petto qui sopra.
+
+
+# ---------------------------------------------------------------------------
+# 'O casco e 'a bandoliera (0.66)
+# ---------------------------------------------------------------------------
+
+## **'O casco janco, calzato ncopp'â capa nova.**
+##
+## Il casco del vigile urbano di Napoli (bianco sopra, fascia blu, visiera
+## nera, stemma d'oro) è la cosa che lo fa riconoscere da in fondo alla
+## piazza, e resta. Ma era misurato sulla testa vecchia: con la faccia nuova
+## la visiera nera gli stava **sulle sopracciglia**, e lo sguardo scocciato
+## — tutto il personaggio — non si vedeva più.
+##
+## Adesso è calzato sulla testa del pupo, con le misure prese dalle sezioni
+## del cranio sull'osso della testa (su +Y, davanti +Z):
+##
+##   * **il bordo** passa a 17,6 cm sopra l'osso davanti (le sopracciglia
+##     arrivano a 16,6) e a 11,8 dietro, sulla nuca: un piano inclinato di
+##     13,7°. Nella posa di riposo il pupo tiene la testa **15,8° in giù**
+##     (misurato in `Idle`, `Walk`, `Walk_Formal`), quindi a vederlo di
+##     fronte il bordo sta quasi in piano, come si porta un casco;
+##   * **la fascia** abbraccia la testa: un'ellisse 0,9 cm più larga del
+##     cranio in quel piano (11,8 × 12,3 cm di semiassi), che si svasa di un
+##     centimetro verso l'alto, dove si appoggia la cupola. Di profilo non
+##     resta vuoto fra casco e testa;
+##   * **la cupola** è alta 12 cm sopra la fascia: bianca e alta, si legge
+##     da lontano;
+##   * **la visiera** è girata in su di 14° rispetto al bordo, cioè di 12° a
+##     vederlo dritto in faccia (con la testa giù di 15,8°): da davanti e di
+##     tre quarti, ad altezza d'occhi, le sopracciglia restano scoperte.
+const CASCO_CENTRO := Vector3(0.0, 0.147, -0.007)
+const CASCO_INCLINA := 13.7
+const CASCO_A := 0.118
+const CASCO_C := 0.123
+const CASCO_FASCIA := 0.034
+const CASCO_SVASA := 0.16
+const CASCO_CUPOLA := 0.15
+const VISIERA_SU := 14.0
+const VISIERA := Vector3(0.17, 0.014, 0.105)
+
+
+func _casco(testa: Node3D) -> void:
+	var casco := Node3D.new()
+	casco.name = "Casco"
+	casco.position = CASCO_CENTRO
+	casco.rotation.x = -deg_to_rad(CASCO_INCLINA)
+	testa.add_child(casco)
+	var largo := 1.0 + CASCO_SVASA
+
+	# La fascia blu: un tronco di cono ellittico, stretto sotto (sulla
+	# testa) e un centimetro più largo sopra (sotto alla cupola).
+	var fascia := MeshInstance3D.new()
+	var fm := CylinderMesh.new()
+	fm.bottom_radius = 1.0
+	fm.top_radius = largo
+	fm.height = CASCO_FASCIA
+	fm.radial_segments = 16
+	fm.rings = 1
+	fm.cap_top = false
+	fascia.mesh = fm
+	fascia.scale = Vector3(CASCO_A, 1.0, CASCO_C)
+	fascia.position = Vector3(0, CASCO_FASCIA * 0.5, 0)
+	fascia.material_override = Tex.flat(Color(0.07, 0.13, 0.34), 0.8)
+	casco.add_child(fascia)
+
+	# La cupola bianca. Con `rings` dispari la mezza sfera ha l'equatore
+	# esatto a quota zero e raggio pieno: combacia con la fascia.
+	var cupola := MeshInstance3D.new()
+	var cm := SphereMesh.new()
+	cm.radius = 1.0
+	cm.height = 1.0
+	cm.is_hemisphere = true
+	cm.radial_segments = 16
+	cm.rings = 7
+	cupola.mesh = cm
+	cupola.scale = Vector3(CASCO_A * largo, CASCO_CUPOLA, CASCO_C * largo)
+	cupola.position = Vector3(0, CASCO_FASCIA, 0)
+	cupola.material_override = Tex.flat(Color(0.95, 0.95, 0.93), 0.35, 0.15)
+	casco.add_child(cupola)
+
+	# **'A visiera steva areto â capa** (0.51): sull'osso della testa il
+	# davanti è +Z. Il bordo di dietro della visiera tocca la fascia agli
+	# spigoli (a ±8,5 cm la fascia sta a z 8,5 cm), il resto è dentro.
+	var visiera := MeshInstance3D.new()
+	var vm := BoxMesh.new()
+	vm.size = VISIERA
+	visiera.mesh = vm
+	var su := Basis(Vector3.RIGHT, -deg_to_rad(VISIERA_SU))
+	var attacco := Vector3(0.0, VISIERA.y * 0.5, 0.085)
+	visiera.transform = Transform3D(su, attacco + su * Vector3(0, 0, VISIERA.z * 0.5))
+	visiera.material_override = Tex.flat(Color(0.05, 0.05, 0.07), 0.4)
+	casco.add_child(visiera)
+
+	# Lo stemma d'oro, davanti, a cavallo fra la fascia e la cupola.
+	var stemma := MeshInstance3D.new()
+	var sm := BoxMesh.new()
+	sm.size = Vector3(0.062, 0.052, 0.012)
+	stemma.mesh = sm
+	stemma.position = Vector3(0, CASCO_FASCIA + 0.018, CASCO_C * largo + 0.001)
+	stemma.rotation.x = -deg_to_rad(10.0)
+	stemma.material_override = Tex.flat(Color(0.92, 0.80, 0.26), 0.2, 0.9, 0.4)
+	casco.add_child(stemma)
+
+
+## **'A bandoliera ca s'azzecca ô busto.**
+##
+## Prima era una scatola 8,5 × 58 × 32 cm appesa all'osso del petto: più
+## profonda del torace, attraversava la maglia e di profilo usciva davanti e
+## dietro come un cartellone. Una bandoliera vera è una fascia di stoffa
+## tesa: gira attorno al busto dalla spalla al fianco opposto, e sui vuoti
+## (il cavo della schiena) passa dritta.
+##
+## È esattamente quello che fa questa: il busto del pupo `normale` nella
+## posa `Idle`, nello spazio dell'osso del petto, tagliato col piano che va
+## dalla spalla (`BANDOLIERA_SPALLA`) al fianco (`BANDOLIERA_FIANCO`), dà un
+## contorno; il suo **involucro convesso** è la fascia tesa. Si prende ai
+## due bordi della fascia (a ±2,75 cm dal piano), si allarga di 9 mm, e lo
+## si scrive qui come raggi visti dal centro del busto in quel piano
+## (`BANDOLIERA_GIRO`: angolo in gradi, raggio del bordo +n, raggio del
+## bordo −n). La faccia di dentro sta 13 mm più giù, dentro alla maglia:
+## sopra la maglia la fascia esce di 9 mm, e non ci entra mai.
+##
+## Il carabiniere porta la stessa, allo specchio (`specchio`): dalla spalla
+## sinistra al fianco destro. Una mesh sola per tutti (è la stessa per
+## ogni vigile), ~180 triangoli, una chiamata di disegno.
+const BANDOLIERA_SPALLA := Vector2(-0.115, 0.19)
+const BANDOLIERA_FIANCO := Vector2(0.13, -0.25)
+const BANDOLIERA_CENTRO := Vector2(0.26, 0.0)
+const BANDOLIERA_LARGA := 0.055
+const BANDOLIERA_SPESSA := 0.013
+const BANDOLIERA_GIRO := [
+	0, 0.2579, 0.2233, 3, 0.2648, 0.2332, 18, 0.2779, 0.2476,
+	29, 0.3002, 0.2096, 31, 0.2861, 0.2047, 35, 0.2544, 0.1877,
+	54, 0.1627, 0.1394, 74, 0.1279, 0.1169, 104, 0.1167, 0.1144,
+	143, 0.1593, 0.1709, 157, 0.1879, 0.2401, 166, 0.2132, 0.2570,
+	176, 0.2420, 0.2705, 184, 0.2581, 0.2724, 190, 0.2677, 0.2701,
+	194, 0.2665, 0.2662, 200, 0.2672, 0.2502, 204, 0.2639, 0.2419,
+	208, 0.2467, 0.2345, 212, 0.2308, 0.2202, 218, 0.1985, 0.2036,
+	223, 0.1782, 0.1860, 240, 0.1384, 0.1489, 260, 0.1203, 0.1230,
+	284, 0.1162, 0.1154, 309, 0.1284, 0.1275, 328, 0.1576, 0.1481,
+	338, 0.1870, 0.1668, 345, 0.2092, 0.1866, 348, 0.2215, 0.1919,
+]
+static var _bandoliere: Dictionary = {}
+
+
+static func bandoliera_mesh(specchio: bool) -> ArrayMesh:
+	if _bandoliere.has(specchio):
+		return _bandoliere[specchio]
+	var a := Vector3(BANDOLIERA_SPALLA.x, BANDOLIERA_SPALLA.y, 0.0)
+	var b := Vector3(BANDOLIERA_FIANCO.x, BANDOLIERA_FIANCO.y, 0.0)
+	var d := (b - a).normalized()
+	var n := Vector3(d.y, -d.x, 0.0)
+	var centro := a + d * BANDOLIERA_CENTRO.x + Vector3(0, 0, BANDOLIERA_CENTRO.y)
+	var sx := -1.0 if specchio else 1.0
+	# Quattro anelli: bordo +n e −n, fuori (sulla maglia) e dentro.
+	var anelli: Array = [[], [], [], []]
+	for i in range(0, BANDOLIERA_GIRO.size(), 3):
+		var phi := deg_to_rad(float(BANDOLIERA_GIRO[i]))
+		var dir := Vector2(cos(phi), sin(phi))
+		for k in range(2):
+			var lato := 1.0 if k == 0 else -1.0
+			var r := float(BANDOLIERA_GIRO[i + 1 + k])
+			for j in range(2):
+				var uz := BANDOLIERA_CENTRO + dir * (r - BANDOLIERA_SPESSA * j)
+				var p := a + n * (lato * BANDOLIERA_LARGA * 0.5) + d * uz.x \
+					+ Vector3(0, 0, uz.y)
+				p.x *= sx
+				anelli[k * 2 + j].append(p)
+	var c := centro * Vector3(sx, 1, 1)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var quanti: int = anelli[0].size()
+	for i in range(quanti):
+		var i2 := (i + 1) % quanti
+		var lo: Vector3 = anelli[0][i]
+		var lo2: Vector3 = anelli[0][i2]
+		var ro: Vector3 = anelli[2][i]
+		var ro2: Vector3 = anelli[2][i2]
+		var li: Vector3 = anelli[1][i]
+		var li2: Vector3 = anelli[1][i2]
+		var ri: Vector3 = anelli[3][i]
+		var ri2: Vector3 = anelli[3][i2]
+		var mezzo := (lo + ro + lo2 + ro2) * 0.25
+		var fuori := (mezzo - c).normalized()
+		var lat := (lo - ro).normalized()
+		_quad(st, lo, ro, ro2, lo2, fuori)        # sopra alla maglia
+		_quad(st, li, ri, ri2, li2, -fuori)       # sotto (dentro alla maglia)
+		_quad(st, lo, lo2, li2, li, lat)          # i due fianchi
+		_quad(st, ro, ro2, ri2, ri, -lat)
+	st.generate_normals()
+	var m := st.commit()
+	_bandoliere[specchio] = m
+	return m
+
+
+## Un quadrilatero con la faccia girata verso `verso` (Godot disegna la
+## faccia davanti in senso orario: si controlla e si gira se serve).
+static func _quad(st: SurfaceTool, p0: Vector3, p1: Vector3, p2: Vector3,
+		p3: Vector3, verso: Vector3) -> void:
+	var nrm := (p1 - p0).cross(p2 - p0)
+	if nrm.dot(verso) > 0.0:
+		st.add_vertex(p0)
+		st.add_vertex(p2)
+		st.add_vertex(p1)
+		st.add_vertex(p0)
+		st.add_vertex(p3)
+		st.add_vertex(p2)
+	else:
+		st.add_vertex(p0)
+		st.add_vertex(p1)
+		st.add_vertex(p2)
+		st.add_vertex(p0)
+		st.add_vertex(p2)
+		st.add_vertex(p3)
 
 
 func _get_player() -> Node3D:
