@@ -39,7 +39,7 @@ const LOCANDINE := [
 const ORO := Color(1.0, 0.84, 0.36)
 const CREMA := Color(0.96, 0.94, 0.90)
 const FONDO := Color(0.055, 0.05, 0.075)
-const VERSIONE := "v0.65"
+const VERSIONE := "v0.66"
 
 ## **'O tutoriale, rifatto 'a capo ê 0.50.**
 ##
