@@ -69,6 +69,8 @@ const MESTIERE := [
 		"camicia": [Color(0.92, 0.86, 0.34), Color(0.36, 0.76, 0.72),
 			Color(0.92, 0.52, 0.32)],
 		"pantalone": Color(0.78, 0.74, 0.62), "cosa": "machinetta",
+		"faccia": {"palpebre": "sveglie", "bocca": "sorriso",
+			"occhi": Color(0.30, 0.44, 0.58), "catenina": false},
 		"dice": ["Ooooh! Beautiful!", "Excuse me… pizza? PIZZA?",
 			"Is this Spaccanapoli? Ja?"],
 	},
@@ -76,6 +78,8 @@ const MESTIERE := [
 		"id": "operaio", "peso": 13.0, "veloce": 1.18, "ferma": 0.6,
 		"camicia": [Color(0.20, 0.34, 0.58), Color(0.26, 0.40, 0.62)],
 		"pantalone": Color(0.18, 0.28, 0.46), "cosa": "cassetta",
+		"faccia": {"barba": "sfatta", "palpebre": "stanche", "colletto": false,
+			"cintura": true},
 		"dice": ["Mo' arrivo, mo' arrivo!", "Chillo 'o tubo s'è rutto n'ata vota.",
 			"E dalle 'na mano, no?"],
 	},
@@ -85,6 +89,7 @@ const MESTIERE := [
 		"id": "pizzaiuolo", "peso": 8.0, "veloce": 1.1, "ferma": 0.7,
 		"camicia": [Color(0.94, 0.93, 0.90)],
 		"pantalone": Color(0.90, 0.90, 0.88), "cosa": "teglia",
+		"faccia": {"bocca": "sorriso", "colletto": false, "catenina": false},
 		"dice": ["'O furno sta acceso!", "Doje margherite, subito!",
 			"Chi 'e vò cavere?"],
 	},
@@ -92,6 +97,8 @@ const MESTIERE := [
 		"id": "prevete", "peso": 5.0, "veloce": 0.86, "ferma": 1.5,
 		"camicia": [Color(0.10, 0.10, 0.12)],
 		"pantalone": Color(0.09, 0.09, 0.11), "cosa": "",
+		"faccia": {"colletto": true, "catenina": false, "barba": "",
+			"bocca": "sorriso", "palpebre": "stanche"},
 		"dice": ["Pace e bene.", "Dominus vobiscum.",
 			"E figlio mio, pregate 'nu poco."],
 	},
@@ -100,6 +107,7 @@ const MESTIERE := [
 		"camicia": [Color(0.24, 0.26, 0.32), Color(0.70, 0.24, 0.28),
 			Color(0.30, 0.52, 0.40)],
 		"pantalone": Color(0.24, 0.30, 0.44), "cosa": "zaino",
+		"faccia": {"rughe": "", "colletto": false},
 		"dice": ["Aggio 'a dà ll'esame, nun me parlà.", "Ma quanno maje!",
 			"Frà, t'aggio scritto e nun m'hê risposto."],
 	},
@@ -109,12 +117,17 @@ const MESTIERE := [
 		"id": "guappo", "peso": 8.0, "veloce": 0.80, "ferma": 1.8,
 		"camicia": [Color(0.10, 0.11, 0.13), Color(0.16, 0.14, 0.18)],
 		"pantalone": Color(0.12, 0.12, 0.14), "cosa": "",
+		# 'O guappo: ingellato, catenina col cornetto, colletto aperto.
+		"faccia": {"capelli": "gellati", "palpebre": "furbe",
+			"sopracciglia": "scettiche", "bocca": "cazzimma",
+			"colletto": true, "catenina": true, "cintura": true},
 		"dice": ["Uè.", "…", "E tu che guarde?", "Overo? Overo overo?"],
 	},
 	{
 		"id": "marenaro", "peso": 7.0, "veloce": 0.96, "ferma": 1.1,
 		"camicia": [Color(0.30, 0.44, 0.56), Color(0.86, 0.86, 0.82)],
 		"pantalone": Color(0.26, 0.28, 0.32), "cosa": "cascetta",
+		"faccia": {"barba": "sfatta", "rughe": "stanco", "catenina": true},
 		"dice": ["Alice frische! Alice!", "'O mare stammatina steva bello.",
 			"Doje chile? Te ne metto tre."],
 	},
@@ -123,6 +136,7 @@ const MESTIERE := [
 		"camicia": [Color(0.62, 0.34, 0.48), Color(0.44, 0.30, 0.52),
 			Color(0.72, 0.56, 0.34)],
 		"pantalone": Color(0.30, 0.26, 0.30), "cosa": "busta",
+		"faccia": {"capelli": "signora", "bocca": "rossetto", "gonna": true},
 		"dice": ["Mia figlia s'è laureata, sai?", "Uh, Maronna mia.",
 			"'Sti guagliune 'e mo'…"],
 	},
@@ -315,6 +329,18 @@ func _costruisci() -> void:
 		"hair": Color(0.76, 0.75, 0.72) if anziano \
 			else Color(0.14, 0.11, 0.08),
 	}
+	# **'A faccia d''o mestiere** (0.66): il guappo nasce ingellato, il
+	# marenaro con la barba sfatta, la signora col rossetto. Il resto della
+	# faccia lo pesca `HumanBuilder`. A una donna su due, la gonna.
+	var faccia: Dictionary = mestiere.get("faccia", {})
+	for k in faccia:
+		if k == "capelli" and bool(opts["bald"]):
+			continue
+		if k == "barba" and femmina:
+			continue
+		opts[k] = faccia[k]
+	if femmina and not opts.has("gonna"):
+		opts["gonna"] = randf() < 0.5
 	var cuorpo: String = _che_cuorpo(femmina)
 	if cuorpo != "":
 		opts["modello"] = cuorpo
@@ -332,53 +358,30 @@ func _costruisci() -> void:
 	_cosa_porta(parts.get("bones", {}))
 
 
-## **'E cuorpe nuove p''e passanti** (0.59).
-##
-## Fino alla 0.58 tutti i passanti erano **lo stesso pupo** con la camicia
-## di un altro colore: da vicino si vedeva che era la stessa faccia, lo
-## stesso naso, lo stesso taglio di capelli, trenta volte. Il capo ha
-## portato due pacchetti di persone animate — otto uomini in quattro
-## vestiti (maglietta e pantaloncini, maniche lunghe, camicia, giacca e
-## cravatta) e l'umano di Quaternius — e adesso sei uomini su dieci ne
-## prendono uno. Il vestito lo sceglie il mestiere, come il colore: il
-## guappo porta la giacca, il prete pure (nera), il pizzaiolo la camicia,
-## il turista i pantaloncini, l'operaio le maniche lunghe o la maglietta
-## dell'umano. Le donne restano del pupo: i due pacchetti sono di soli
-## uomini.
-##
-## **E dalla 0.62 'e cuorpe 'e fore** (vedi `HumanBuilder.QUAT`): il signore
-## in giacca per il guappo e lo studente, il ragazzo in maglietta per il
-## quartiere e il turista, l'operaio col casco per l'operaio, il contadino
-## col cappello per chi vende al mercato. E due donne, finalmente: una
-## donna su tre non è più il pupo.
-const CUORPE_MESTIERE := {
-	"quartiere": ["casual", "maniche", "camicia", "umano", "quat_maglietta"],
-	"turista": ["casual", "umano", "quat_maglietta"],
-	"operaio": ["maniche", "umano", "quat_operaio", "quat_operaio"],
-	"pizzaiuolo": ["camicia"],
-	"prevete": ["giacca"],
-	"studente": ["casual", "maniche", "umano", "quat_giacca"],
-	"guappo": ["giacca", "camicia", "quat_giacca"],
-	"marenaro": ["casual", "maniche", "quat_cafone"],
+## **(0.66) 'O pupo nuovo va 'nnanze.** Dalla 0.59 sei uomini su dieci
+## prendevano un corpo dei pacchetti, perché il pupo era uno solo e trenta
+## pupi uguali si vedevano. Il pupo della 0.66 ha otto capigliature, quattro
+## palpebre, cinque sopracciglia, tre nasi, sei bocche, quattro barbe,
+## quattro rughe, colletto, cintura, catenina e gonna: la varietà ce l'ha
+## lui, e in più ha lo stile del gioco (occhi a palla, faccia dipinta),
+## mentre i corpi dei pacchetti accanto a lui sembrano di un altro gioco
+## (l'ha detto il revisore: «due famiglie di persone nella stessa strada»).
+## Quindi i pacchetti restano solo dove dicono qualcosa che il pupo non
+## sa dire: **l'operaio col casco giallo** e **il marenaro col cappello di
+## paglia**. Tutti gli altri — uomini e donne — sono pupi.
+const CUORPE_FORE := {
+	"operaio": ["quat_operaio", 0.35],
+	"marenaro": ["quat_cafone", 0.25],
 }
 
 
 func _che_cuorpo(femmina: bool) -> String:
 	if femmina:
-		if randf() < 0.36:
-			return str(Human.QUAT_DONNE[randi() % Human.QUAT_DONNE.size()])
 		return ""
-	if randf() < 0.4:
+	var fore: Array = CUORPE_FORE.get(str(mestiere.get("id", "")), [])
+	if fore.is_empty() or randf() >= float(fore[1]):
 		return ""
-	var scelte: Array = CUORPE_MESTIERE.get(str(mestiere.get("id", "")), [])
-	if scelte.is_empty():
-		return ""
-	var c: String = str(scelte[randi() % scelte.size()])
-	if c == "umano":
-		return "umano_q"
-	if c.begins_with("quat_"):
-		return c
-	return "omo_" + c + ("_liscio" if randf() < 0.5 else "")
+	return str(fore[0])
 
 
 ## **Chello ca tene 'n mano.**

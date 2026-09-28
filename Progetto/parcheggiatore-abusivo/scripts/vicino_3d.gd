@@ -131,18 +131,32 @@ func _build_visual() -> void:
 	match vicino_id:
 		"nunzia_bar":
 			opts = {"corpo": "femmina", "hair": Color(0.16, 0.12, 0.1),
-				"belly": 0.35}
+				"belly": 0.35,
+				# (0.66) Nunzia d''o bar: sape tutto 'e tutte.
+				"capelli": "lunghi", "palpebre": "furbe", "bocca": "rossetto",
+				"sopracciglia": "scettiche", "naso": "piccolo", "rughe": "",
+				"catenina": true}
 			alt = 1.64
 		"totore":
 			opts = {"hair": Color(0.78, 0.78, 0.76), "belly": 0.9,
-				"moustache": true, "bald": true}
+				"moustache": true, "bald": false,
+				# (0.66) Totore: 'a corona 'e capille bianche e 'a canottiera.
+				"capelli": "stempiati", "palpebre": "stanche",
+				"sopracciglia": "dritte", "naso": "grosso", "bocca": "sorriso",
+				"barba": "", "rughe": "vecchio", "cintura": true,
+				"colletto": false, "catenina": true}
 			alt = 1.70
 		"rosa":
 			opts = {"corpo": "femmina", "hair": Color(0.66, 0.64, 0.6),
-				"belly": 0.8}
+				"belly": 0.8,
+				# (0.66) Rosa: messa in piega e gonna, preoccupata pe' tutte.
+				"capelli": "signora", "palpebre": "sveglie",
+				"sopracciglia": "preoccupate", "bocca": "preoccupata",
+				"rughe": "vecchia", "gonna": true}
 			alt = 1.58
 		"mimmo":
-			opts = {"hair": Color(0.12, 0.1, 0.09), "belly": 0.0}
+			opts = {"hair": Color(0.12, 0.1, 0.09), "belly": 0.0,
+				"capelli": "ricci", "bocca": "cazzimma", "palpebre": "sveglie"}
 			alt = 1.32 # tene diece anne
 	var parts := Human.build(colore, colore.darkened(0.45), "", alt, opts)
 	_visual_root.add_child(parts["root"])

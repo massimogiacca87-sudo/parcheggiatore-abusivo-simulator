@@ -162,7 +162,11 @@ static func _signora_assettata(c: Node3D, seggia: Vector3, giro: float,
 	var parti: Dictionary = Human.build(veste, veste.darkened(0.3), "", alta, {
 		"corpo": "femmina", "hair": stoffa,
 		"belly": rng.randf_range(0.45, 0.85), "bald": false,
-		"moustache": false})
+		"moustache": false,
+		# (0.66) Il fazzoletto sta sui "capelli" della signora: le
+		# sopracciglia restano grigie, e sotto c'è la gonna.
+		"capelli": "signora", "peli": Color(0.62, 0.60, 0.58),
+		"rughe": "vecchia", "gonna": true})
 	var chi := Node3D.new()
 	chi.name = "SignoraAssettata"
 	c.add_child(chi)

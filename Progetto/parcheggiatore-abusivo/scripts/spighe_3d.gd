@@ -155,6 +155,11 @@ func _costruisci() -> void:
 		"spighe", 1.58, {
 			"hair": Color(0.74, 0.73, 0.7),
 			"belly": 0.75, "bald": false, "moustache": false,
+			# (0.66) 'O viecchio d''e spighe.
+			"capelli": "stempiati", "palpebre": "stanche",
+			"sopracciglia": "dritte", "naso": "grosso", "bocca": "sorriso",
+			"barba": "sfatta", "rughe": "vecchio", "cintura": true,
+			"colletto": false, "catenina": false,
 		})
 	var corpo: Node3D = parts["root"]
 	corpo.position = Vector3(0, 0, -1.1)

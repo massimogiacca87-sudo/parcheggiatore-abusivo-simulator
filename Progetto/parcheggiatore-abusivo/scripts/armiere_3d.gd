@@ -217,7 +217,11 @@ func _build_visual() -> void:
 		# prova, e non l'aveva mai beccato nessuno perché nessuno aveva
 		# mai fotografato l'armiere da davanti. Con `true` fa l'idle e
 		# sta fermo lo stesso.
-		{"belly": 0.5, "bald": true, "moustache": false, "animate": true})
+		{"belly": 0.5, "bald": true, "moustache": false, "animate": true,
+		# (0.66) 'O ferraro: barba e occhi 'e chi nun fa domande.
+		"palpebre": "stanche", "sopracciglia": "arraggiate", "naso": "grosso",
+		"bocca": "dritta", "barba": "barba", "rughe": "", "cintura": true,
+		"colletto": false, "catenina": false})
 	var g: Node3D = p["root"]
 	g.position = Vector3(0, 0, -0.45)
 	# I rig guardano verso -Z: mezzo giro per guardare chi arriva.

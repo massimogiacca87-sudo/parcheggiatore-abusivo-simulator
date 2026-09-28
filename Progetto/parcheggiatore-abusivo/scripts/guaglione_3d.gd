@@ -135,7 +135,13 @@ func _build_visual() -> void:
 	_visual = Node3D.new()
 	add_child(_visual)
 	var parts := Human.build(Color(0.86, 0.84, 0.78), Color(0.22, 0.24, 0.3),
-		"guaglione_" + zona_id, 1.74, {"belly": 0.15, "moustache": false})
+		"guaglione_" + zona_id, 1.74, {"belly": 0.15, "moustache": false,
+		# (0.66) 'O guaglione d''a zona: sfumatura, catenina, e 'na faccia
+		# 'e chi te vò fa' fesso.
+		"bald": false, "capelli": "sfumati", "palpebre": "furbe",
+		"sopracciglia": "scettiche", "naso": "piccolo", "bocca": "cazzimma",
+		"barba": "", "rughe": "", "catenina": true, "cintura": true,
+		"colletto": false})
 	_visual.add_child(parts["root"])
 	_anim = parts.get("anim", null)
 

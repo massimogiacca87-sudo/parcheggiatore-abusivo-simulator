@@ -1117,7 +1117,12 @@ func _moglie_e_criature(r: Node3D) -> void:
 		Color(0.58, 0.24, 0.30), Color(0.30, 0.28, 0.34), "", 1.63,
 		{"skin": Color(0.86, 0.70, 0.56), "hair": Color(0.14, 0.11, 0.09),
 		 "corpo": "femmina", "belly": 0.45, "bald": false,
-		 "moustache": false})
+		 "moustache": false,
+		 # (0.66) 'A mugliera: stanca 'e te aspettà, ma te vò bene.
+		 "capelli": "lunghi", "palpebre": "stanche", "sopracciglia": "sottili",
+		 "naso": "piccolo", "bocca": "dritta", "rughe": "stanco",
+		 "gonna": false, "catenina": true, "colletto": false,
+		 "cintura": false})
 	m.add_child(parti["root"])
 	m.parti = parti
 	_moglie = m
@@ -1219,7 +1224,14 @@ func _suocera(r: Node3D) -> void:
 		Color(0.24, 0.20, 0.26), lutto, "", 1.56,
 		{"skin": Color(0.84, 0.68, 0.56), "hair": FAZZOLETTO_SUOCERA,
 		 "corpo": "femmina", "belly": 0.75, "bald": false,
-		 "moustache": false})
+		 "moustache": false,
+		 # (0.66) Donna Cuncetta: 'o fazzoletto (sono i "capelli", vedi
+		 # sotto), 'e sopracciglia bianche e 'na faccia ca nun perdona.
+		 "capelli": "signora", "peli": Color(0.78, 0.77, 0.75),
+		 "palpebre": "arraggiate", "sopracciglia": "arraggiate",
+		 "naso": "aquilino", "bocca": "storta", "rughe": "vecchia",
+		 "gonna": true, "catenina": false, "colletto": false,
+		 "cintura": false})
 	c.add_child(parti["root"])
 	var testa = parti.get("head", null)
 	if testa != null:

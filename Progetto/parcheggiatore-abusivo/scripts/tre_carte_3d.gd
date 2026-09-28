@@ -221,7 +221,12 @@ func _build_carte() -> void:
 func _build_compare() -> void:
 	var p := HumanBuilderScript.build(Color(0.16, 0.16, 0.18),
 		Color(0.2, 0.2, 0.24), "", 1.74,
-		{"belly": 0.35, "moustache": true})
+		{"belly": 0.35, "moustache": true,
+		# (0.66) 'O magliaro d''e tre carte: ingellato, catenina, cazzimma.
+		"bald": false, "capelli": "gellati", "palpebre": "furbe",
+		"sopracciglia": "scettiche", "naso": "aquilino", "bocca": "cazzimma",
+		"barba": "sfatta", "rughe": "", "colletto": true, "catenina": true,
+		"cintura": true})
 	var g: Node3D = p["root"]
 	# Sta DIETRO al banco, cioè a -Z: il giocatore arriva da +Z e deve
 	# vedere le carte, non la schiena del compare.

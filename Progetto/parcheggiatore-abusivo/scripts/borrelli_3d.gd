@@ -183,7 +183,17 @@ func _build_visual() -> void:
 			"hair": Color(0.42, 0.40, 0.38), # sale e pepe
 			"belly": 0.35,
 			"bald": false,
-			"moustache": false,
+			# (0.66) Sempre indignato, sempre col telefonino in mano.
+			# I tre tratti di sempre — capelli mossi, barba sale e pepe,
+			# occhiali tondi — adesso col pupo nuovo: capelli `ricci`,
+			# barba piena dipinta con peli grigi (e i baffi), gli occhiali
+			# in `_build_face`. Niente di più: è una caricatura, non un
+			# ritratto.
+			"capelli": "ricci", "palpebre": "sveglie",
+			"sopracciglia": "arraggiate", "naso": "aquilino",
+			"bocca": "storta", "barba": "barba", "rughe": "arraggiato",
+			"moustache": true, "peli": Color(0.50, 0.48, 0.46),
+			"colletto": true, "cintura": true, "catenina": false,
 		})
 	_visual_root.add_child(parts["root"])
 	_legs = parts["legs"]
@@ -207,70 +217,54 @@ const LINO := Color(0.74, 0.75, 0.77)
 ##
 ## **'Nnanze è +Z.** Sull'osso della testa il davanti è +Z (misurato, vedi
 ## `maestro_3d.gd` e `POSA_PUPO`): fino alla 0.63 qui stava tutto a −Z, e
-## Borrelli girava con gli occhiali e la barba **sulla nuca** — la faccia
-## liscia davanti, e dietro un secondo viso. L'ha visto la prima foto da
-## tutti i lati (`tools/foto_modello.gd`), dopo sei versioni.
+## Borrelli girava con gli occhiali e la barba **sulla nuca**.
+##
+## **(0.66) 'A faccia vecchia se ne va.** Qui c'erano ancora la mascella a
+## palla, il mento, il labbro a scatola e sei ciuffi a palla della testa di
+## prima: sopra alla faccia nuova facevano una massa grigia a bitorzoli
+## sulla bocca e sei palle in testa. Barba e capelli adesso li fa il pupo
+## (`ricci`, `barba`, `peli` in `_build_visual`); qui restano gli occhiali,
+## rimessi sugli occhi nuovi: centro del bulbo a (±4,3; 10,1) cm, punta a
+## z 14,8, palpebre fino a 15,1 → lenti a z 15,8, montatura a 16, aste
+## che girano fuori dalla testa fino sopra alle orecchie (±12,8 cm).
 func _build_face() -> void:
 	var frame_mat := Tex.flat(Color(0.10, 0.09, 0.10), 0.35)
 	var lens_mat := Tex.flat(Color(0.55, 0.62, 0.70, 0.35), 0.1, 0.5)
 	lens_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	var beard_mat := Tex.flat(Color(0.47, 0.45, 0.42), 0.95)
-	var hair_mat := Tex.flat(Color(0.42, 0.40, 0.38), 0.95)
-
-	# --- Occhiali: due cerchi spessi davanti agli occhi, il ponte, le aste ---
-	for ex in [-0.052, 0.052]:
+	for sx in [-1.0, 1.0]:
+		var ex: float = sx * OCCHIALI_X
 		var rim_mesh := TorusMesh.new()
-		rim_mesh.inner_radius = 0.030
-		rim_mesh.outer_radius = 0.041
+		rim_mesh.inner_radius = 0.027
+		rim_mesh.outer_radius = 0.035
 		rim_mesh.rings = 16
-		rim_mesh.ring_segments = 8
-		_pezzo(_head, rim_mesh, Vector3(ex, OCCHI_Y, 0.142), frame_mat,
+		rim_mesh.ring_segments = 6
+		_pezzo(_head, rim_mesh, Vector3(ex, OCCHI_Y, 0.160), frame_mat,
 			Vector3(deg_to_rad(90), 0, 0))
 		var lens_mesh := CylinderMesh.new()
-		lens_mesh.top_radius = 0.031
-		lens_mesh.bottom_radius = 0.031
-		lens_mesh.height = 0.004
-		_pezzo(_head, lens_mesh, Vector3(ex, OCCHI_Y, 0.140), lens_mat,
+		lens_mesh.top_radius = 0.028
+		lens_mesh.bottom_radius = 0.028
+		lens_mesh.height = 0.003
+		lens_mesh.radial_segments = 12
+		_pezzo(_head, lens_mesh, Vector3(ex, OCCHI_Y, 0.158), lens_mat,
 			Vector3(deg_to_rad(90), 0, 0))
-		# L'asta, dal cerchio all'orecchio.
+		# L'asta: dal bordo di fuori della montatura a sopra all'orecchio,
+		# girata in fuori quanto serve a non entrare nella tempia.
+		var da := Vector3(sx * (OCCHIALI_X + 0.034), OCCHI_Y + 0.004, 0.157)
+		var a := Vector3(sx * 0.128, OCCHI_Y + 0.002, -0.005)
+		var v := a - da
 		var arm_mesh := BoxMesh.new()
-		arm_mesh.size = Vector3(0.008, 0.008, 0.12)
-		_pezzo(_head, arm_mesh, Vector3(signf(ex) * 0.09, OCCHI_Y + 0.004, 0.08), frame_mat)
+		arm_mesh.size = Vector3(0.007, 0.007, v.length())
+		_pezzo(_head, arm_mesh, (da + a) * 0.5, frame_mat,
+			Vector3(0, atan2(v.x, v.z), 0))
 	var bridge_mesh := BoxMesh.new()
-	bridge_mesh.size = Vector3(0.03, 0.008, 0.008)
-	_pezzo(_head, bridge_mesh, Vector3(0, OCCHI_Y + 0.006, 0.146), frame_mat)
-
-	# --- Barba piena: guance e mascella, il mento, i baffi ---
-	var jaw_mesh := SphereMesh.new()
-	jaw_mesh.radius = 0.104
-	jaw_mesh.height = 0.208
-	jaw_mesh.radial_segments = 16
-	jaw_mesh.rings = 8
-	_pezzo(_head, jaw_mesh, Vector3(0, 0.036, 0.036), beard_mat, Vector3.ZERO,
-		Vector3(1.0, 0.6, 1.0))
-	var chin_mesh := SphereMesh.new()
-	chin_mesh.radius = 0.05
-	chin_mesh.height = 0.1
-	_pezzo(_head, chin_mesh, Vector3(0, 0.002, 0.098), beard_mat, Vector3.ZERO,
-		Vector3(1.1, 0.75, 0.75))
-	var lip_mesh := BoxMesh.new()
-	lip_mesh.size = Vector3(0.088, 0.022, 0.03)
-	_pezzo(_head, lip_mesh, Vector3(0, 0.079, 0.126), beard_mat)
-
-	# --- Capelli mossi: due file di ciuffi sopra la fronte e in cima ---
-	for fila in [[0.058, 0.212], [-0.012, 0.226]]:
-		for x in [-0.058, 0.0, 0.058]:
-			var tuft_mesh := SphereMesh.new()
-			tuft_mesh.radius = 0.047
-			tuft_mesh.height = 0.094
-			tuft_mesh.radial_segments = 10
-			tuft_mesh.rings = 5
-			_pezzo(_head, tuft_mesh, Vector3(x, fila[1] - absf(x) * 0.25, fila[0]),
-				hair_mat, Vector3.ZERO, Vector3(1.0, 0.62, 1.05))
+	bridge_mesh.size = Vector3(OCCHIALI_X * 2.0 - 0.064, 0.007, 0.007)
+	_pezzo(_head, bridge_mesh, Vector3(0, OCCHI_Y + 0.008, 0.161), frame_mat)
 
 
-## L'altezza degli occhi sull'osso della testa del pupo.
-const OCCHI_Y := 0.117
+## L'altezza degli occhi sull'osso della testa del pupo (centro del bulbo,
+## misurato sulla testa nuova) e dove stanno le lenti di lato.
+const OCCHI_Y := 0.101
+const OCCHIALI_X := 0.045
 
 
 func _pezzo(padre: Node3D, m: Mesh, pos: Vector3, mat: Material,

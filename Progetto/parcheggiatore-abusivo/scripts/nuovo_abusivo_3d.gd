@@ -127,27 +127,25 @@ func _build_visual() -> void:
 	add_child(_visual)
 	var parts := Human.build(Color(0.92, 0.55, 0.18), Color(0.16, 0.2, 0.34),
 		"", 1.68, {"belly": 0.0, "moustache": false, "bald": false,
-			"hair": Color(0.08, 0.06, 0.05)})
+			"hair": Color(0.08, 0.06, 0.05),
+			# (0.66) Gennarino: nuovo del mestiere, e si vede in faccia.
+			"capelli": "corti", "palpebre": "sveglie",
+			"sopracciglia": "preoccupate", "naso": "piccolo", "bocca": "sorriso",
+			"barba": "", "rughe": "", "cintura": false, "colletto": false,
+			"catenina": false})
 	_visual.add_child(parts["root"])
 	_anim = parts.get("anim", null)
 	# Il berretto rosso: da lontano è la cosa che lo distingue da un
 	# passante qualunque.
-	var berretto := MeshInstance3D.new()
-	var cm := CylinderMesh.new()
-	cm.top_radius = 0.10
-	cm.bottom_radius = 0.115
-	cm.height = 0.08
-	berretto.mesh = cm
-	berretto.material_override = Tex.flat(Color(0.82, 0.1, 0.08), 0.8)
-	berretto.position = Vector3(0, 1.66, 0.0)
-	_visual.add_child(berretto)
-	var visiera := MeshInstance3D.new()
-	var vm := BoxMesh.new()
-	vm.size = Vector3(0.16, 0.015, 0.1)
-	visiera.mesh = vm
-	visiera.material_override = Tex.flat(Color(0.7, 0.08, 0.06), 0.8)
-	visiera.position = Vector3(0, 1.635, -0.13)
-	_visual.add_child(visiera)
+	#
+	# **(0.66) Appiso â capa.** Stava a un metro e sessantasei da terra,
+	# fermo in mezzo al corpo: col cranio nuovo finiva tutto dentro alla
+	# testa (non si vedeva più), e non aveva mai seguito la testa quando
+	# Gennarino cammina. Adesso sta sull'osso della testa, dove **su è +Y e
+	# davanti è +Z**: vedi `_berretto` (calzato sulla testa nuova, 0.66).
+	var testa: Node3D = parts.get("head", null)
+	if testa != null:
+		_berretto(testa)
 	# Il cartone.
 	var cartone := MeshInstance3D.new()
 	var bm := BoxMesh.new()
@@ -175,6 +173,54 @@ func _build_visual() -> void:
 	_targhetta.outline_size = 10
 	add_child(_targhetta)
 
+
+
+## **'O cappelluccio russo, calzato** (0.66). La visiera stava sulle
+## sopracciglia (quelle "preoccupate", che sono tutta la faccia di uno
+## nuovo del mestiere). Adesso il bordo è un'ellisse che abbraccia cranio e
+## capelli `corti` con 0,9 cm di gioco (nessuna ciocca buca la calotta),
+## inclinata di 12,8° col davanti in su: davanti passa a 17,6 cm sopra
+## l'osso (le sopracciglia arrivano a 16,3), dietro a 12 cm, sulla nuca.
+## La testa del pupo nella posa di riposo guarda 15,8° in giù: di fronte il
+## bordo sta in piano, e la visiera — girata in su di 15° sul bordo — sale
+## di 12°, da guaglione.
+const BERRETTO_CENTRO := Vector3(0.0, 0.147, -0.005)
+const BERRETTO_INCLINA := 12.8
+const BERRETTO_A := 0.128
+const BERRETTO_C := 0.131
+const BERRETTO_ALTO := 0.095
+const VISIERA_SU := 15.0
+const VISIERA := Vector3(0.16, 0.012, 0.095)
+
+
+func _berretto(testa: Node3D) -> void:
+	var berretto := Node3D.new()
+	berretto.name = "Berretto"
+	berretto.position = BERRETTO_CENTRO
+	berretto.rotation.x = -deg_to_rad(BERRETTO_INCLINA)
+	testa.add_child(berretto)
+	var calotta := MeshInstance3D.new()
+	var cm := SphereMesh.new()
+	cm.radius = 1.0
+	cm.height = 1.0
+	cm.is_hemisphere = true
+	cm.radial_segments = 14
+	cm.rings = 5
+	calotta.mesh = cm
+	calotta.scale = Vector3(BERRETTO_A, BERRETTO_ALTO, BERRETTO_C)
+	calotta.material_override = Tex.flat(Color(0.82, 0.1, 0.08), 0.8)
+	berretto.add_child(calotta)
+	# Il bordo di dietro della visiera tocca la calotta agli spigoli (a
+	# ±8 cm la calotta sta a z 10,2 cm); il resto sta dentro.
+	var visiera := MeshInstance3D.new()
+	var vm := BoxMesh.new()
+	vm.size = VISIERA
+	visiera.mesh = vm
+	var su := Basis(Vector3.RIGHT, -deg_to_rad(VISIERA_SU))
+	var attacco := Vector3(0.0, VISIERA.y * 0.5, 0.102)
+	visiera.transform = Transform3D(su, attacco + su * Vector3(0, 0, VISIERA.z * 0.5))
+	visiera.material_override = Tex.flat(Color(0.7, 0.08, 0.06), 0.8)
+	berretto.add_child(visiera)
 
 # ---------------------------------------------------------------------------
 # Quando vene

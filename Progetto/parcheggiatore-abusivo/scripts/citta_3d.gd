@@ -5042,11 +5042,17 @@ func _build_gente_ferma() -> void:
 		# **E pure chi sta fermo tene 'na faccia soja** (0.59): uno su due
 		# è uno degli otto uomini del pacchetto nuovo, uno su cinque
 		# l'umano di Quaternius, gli altri il pupo di sempre.
+		#
+		# **(0.66) Mo' so' tutte pupe** (vedi `passante_3d`,
+		# `CUORPE_FORE`): il pupo nuovo ha la varietà e lo stile del gioco,
+		# i corpi dei pacchetti accanto a lui sembravano di un altro gioco.
+		# Le estrazioni restano **le stesse di prima** — stesso `randf`,
+		# stesso `randi` negli stessi casi — perché il caso è quello della
+		# città, e un'estrazione in meno sposterebbe tutto quello che viene
+		# dopo. Cambia solo che il risultato non si usa più.
 		var dado: float = rng.randf()
 		if dado < 0.45:
-			opts["modello"] = str(Human.OMINI[rng.randi() % Human.OMINI.size()])
-		elif dado < 0.65:
-			opts["modello"] = "umano_q"
+			var _omino: String = str(Human.OMINI[rng.randi() % Human.OMINI.size()])
 		var parti: Dictionary = Human.build(
 			camicie[rng.randi() % camicie.size()],
 			pantaloni[rng.randi() % pantaloni.size()], "",
