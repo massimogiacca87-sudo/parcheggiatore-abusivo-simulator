@@ -205,32 +205,15 @@ func _build_visual() -> void:
 		# (0.66) 'O rivale te guarda storto, sempe.
 		"palpebre": "arraggiate", "sopracciglia": "arraggiate",
 		"bocca": "storta",
+		# Il gilet: se lo mettono anche loro, ed è il segnale che sono del
+		# mestiere. Colore diverso dal tuo, che il tuo è giallo.
+		# (0.66) È un pezzo del pupo, cucito sulla maglia e animato con
+		# lei: la capsula appesa al petto la tagliava a dente di sega.
+		"gilet": true, "gilet_colore": Color(0.95, 0.42, 0.12),
+		"catenina": false,
 	})
 	_visual.add_child(parts["root"])
 	_anim = parts.get("anim", null)
-
-	# Il gilet: se lo mettono anche loro, ed è il segnale che sono del
-	# mestiere. Colore diverso dal tuo, che il tuo è giallo.
-	var bones: Dictionary = parts.get("bones", {})
-	if bones.has("chest"):
-		# Un gilet e' un pezzo di stoffa che AVVOLGE il torace: una scatola
-		# gli sta sopra come un cartellone. Una capsula schiacciata segue la
-		# cassa toracica, che adesso e' tonda anche lei.
-		var gilet := MeshInstance3D.new()
-		var gm := CapsuleMesh.new()
-		# **'O gilè era cchiù largo d''o pietto.** Era tarato sul torace
-		# vecchio, che era largo quaranta centimetri; adesso il torace ne
-		# fa trentadue e questo, a quarantatré, usciva come una palla
-		# arancione appesa davanti. Un gilè sta ADDOSSO, non intorno.
-		gm.radius = 0.134
-		gm.height = 0.40
-		gm.radial_segments = 12
-		gm.rings = 3
-		gilet.mesh = gm
-		gilet.scale = Vector3(1.16, 1.0, 0.80)
-		gilet.position = Vector3(0, 0.01, 0)
-		gilet.material_override = Tex.flat(Color(0.95, 0.42, 0.12), 0.75)
-		bones["chest"].add_child(gilet)
 
 	_targhetta = Label3D.new()
 	_targhetta.text = nome

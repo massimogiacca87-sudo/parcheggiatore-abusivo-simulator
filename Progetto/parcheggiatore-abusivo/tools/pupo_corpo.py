@@ -1186,28 +1186,204 @@ def catenina(g, corp):
 	t.emetti(g)
 
 
+## Il gilet: gli spicchi di un fianco (gradi dal centro davanti; l'altro è
+## lo specchio), le righe piene (quota, materiale della fascia che sale da
+## lì) e le righe di sopra, dove ci sono solo i due pannelli.
+GILET_ANGOLI = [15.0, 38.0, 62.0, 90.0, 125.0, 150.0, 180.0]
+GILET_RIGHE = [(0.985, "gilet"), (1.055, "metallo"), (1.095, "gilet"),
+	(1.185, "metallo"), (1.225, "gilet"), (1.310, "gilet")]
+GILET_SOPRA = [1.380, 1.450]
+GILET_DAVANTI = (15.0, 38.0, 62.0)
+GILET_DIETRO = (125.0, 150.0, 180.0)
+
+
+def gilet(g, corp):
+	"""**'O gilet d''o parcheggiatore.** Arancione ad alta visibilità, senza
+	maniche, aperto davanti a V con le due falde, giromanica larghi, e due
+	strisce catarifrangenti grigie attorno alla vita e al petto — quelle
+	vere, che la sera si vedono da lontano. Finisce poco sotto la vita,
+	sopra alla cintura.
+
+	È un guscio staccato dalla maglietta (1,2 cm; 1,7 sotto 1,05, dove
+	passano la fascia, la cintura e la fibbia): ogni vertice nasce da un
+	raggio che va verso l'asse del corpo e si ferma sulla stoffa vera, e ne
+	copia i pesi. Così si muove con la maglietta in ogni clip. Le spalline
+	passano sopra le spalle, fra il collo (dove sta la catenina) e il
+	giromanica.
+
+	Le strisce sono fasce del guscio stesso col materiale `metallo` (grigio
+	chiaro, un po' lucido, non lo tinge il gioco): costano zero triangoli
+	in più."""
+	t = Tela()
+	corpo_t = tela_corpo(g, corp)
+	stoffa = corpo_t.albero({"camicia", "pantaloni"})
+
+	def colpo(ang, z):
+		th = math.radians(ang)
+		d = Vector((math.sin(th), -math.cos(th), 0.0))
+		o = Vector((0.0, 0.015, z))
+		r = stoffa.raggio(o + d * 0.6, -d)
+		loc, nor, pesi = r
+		stacco = 0.017 if z < 1.05 else 0.012
+		return loc + nor * stacco, nor, pesi
+
+	def v_colpo(ang, z):
+		p, nor, pesi = colpo(ang, z)
+		i = t.v(p, pesi)
+		return i, nor
+
+	# gli spicchi di tutto il giro, aperto davanti: da +15° per il fianco
+	# sinistro fino a dietro, e giù per il destro fino a −15°
+	giro = list(GILET_ANGOLI) + [-a for a in reversed(GILET_ANGOLI[:-1])]
+	righe = []
+	for z, mat in GILET_RIGHE:
+		righe.append(([v_colpo(a, z) for a in giro], mat))
+	# sopra: solo i pannelli
+	pannelli = [a for a in giro if abs(a) in GILET_DAVANTI or abs(a) in GILET_DIETRO]
+	for z in GILET_SOPRA:
+		riga = {}
+		for a in pannelli:
+			riga[a] = v_colpo(a, z)
+		righe.append((riga, "gilet"))
+
+	def quad(vs, mat):
+		nor = sum((n for _, n in vs), Vector()).normalized()
+		t.f_verso([i for i, _ in vs], mat, nor)
+
+	# le fasce piene
+	for (r0, mat), (r1, _) in zip(righe[:len(GILET_RIGHE)], righe[1:len(GILET_RIGHE)]):
+		for k in range(len(giro) - 1):
+			quad([r0[k], r0[k + 1], r1[k + 1], r1[k]], mat)
+	# dalla riga piena più alta ai pannelli, e fra i pannelli
+	ultima = dict(zip(giro, righe[len(GILET_RIGHE) - 1][0]))
+	prec = ultima
+	for riga, _ in righe[len(GILET_RIGHE):]:
+		for a0, a1 in zip(pannelli, pannelli[1:]):
+			vicini = abs(giro.index(a1) - giro.index(a0)) == 1
+			if not vicini:
+				continue
+			quad([prec[a0], prec[a1], riga[a1], riga[a0]], "gilet")
+		prec = riga
+	# le spalline: dal bordo alto davanti (38°, 62°) a quello dietro
+	# (150°, 125°), passando sopra la spalla
+	alto = prec
+	for sx in (1.0, -1.0):
+		dentro = [alto[sx * 38.0]]
+		fuori = [alto[sx * 62.0]]
+		pd = t.co[alto[sx * 38.0][0]]
+		pf = t.co[alto[sx * 62.0][0]]
+		qd = t.co[alto[sx * 150.0][0]]
+		qf = t.co[alto[sx * 125.0][0]]
+		for u in (1.0 / 3.0, 2.0 / 3.0):
+			for lista, a, b in ((dentro, pd, qd), (fuori, pf, qf)):
+				m = a.lerp(b, u)
+				r = stoffa.raggio((m.x, m.y, 1.8), (0.0, 0.0, -1.0))
+				loc, nor, pesi = r
+				lista.append((t.v(loc + nor * 0.012, pesi), nor))
+		dentro.append(alto[sx * 150.0])
+		fuori.append(alto[sx * 125.0])
+		for k in range(3):
+			quad([dentro[k], fuori[k], fuori[k + 1], dentro[k + 1]], "gilet")
+	t.emetti(g)
+
+
 def extra():
-	return [("colletto", colletto), ("cintura", cintura), ("catenina", catenina)]
+	return [("colletto", colletto), ("cintura", cintura), ("catenina", catenina),
+		("gilet", gilet)]
 
 
 # ---------------------------------------------------------------------------
 # 'A gonna e 'a banda rossa
 # ---------------------------------------------------------------------------
 
+## In vita 16 spicchi, gli stessi dei pantaloni (la gonna sta a 2,5 mm dalla
+## fascia e la cintura a 4,5: con spicchi diversi le corde si
+## incrocerebbero); dall'anca in giù 18, che al centro davanti e dietro la
+## stoffa sia abbastanza fitta da stare dietro a due cosce che vanno in
+## direzioni opposte.
 N_GONNA = 16
+N_GONNA_GIU = 18
+## La gonna, riga per riga: (quota, forma, a, b, c).
+##   "fascia": sulla fascia dei pantaloni, staccata di `a`;
+##   "sedere": sui fianchi, staccata di `a` davanti e `b` dietro;
+##   "anca":   sui fianchi dei pantaloni (W4), staccata di `a`;
+##   "apri":   l'anca allargata di `a` di lato, `b` davanti, `c` dietro.
+GONNA = [
+	(1.040, "fascia", 0.0025, 0.0, 0.0),
+	(1.002, "fascia", 0.0025, 0.0, 0.0),
+	(0.965, "sedere", 0.012, 0.020, 0.0),
+	(0.915, "anca", 0.035, 0.0, 0.0),
+	(0.800, "apri", 1.14, 1.26, 1.20),
+	(0.660, "apri", 1.18, 1.30, 1.30),
+	(0.420, "apri", 1.24, 1.34, 1.40),
+]
+## Quanto netta è la divisione fra coscia sinistra e destra al centro.
+GONNA_SPARTI = 0.05
+## Quanto si addensano gli spicchi al centro davanti e dietro (0 = uguali).
+GONNA_STRINGI = 0.7
+## Quanto la striscia al centro davanti, in basso, pende dal bacino invece
+## di seguire le cosce (l'amaca fra le ginocchia della signora seduta).
+GONNA_AMACA = 0.3
+## Quanto il pannello di dietro, sotto a metà coscia, segue le cosce (1 =
+## tutto, come i pantaloni; meno = pende).
+GONNA_DIETRO = 1.0
+
+
+def pesi_gonna(p):
+	"""**'A gonna se pesa comme 'e cazune.** Alla quota `z` segue le cosce
+	quanto le seguono i pantaloni che ci stanno sotto (la stessa rampa di
+	`pesi_tronco`: niente sopra l'anca, tutto da metà coscia in giù), e da
+	ogni lato segue la coscia del suo lato; solo la striscia al centro,
+	davanti e dietro, sta a metà fra le due. Così la stoffa e la gamba si
+	muovono insieme e la gamba non la può passare.
+
+	**Pecché nun se faceva a campana.** La prima gonna aveva pesi suoi
+	(davanti 45% di coscia all'anca, 78% a metà coscia): in città le passanti
+	camminano anche di corsa (il gioco mescola Walk, Jog_Fwd e Sprint), la
+	coscia sale di 50–90 gradi e il pezzo di coscia sotto l'anca veniva
+	avanti più svelto della stoffa. Si vedevano triangoli di calza in mezzo
+	alla gonna. E la riga dell'anca pesata sulla coscia non aiuta: un punto
+	davanti al giunto, ruotando, sale verso la pancia invece di andare avanti."""
+	w = pesi_tronco(Vector((p.x, p.y, max(p.z, 0.99))))
+	q = _liscio((0.975 - p.z) / 0.135)
+	if q <= 0.0:
+		return w
+	if p.y < 0.012:
+		# **L'amaca.** Seduta, le due cosce vanno avanti insieme e una gonna
+		# che le segue del tutto diventa un tubo con la bocca verso chi
+		# guarda. La stoffa vera fra le ginocchia pende: la striscia al
+		# centro davanti, dal ginocchio in giù, resta un po' sul bacino.
+		q *= 1.0 - GONNA_AMACA * _liscio((0.76 - p.z) / 0.20) * (
+			1.0 - _liscio(abs(p.x) / 0.03))
+	if p.y > 0.012 and GONNA_DIETRO < 1.0:
+		r = math.hypot(p.x, p.y - 0.012)
+		q *= 1.0 - (1.0 - GONNA_DIETRO) * _liscio((0.75 - p.z) / 0.25) * (
+			(p.y - 0.012) / max(r, 1e-6)) ** 1.5
+	ax = abs(p.x)
+	lato = "l" if p.x >= 0 else "r"
+	altro = "r" if lato == "l" else "l"
+	s = _liscio(ax / GONNA_SPARTI)
+	cosce = {"thigh_" + lato: 0.5 + 0.5 * s, "thigh_" + altro: 0.5 - 0.5 * s}
+	return _mix((w, 1.0 - q), (cosce, q))
 
 
 def gonna(g):
 	"""**'A gonna ad A** d''a signora: dalla vita a un palmo sotto al
 	ginocchio. In cima sta sulla fascia dei pantaloni (sotto all'orlo della
-	maglietta); scendendo si allarga, e di sotto l'orlo gira in dentro e la
-	stoffa risale fino a metà coscia, così guardandola dal basso — o seduta
-	— dentro c'è stoffa e non il vuoto. I pesi passano piano dal bacino
-	alle cosce: la gonna segue la gamba che avanza senza strapparsi."""
+	maglietta e sotto alla cintura, se c'è); sui fianchi sta **larga**, tre
+	centimetri e mezzo fuori dai pantaloni, perché quando la coscia sale
+	(corsa, seduta) la stoffa ha lo spazio per venirle dietro; scendendo si
+	apre, più dietro e di lato che davanti. Di sotto l'orlo gira in dentro
+	e la fodera risale fino a metà coscia: da sotto, o seduta, dentro c'è
+	stoffa e non il vuoto.
+
+	Le forme e i pesi sono stati misurati sulle clip vere (Walk, Jog_Fwd,
+	Sprint, metà Walk/Jog, Sitting_Idle, Crouch_Idle): per ogni posa si
+	contano i punti di coscia che finiscono fuori dalla gonna e si vedono da
+	due metri, davanti e di tre quarti."""
 	corp = CORPORATURE["femmina"]
 	t = Tela()
 	n = N_GONNA
-	fianchi = _fianchi(corp)
 
 	def ring_su(pts, off):
 		out = []
@@ -1217,57 +1393,96 @@ def gonna(g):
 			out.append(p + nor * off)
 		return out
 
-	def pesi_g(p, qf, qb):
-		"""Davanti la gonna segue le cosce quasi del tutto (seduta, ci si
-		appoggia sopra), dietro meno (cade verso la sedia)."""
-		w = pesi_tronco(Vector((p.x, p.y, max(p.z, 0.99))))
-		dav = _liscio(0.5 - (p.y - 0.012) / 0.30)
-		quanto = qb + (qf - qb) * dav
-		if quanto <= 0.0:
-			return w
-		ax = abs(p.x)
-		lato = "l" if p.x >= 0 else "r"
-		altro = "r" if lato == "l" else "l"
-		s = _liscio(ax / 0.10)
-		cosce = {"thigh_" + lato: 0.5 + 0.5 * s, "thigh_" + altro: 0.5 - 0.5 * s}
-		return _mix((w, 1.0 - quanto), (cosce, quanto))
+	def fascia(z):
+		z1, rx1, df1, db1, yc1 = CAZUNE[0]
+		z2, rx2, df2, db2, yc2 = CAZUNE[1]
+		u = (z - z2) / (z1 - z2)
+		return _anello_tronco(n, z, rx2 + (rx1 - rx2) * u, df2 + (df1 - df2) * u,
+			db2 + (db1 - db2) * u, yc2, corp)
 
-	def apri(pts, z, kx, kf, kb):
+	m = N_GONNA_GIU
+	za, rxa, dfa, dba, yca = CAZUNE[2]
+	# **'E spicche fitte 'o miezo.** Nel passo lungo una coscia va avanti e
+	# l'altra indietro: la colonna proprio al centro sta a metà fra le due,
+	# e fra lei e la prima vicina (che segue la coscia avanti) la stoffa
+	# resta indietro e si ripiega — le facce girate non si disegnano e si
+	# apriva uno spacco con la coscia dentro. Gli spicchi si addensano al
+	# centro davanti e dietro (la prima vicina sta a tre centimetri invece
+	# che a sette) e si diradano sui fianchi, dove non serve.
+	angoli = [2.0 * math.pi * j / m - GONNA_STRINGI * math.sin(4.0 * math.pi * j / m) / 2.0
+		for j in range(m)]
+	anca0 = [_punto_tronco(a, za, rxa, dfa, dba, yca, corp) for a in angoli]
+
+	def ring_su_m(pts, off):
 		out = []
-		for p in pts:
-			k = kf if p.y < 0.012 else kb
-			out.append(Vector((p.x * kx, 0.012 + (p.y - 0.012) * k, z)))
+		for j, p in enumerate(pts):
+			q = pts[(j + 1) % m] - pts[(j - 1) % m]
+			nor = Vector((q.y, -q.x, 0.0)).normalized()
+			out.append(p + nor * off)
 		return out
 
+	anca = anca0
 	righe = []
-	# In vita: fascia + 2,5 mm (sotto alla cintura, se c'è); poi i
-	# fianchi + 1,2 cm; poi si apre, poco davanti e di più dietro e di lato.
-	z1, rx1, df1, db1, yc1 = CAZUNE[0]
-	z2, rx2, df2, db2, yc2 = CAZUNE[1]
-	u = (1.040 - z2) / (z1 - z2)
-	vita = _anello_tronco(n, 1.040, rx2 + (rx1 - rx2) * u, df2 + (df1 - df2) * u,
-		db2 + (db1 - db2) * u, yc2, corp)
-	righe.append((ring_su(vita, 0.0025), (0.0, 0.0)))
-	righe.append((ring_su(fianchi[1], 0.0025), (0.0, 0.0)))
-	anca = ring_su(fianchi[3], 0.012)
-	righe.append(([Vector((p.x, p.y, 0.915)) for p in anca], (0.45, 0.15)))
-	righe.append((apri(anca, 0.72, 1.10, 1.14, 1.22), (0.78, 0.40)))
-	righe.append((apri(anca, 0.46, 1.17, 1.16, 1.40), (0.86, 0.55)))
-	vv = [[t.v(p, pesi_g(p, *q)) for p in pts] for pts, q in righe]
+	for z, forma, a, b, c in GONNA:
+		if forma == "fascia":
+			pts = ring_su(fascia(z), a)
+		elif forma == "anca":
+			anca = ring_su_m(anca0, a)
+			pts = [Vector((p.x, p.y, z)) for p in anca]
+		elif forma == "sedere":
+			# **'O culo nun ha da scassà 'a gonna.** Dritta dalla fascia
+			# all'anca, la stoffa tagliava la curva del sedere (e le tasche
+			# di dietro) a mezzo centimetro: appena la coscia saliva, da
+			# dietro spuntava il sedere. Un anello in mezzo, un po' più
+			# staccato dietro, e la corda gira attorno.
+			pts = []
+			for j, p in enumerate(anca0):
+				q = anca0[(j + 1) % m] - anca0[(j - 1) % m]
+				nor = Vector((q.y, -q.x, 0.0)).normalized()
+				die = max(0.0, (p.y - 0.012) / max(0.05, abs(p.y - 0.012) + abs(p.x)))
+				pts.append(Vector((p.x, p.y, z)) + nor * (a + (b - a) * _liscio(die * 1.4)))
+		else:
+			pts = [Vector((p.x * a, 0.012 + (p.y - 0.012) * (b if p.y < 0.012 else c), z))
+				for p in anca]
+		righe.append(pts)
+	vv = [[t.v(p, pesi_gonna(p)) for p in pts] for pts in righe]
 	for a, b in zip(vv[1:], vv):
-		t.cuci(a, b, "gonna")
-	# L'orlo e la fodera: dentro, verso l'alto, facce girate in dentro.
-	orlo_p = [t.co[i] for i in vv[-1]]
-	fod1 = [Vector((p.x * 0.97, 0.012 + (p.y - 0.012) * 0.97, p.z + 0.010))
-		for p in orlo_p]
-	pm = [t.co[i] for i in vv[-2]]
-	fod2 = [Vector((p.x * 0.96, 0.012 + (p.y - 0.012) * 0.96, p.z))
-		for p in pm]
-	f1 = [t.v(p, pesi_g(p, *righe[-1][1])) for p in fod1]
-	f2 = [t.v(p, pesi_g(p, *righe[-2][1])) for p in fod2]
-	t.cuci(f1, vv[-1], "gonna")
-	t.cuci(f2, f1, "gonna")
+		if len(a) == len(b):
+			t.cuci(a, b, "gonna")
+		else:
+			_cuci_giro(t, a, b, "gonna")
+	# La fodera: dall'orlo la stoffa gira in dentro e risale fino alla riga
+	# di sopra, con le facce girate verso l'interno. Da sotto, o seduta,
+	# dentro c'è stoffa e non il vuoto.
+	k = 0.96
+	fodera = [t.v(Vector((p.x * k, 0.012 + (p.y - 0.012) * k, p.z)),
+		pesi_gonna(p)) for p in righe[-2]]
+	t.cuci(fodera, vv[-1], "gonna")
 	t.emetti(g)
+
+
+def _cuci_giro(t, sotto, sopra, mat):
+	"""Cuce due anelli orizzontali con un numero diverso di vertici (per
+	angolo attorno all'asse del corpo): `sotto` più in basso di `sopra`,
+	le facce verso fuori."""
+	def ang(i):
+		p = t.co[i]
+		return math.atan2(p.x, -(p.y - 0.012)) % (2.0 * math.pi)
+	aa = sorted(sotto, key=ang)
+	bb = sorted(sopra, key=ang)
+	i = j = 0
+	na, nb = len(aa), len(bb)
+	while i < na or j < nb:
+		a0, a1 = aa[i % na], aa[(i + 1) % na]
+		b0, b1 = bb[j % nb], bb[(j + 1) % nb]
+		ta = ang(a1) + (2.0 * math.pi if i + 1 >= na else 0.0)
+		tb = ang(b1) + (2.0 * math.pi if j + 1 >= nb else 0.0)
+		if j >= nb or (i < na and ta <= tb):
+			t.f([a0, a1, b0], mat)
+			i += 1
+		else:
+			t.f([a0, b1, b0], mat)
+			j += 1
 
 
 def banda_rossa(g):
