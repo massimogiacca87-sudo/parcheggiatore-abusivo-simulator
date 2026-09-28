@@ -203,7 +203,13 @@ func _build_vecchio(i: int) -> Node3D:
 	var p := HumanBuilderScript.build(camicie[i], Color(0.28, 0.28, 0.3),
 		"", altezza,
 		{"belly": _rng.randf_range(0.6, 1.0), "bald": i != 1,
-		"moustache": i != 2, "hair": Color(0.72, 0.71, 0.68)})
+		"moustache": i != 2, "hair": Color(0.72, 0.71, 0.68),
+		# (0.66) Tre vecchi a scopa: uno se la ride, uno è scucciato, uno
+		# non si fida.
+		"capelli": "stempiati", "rughe": "vecchio",
+		"palpebre": ["stanche", "sveglie", "furbe"][i % 3],
+		"bocca": ["sorriso", "storta", "cazzimma"][i % 3],
+		"sopracciglia": ["dritte", "arraggiate", "scettiche"][i % 3]})
 	var root: Node3D = p["root"]
 	# Il bacino sopra al centro della sedia, un palmo sopra alla seduta
 	# (la seduta è un'asse, il sedere ha uno spessore).

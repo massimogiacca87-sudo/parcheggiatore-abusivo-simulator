@@ -94,6 +94,15 @@ func _build_visual() -> void:
 			"belly": 0.55 if femmina else 0.85,
 			"hair": Color(0.80, 0.79, 0.77),
 			"moustache": not femmina,
+			# (0.66) Occhi pesanti e bocca storta: non ha bisogno di alzare
+			# la voce.
+			"capelli": "signora" if femmina else "stempiati",
+			"palpebre": "furbe" if femmina else "stanche",
+			"sopracciglia": "sottili" if femmina else "dritte",
+			"naso": "aquilino", "bocca": "rossetto" if femmina else "storta",
+			"barba": "", "rughe": "vecchia" if femmina else "vecchio",
+			"gonna": femmina, "colletto": not femmina, "cintura": not femmina,
+			"catenina": true,
 		})
 	_visual.add_child(parts["root"])
 	_anim = parts.get("anim", null)

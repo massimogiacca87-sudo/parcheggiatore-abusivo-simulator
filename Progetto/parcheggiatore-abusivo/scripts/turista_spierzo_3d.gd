@@ -97,7 +97,13 @@ func _ready() -> void:
 	# forestiero si riconosce da trenta metri, come nella vita.
 	var parts := Human.build(Color(0.95, 0.8, 0.25), Color(0.85, 0.8, 0.66),
 		"", 1.84, {"belly": 0.3, "hair": Color(0.85, 0.72, 0.45),
-			"moustache": false, "bald": false, "skin": Color(0.95, 0.72, 0.62)})
+			"moustache": false, "bald": false, "skin": Color(0.95, 0.72, 0.62),
+			# (0.66) Sperso, e con gli occhi azzurri.
+			"capelli": "corti", "palpebre": "sveglie",
+			"sopracciglia": "preoccupate", "naso": "piccolo",
+			"bocca": "preoccupata", "barba": "", "rughe": "",
+			"occhi": Color(0.30, 0.44, 0.58), "cintura": true,
+			"colletto": false, "catenina": false})
 	_visual.add_child(parts["root"])
 	_anim = parts.get("anim", null)
 	# La cartina: un foglio bianco aperto davanti alla pancia.

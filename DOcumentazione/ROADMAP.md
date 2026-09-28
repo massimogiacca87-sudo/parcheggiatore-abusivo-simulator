@@ -964,7 +964,9 @@ esilaranti fino al game over dopo una settimana. Racconto completo in
 
 ---
 
-## v0.66 — **'E vvoce**
+## v0.66 — **'E facce nove** (fatta: vedi `NOVITA-v0.66.md`)
+
+## v0.67 — **'E vvoce** (era la 0.66)
 
 - **Le voci registrate**: l'introduzione parlata, e qualche riga dei
   personaggi principali. Il gioco è pieno di gente che parla e nessuno fa
