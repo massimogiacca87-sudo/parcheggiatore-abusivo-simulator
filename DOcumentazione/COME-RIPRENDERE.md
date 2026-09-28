@@ -1006,6 +1006,8 @@ la lista della roadmap in mano.
 noto per la campagna contro i parcheggiatori abusivi: tratti riconoscibili
 sul corpo low-poly, non un ritratto.
 
+**Decisione del capo (29/09/2026, v0.66):** Borrelli, lo stencil di Maradona e le altre caricature di personaggi pubblici **restano nel gioco, anche nella build in vendita**: il gioco è satira. Non vanno più segnalati né tolti.
+
 **I sei manifesti** della collezione sono immagini fornite dal capo, con volti
 e marchi riconoscibili: vanno bene per una build privata, e sono la prima
 cosa da sostituire se un giorno si distribuisce il gioco.

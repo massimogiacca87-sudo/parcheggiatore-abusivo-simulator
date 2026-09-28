@@ -92,6 +92,6 @@ sul PC del capo.** Prove `prova_croce`, `prova_asset`, `prova_psx`,
 - Borrelli: la mano col telefono schiaccia la barba.
 - La borsetta sul petto delle signore senza tracolla; busta e cassetta a
   scatola.
-- **Da decidere al capo**: Borrelli è la caricatura di una persona vera, e
-  sul muro c'è lo stencil di Maradona; la BIBBIA §6 esclude i volti
-  riconoscibili nella build in vendita.
+- ~~Da decidere al capo: Borrelli e lo stencil di Maradona~~ → **deciso
+  (29/09/2026): restano, anche nella build in vendita.** Il gioco è
+  satira; la BIBBIA §6 è aggiornata.

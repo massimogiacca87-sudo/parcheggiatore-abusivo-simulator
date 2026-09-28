@@ -210,8 +210,11 @@ I percorsi Windows della tabella qui sopra non esistono. Allora:
 - ❌ **NC** (non commerciale), **ND** (non modificabile), licenze "editorial",
   "personal use", GPL per asset grafici, licenza non trovata: **no**. Il gioco
   si venderà.
-- ❌ Roba estratta da giochi commerciali, marchi e volti riconoscibili: **no**
+- ❌ Roba estratta da giochi commerciali e marchi: **no**
   (i manifesti della collezione valgono solo per le build private).
+- ✅ Caricature satiriche di personaggi pubblici (Borrelli, lo stencil di
+  Maradona e simili): **sì, anche nella build in vendita**. Decisione del
+  capo del 29/09/2026: il gioco è satira. Non segnalarle e non toglierle.
 - La guida della biblioteca esterna è
   `Progetto/parcheggiatore-abusivo/assets/esterni/ASSET-ESTERNI.md`: ogni
   asset scaricato ci va registrato (fonte, autore, licenza, link).
